@@ -1,0 +1,167 @@
+package com.codewithben.schoolmanagementsystem.Utility;
+
+import com.codewithben.schoolmanagementsystem.Entity.EntityID_generation;
+import com.codewithben.schoolmanagementsystem.Entity.GradeSystem;
+import com.codewithben.schoolmanagementsystem.Entity.Institution;
+import com.codewithben.schoolmanagementsystem.Entity.Semester;
+import com.codewithben.schoolmanagementsystem.Repository.EntityID_generationRepository;
+import com.codewithben.schoolmanagementsystem.Repository.GradeSystemRepository;
+import com.codewithben.schoolmanagementsystem.Repository.InstitutiionRepository;
+import org.springframework.stereotype.Component;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
+
+@Component
+public class UtilityClass {
+
+    private final EntityID_generationRepository entityID_generationRepository;
+
+    private final GradeSystemRepository gradeSystemRepository;
+
+    private final InstitutiionRepository institutiionRepository;
+
+    private final AtomicReference<List<GradeSystem>> cache = new AtomicReference<>();
+
+    public UtilityClass(EntityID_generationRepository entityID_generationRepository, InstitutiionRepository institutiionRepository,
+                        GradeSystemRepository gradeSystemRepository) {
+        this.entityID_generationRepository = entityID_generationRepository;
+        this.gradeSystemRepository = gradeSystemRepository;
+        this.institutiionRepository = institutiionRepository;
+    }
+
+    //Id generation method
+    public String generateEntityId(String entityName) {
+        String newCode = "";
+
+        if (entityName.equals("STAFF")) {
+            String prefix = "ST";
+            long entityCode = 100100L;
+            newCode = getStringCode(entityName, prefix, entityCode);
+
+        } else if (entityName.equals("STUDENT")) {
+            String prefix = "STD";
+            long entityCode = 100200L;
+            newCode = getStringCode(entityName, prefix, entityCode);
+
+        } else if (entityName.equals("SUBJECT")) {
+            String prefix = "SUB";
+            long entityCode = 100300L;
+            newCode = getStringCode(entityName, prefix, entityCode);
+
+        } else if (entityName.equals("LEVEL")) {
+            String prefix = "LV";
+            long entityCode = 100400L;
+            newCode = getStringCode(entityName, prefix, entityCode);
+
+        } else if (entityName.equals("REPORT")) {
+            String prefix = "RP";
+            long entityCode = 100500L;
+            newCode = getStringCode(entityName, prefix, entityCode);
+
+        } else if (entityName.equals("INSTITUTION")) {
+            String prefix = "INS";
+            long entityCode = 100600L;
+            newCode = getStringCode(entityName, prefix, entityCode);
+
+        } else if (entityName.equals("SEMESTER")) {
+            String prefix = "SE";
+            long entityCode = 100700L;
+            newCode = getStringCode(entityName, prefix, entityCode);
+            
+        }
+
+        return newCode;
+    }
+
+    private String getStringCode(String entityName, String prefix, long entityCode) {
+        try {
+            EntityID_generation generateId = entityID_generationRepository.findByEntityName(entityName).orElse(
+                    new EntityID_generation(entityName, entityCode)
+            );
+            long code = generateId.getCode();
+            generateId.setCode(code + 1L);
+            entityID_generationRepository.save(generateId);
+
+            return prefix + String.valueOf(code);
+        }catch (Exception ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            return null;
+        }
+    }
+
+    //This clears cache when the grading criteria is updated
+    public void invalidateCache() {
+        cache.set(null);
+    }
+
+    //Load (Cached) list ordered by LowerRange
+    private List<GradeSystem> getOrderedCacheList() {
+        List<GradeSystem> list = cache.get();
+        if (list == null) {
+            list = gradeSystemRepository.findAllByOrderByLowerRange();
+            cache.set(list);
+        }
+        return list;
+    }
+
+    //Returns subject grade based on the score
+    public String getGradeAndDescription(Double totalScore) {
+        List<GradeSystem> list = getOrderedCacheList();
+
+        //Find matching range
+        for (GradeSystem grade : list) {
+            if (totalScore >= grade.getLowerRange() && totalScore <= grade.getUpperRange()) {
+                return grade.getGrade() + "_" + grade.getGradeDescription();
+            }
+        }
+        return "grade range not found";
+    }
+
+    //Extract grade
+    public String extractGrade(Double totalScore) {
+        String[] gradeAndDescription = getGradeAndDescription(totalScore).split("_");
+
+        if (gradeAndDescription.length == 2) {
+            return gradeAndDescription[0];
+        }
+        return null;
+    }
+
+    //Extract grade Description
+    public String extractDescription(Double totalScore) {
+        String[] gradeAndDescription = getGradeAndDescription(totalScore).split("_");
+
+        if (gradeAndDescription.length == 2) {
+            return gradeAndDescription[1];
+        }
+        return null;
+    }
+
+    //Method for finding the current semester
+    public String getCurrentSemester(String institutionId) {
+        LocalDate currentDate = LocalDate.now();
+
+        Institution institution = institutiionRepository.findByInstitutionId(institutionId).orElse(null);
+        if (institution == null)
+            return "";
+
+        List<Semester> semesters = institution.getSemester();
+        if (semesters == null)
+            return "";
+
+        for (Semester semester : semesters) {
+            LocalDate startDate = semester.getSemesterStartDate();
+            LocalDate endDate = semester.getSemesterEndDate();
+            LocalDate gradePeriod = endDate.plusWeeks(2);
+
+            // Check if current date is within semester range (inclusive)
+            if ((currentDate.isEqual(startDate) || currentDate.isAfter(startDate)) &&
+                    (currentDate.isEqual(endDate) || currentDate.isBefore(endDate))) {
+                return semester.getSemesterID();
+            }
+        }
+        return "";
+    }
+}
