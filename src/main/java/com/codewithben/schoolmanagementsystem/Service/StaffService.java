@@ -69,7 +69,7 @@ public class StaffService {
 
         Staffs existingStaff = staffsRepository.findByStatusAndInstitution_InstitutionId(status, institutionId).orElse(null);
         if (existingStaff != null) {
-            if (status.equals("Principal") || status.equals("Accountant")) {
+            if (status.equals("Accountant")) {
                 throw new Exception("Institution already has " + status);
             }
         }
