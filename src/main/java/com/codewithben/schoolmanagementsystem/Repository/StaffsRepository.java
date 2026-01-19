@@ -8,9 +8,11 @@ import java.util.Optional;
 
 @Repository
 public interface StaffsRepository extends JpaRepository<Staffs, Long> {
-    public Optional<Staffs> findByStaffId(String staffId);
+    Optional<Staffs> findByStaffId(String staffId);
 
-    public Optional<Staffs> findByphoneNumberAndInstitution_InstitutionId(String phoneNumber, String institutionId);
+    boolean existsByPhoneNumberAndInstitution_InstitutionId(String phoneNumber, String institutionId);
 
-    public Optional<Staffs> findByFirstNameAndLastName(String firstName, String lastName);
+    Optional<Staffs> findByStatusAndInstitution_InstitutionId(String status, String institutionId);
+
+    boolean existsByFirstNameAndLastName(String firstName, String lastName);
 }

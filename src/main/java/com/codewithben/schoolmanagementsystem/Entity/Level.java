@@ -12,8 +12,9 @@ public class Level {
 
     private String levelName;
 
-    @OneToOne(mappedBy = "level")
-    private Staffs instructor;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "staff_staffId")
+    private Staffs staff;
 
     @ManyToOne
     @JoinColumn(nullable = false, name = "Institution_institutionId")
@@ -47,14 +48,14 @@ public class Level {
         this.levelName = className;
     }
 
-    public Staffs getInstructor() {
+    public Staffs getStaff() {
 
-        return instructor;
+        return staff;
     }
 
-    public void setInstructor(Staffs instructorId) {
+    public void setStaff(Staffs instructorId) {
 
-        this.instructor = instructorId;
+        this.staff = instructorId;
     }
 
     public Institution getInstitution() {

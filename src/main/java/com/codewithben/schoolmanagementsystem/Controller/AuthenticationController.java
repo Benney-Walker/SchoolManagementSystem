@@ -82,10 +82,8 @@ public class AuthenticationController {
                     "message", response
             ));
         } catch (Exception e) {
-            return ResponseEntity.ok(Map.of(
-                    "status", "failed",
-                    "message", e.getMessage()
-            ));
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 

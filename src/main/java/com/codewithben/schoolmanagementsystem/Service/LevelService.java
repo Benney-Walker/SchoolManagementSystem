@@ -1,5 +1,6 @@
 package com.codewithben.schoolmanagementsystem.Service;
 
+import com.codewithben.schoolmanagementsystem.DTO.Academics.GradeInfoResponse;
 import com.codewithben.schoolmanagementsystem.DTO.Academics.LevelCaching;
 import com.codewithben.schoolmanagementsystem.DTO.Academics.SemesterCaching;
 import com.codewithben.schoolmanagementsystem.Entity.*;
@@ -55,12 +56,15 @@ public class LevelService {
             level = new Level();
             level.setLevelName(className);
             level.setLevelID(utilityClass.generateEntityId("LEVEL"));
-            level.setInstitution(institution);
-            level.setInstructor(staffs);
-            levelRepository.saveAndFlush(level);
+            level.setInstitution(staffs.getInstitution());
+            level.setStaff(staffs); // Link Level -> Staff
+
+            level = levelRepository.saveAndFlush(level);
 
             staffs.setLevel(level);
+
             staffsRepository.save(staffs);
+
             return "Success";
         }
         throw new Exception("Level already exists");
@@ -140,7 +144,7 @@ public class LevelService {
         return "Success";
     }
 
-    public String loadGradeNameAndSize(String staffId) throws  Exception {
+    public GradeInfoResponse loadGradeNameAndSize(String staffId) throws  Exception {
         Staffs staffs = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staffs == null)
             throw new Exception("Staff not found");
@@ -150,8 +154,16 @@ public class LevelService {
             throw new Exception("Level not found");
 
         String levelName = level.getLevelName();
+        String[] response = levelName.split("_");
+        String gradeName = null;
+        String gradeNumber = null;
+        if (response.length == 2) {
+            gradeName = response[0];
+            gradeNumber = response[1];
+        }
         long studentCount = level.getStudents().size();
+        System.out.println("GradeName: " + gradeName + " gradeNumber: " + gradeNumber + " studentCount: " + studentCount);
 
-        return studentCount + " " + levelName;
+        return new GradeInfoResponse(gradeName, gradeNumber, String.valueOf(studentCount));
     }
 }

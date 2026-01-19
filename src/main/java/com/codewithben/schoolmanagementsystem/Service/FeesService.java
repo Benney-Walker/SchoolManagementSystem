@@ -1,9 +1,6 @@
 package com.codewithben.schoolmanagementsystem.Service;
 
-import com.codewithben.schoolmanagementsystem.DTO.Account.ClassFeesSummary;
-import com.codewithben.schoolmanagementsystem.DTO.Account.FeesSummaryTable;
-import com.codewithben.schoolmanagementsystem.DTO.Account.StudentFeesPaymentDisplay;
-import com.codewithben.schoolmanagementsystem.DTO.Account.StudentPaymentHistory;
+import com.codewithben.schoolmanagementsystem.DTO.Account.*;
 import com.codewithben.schoolmanagementsystem.Entity.*;
 import com.codewithben.schoolmanagementsystem.Repository.*;
 import com.codewithben.schoolmanagementsystem.Utility.UtilityClass;
@@ -128,7 +125,7 @@ public class FeesService {
         if (level == null) {
             return 0.0;
         }
-        String currentSemesterId = utilityClass.getCurrentSemester(level.getInstitution().getInstitutionId());
+        String currentSemesterId = utilityClass.getCurrentSemesterId(level.getInstitution().getInstitutionId());
         Fees fees = feesRepository.findBySemester_SemesterIDAndLevel_LevelID(currentSemesterId, levelId).orElse(null);
         if (fees == null) {
             return 0.0;
@@ -144,7 +141,7 @@ public class FeesService {
         if (level == null) {
             return 0.0;
         }
-        String currentSemesterId = utilityClass.getCurrentSemester(level.getInstitution().getInstitutionId());
+        String currentSemesterId = utilityClass.getCurrentSemesterId(level.getInstitution().getInstitutionId());
         Fees fees = feesRepository.findBySemester_SemesterIDAndLevel_LevelID(currentSemesterId, levelId).orElse(null);
         if (fees == null) {
             return 0.0;
@@ -193,10 +190,13 @@ public class FeesService {
     public String updateSemesterFees(Double feesAmount, String semesterId, String levelID) throws Exception {
         Fees fees = feesRepository.findBySemester_SemesterIDAndLevel_LevelID(semesterId, levelID).orElse(null);
 
-        assert fees != null;
+        if (fees == null) {
+            throw new Exception("Fees not found");
+        }
+
         fees.setAmountToBePayed(feesAmount);
         feesRepository.save(fees);
-        return "Success";
+        return "Fees Updated Successfully";
     }
 
     @Transactional
@@ -284,7 +284,7 @@ public class FeesService {
         List<FeesSummaryTable> feesSummaryTables = new ArrayList<>();
 
         //Get current Semester
-        String currentSemester = utilityClass.getCurrentSemester(institution.getInstitutionId());
+        String currentSemester = utilityClass.getCurrentSemesterId(institution.getInstitutionId());
 
         for (Students student: students) {
             String levelId = student.getLevel().getLevelID();
@@ -335,7 +335,7 @@ public class FeesService {
 
         List<FeesSummaryTable> feesSummaryTables = new ArrayList<>();
 
-        String currentSemester = utilityClass.getCurrentSemester(institution.getInstitutionId());
+        String currentSemester = utilityClass.getCurrentSemesterId(institution.getInstitutionId());
         if (currentSemester == null || currentSemester.isEmpty()) {
             return new ArrayList<>();
         }
@@ -364,7 +364,6 @@ public class FeesService {
                 }
             }
 
-            // ✅ FIXED: Partially paid = paid something but less than total
             if (amountPaid > 0 && amountPaid < feeAmount) {
                 double balance = feeAmount - amountPaid;
                 FeesSummaryTable feesSummaryTable = new FeesSummaryTable(
@@ -393,7 +392,7 @@ public class FeesService {
         List<FeesSummaryTable> feesSummaryTables = new ArrayList<>();
 
         //Get current Semester
-        String currentSemester = utilityClass.getCurrentSemester(institution.getInstitutionId());
+        String currentSemester = utilityClass.getCurrentSemesterId(institution.getInstitutionId());
 
         for (Students student: students) {
             String levelId = student.getLevel().getLevelID();
@@ -426,5 +425,35 @@ public class FeesService {
             }
         }
         return feesSummaryTables;
+    }
+
+    public List<RecentPaymentTable> getRecentPayments(String staffId) throws Exception {
+        Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
+        if (staff == null) {
+            throw new Exception("Staff not found");
+        }
+
+        String institutionId = staff.getInstitution().getInstitutionId();
+
+        String currentSemester = utilityClass.getCurrentSemesterId(institutionId);
+
+        List<FeesReport> feesReports = feesReportRepository
+                .findByInstitution_InstitutionIdOrderByDateOfPaymentDesc(institutionId);
+
+        List<RecentPaymentTable> recentPaymentTables = new ArrayList<>();
+        for (FeesReport feesReport: feesReports) {
+            if (feesReport.getFees().getSemester().getSemesterID().equals(currentSemester)) {
+                RecentPaymentTable recentPaymentTable = new RecentPaymentTable(
+                        feesReport.getDateOfPayment().toString(),
+                        feesReport.getStudent().getStudentId(),
+                        feesReport.getStudent().getFirstName() + " " + feesReport.getStudent().getLastName(),
+                        feesReport.getAmountPaid().toString(),
+                        feesReport.getPersonWhoPaid(),
+                        feesReport.getFees().getLevel().getLevelName()
+                );
+                recentPaymentTables.add(recentPaymentTable);
+            }
+        }
+        return recentPaymentTables;
     }
 }

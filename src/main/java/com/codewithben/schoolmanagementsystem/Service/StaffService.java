@@ -7,6 +7,7 @@ import com.codewithben.schoolmanagementsystem.DTO.Institution.StaffCaching;
 import com.codewithben.schoolmanagementsystem.Entity.*;
 import com.codewithben.schoolmanagementsystem.Repository.*;
 import com.codewithben.schoolmanagementsystem.Utility.UtilityClass;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -33,14 +34,14 @@ public class StaffService {
 
     private final UtilityClass utilityClass;
 
-    private final ReportsRepository reportsRepository;
-
     private final InstitutiionRepository institutionRepository;
+
+    private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
     public StaffService(StaffsRepository staffsRepository, StudentsRepository studentsRepository, ResultsRepository resultsRepository,
                         SubjectsRepository subjectsRepository, SubjectScoreRepository subjectScoreRepository, SemesterRepository semesterRepository,
-                        LevelRepository levelRepository, UtilityClass utilityClass, ReportsRepository reportsRepository,
-                        InstitutiionRepository institutionRepository) {
+                        LevelRepository levelRepository, UtilityClass utilityClass,
+                        InstitutiionRepository institutionRepository,  BCryptPasswordEncoder bCryptPasswordEncoder) {
         this.staffsRepository = staffsRepository;
         this.studentsRepository = studentsRepository;
         this.resultsRepository = resultsRepository;
@@ -49,8 +50,8 @@ public class StaffService {
         this.semesterRepository = semesterRepository;
         this.levelRepository = levelRepository;
         this.utilityClass = utilityClass;
-        this.reportsRepository = reportsRepository;
         this.institutionRepository = institutionRepository;
+        this.bCryptPasswordEncoder = bCryptPasswordEncoder;
     }
 
     public String addNewStaff(String firstName, String surName, String gender, LocalDate dateOfBirth,
@@ -59,12 +60,22 @@ public class StaffService {
 
         Institution institution = institutionRepository.findByInstitutionId(institutionId).orElse(null);
         if (institution == null) {
-            return "invalid institution ID";
+            throw new Exception("invalid institution ID");
         }
 
-        Staffs existingStaff = staffsRepository.findByphoneNumberAndInstitution_InstitutionId(phoneNumber, institutionId).orElse(null);
+        if (staffsRepository.existsByPhoneNumberAndInstitution_InstitutionId(phoneNumber, institutionId)) {
+            throw new Exception("Phone number already in use");
+        }
+
+        Staffs existingStaff = staffsRepository.findByStatusAndInstitution_InstitutionId(status, institutionId).orElse(null);
         if (existingStaff != null) {
-            return "Staff already exists";
+            if (status.equals("Principal") || status.equals("Accountant")) {
+                throw new Exception("Institution already has " + status);
+            }
+        }
+
+        if (staffsRepository.existsByFirstNameAndLastName(firstName, surName)) {
+            throw new Exception("Staff already exists");
         }
 
         String staffID = utilityClass.generateEntityId("STAFF");
@@ -75,7 +86,9 @@ public class StaffService {
         staff.setGender(gender);
         staff.setDateOfBirth(dateOfBirth);
         staff.setEmail(email);
-        staff.setPassword(password);
+
+        String hashedPassword = bCryptPasswordEncoder.encode(password);
+        staff.setPassword(hashedPassword);
         staff.setPhoneNumber(phoneNumber);
         staff.setDateOfRegistration(LocalDate.now());
         staff.setStatus(status);
@@ -89,37 +102,11 @@ public class StaffService {
         return staffID;
     }
 
-    public List<ReportsDTO> displayReportsBasedOnStatus(String status) {
-        List<Reports> reports = reportsRepository.findReportsByStatus(status);
-
-        //Convert each entity into a DTO
-        return reports.stream().map(
-                report -> new ReportsDTO(
-                        report.getStaff(),
-                        report.getCreationDate(),
-                        report.getReportData()
-                )
-        ).collect(Collectors.toList());
-    }
-
-    public List<ReportsDTO> displayReportsBetween(LocalDateTime from,
-                                                                LocalDateTime to) {
-        List<Reports> reports = reportsRepository.findByCreationDateBetween(from, to);
-
-        return reports.stream().map(
-                report -> new ReportsDTO(
-                        report.getStaff(),
-                        report.getCreationDate(),
-                        report.getReportData()
-                )
-        ).collect(Collectors.toList());
-    }
-
     public FindStaffDTO findStaffById(String id) throws Exception {
         Staffs staff = staffsRepository.findByStaffId(id).orElse(null);
 
         if (staff == null) {
-            return null;
+            throw new Exception("Staff not found");
         }
 
         return new FindStaffDTO(
@@ -154,8 +141,22 @@ public class StaffService {
             throw new Exception("Invalid ID");
         }
 
-        if(!password.equals(staffs.getPassword())){
-            throw new Exception("Invalid Password");
+        String storedPassword = staffs.getPassword();
+        if (isBCrypt(storedPassword)) {
+            //Checks password for new account
+            if (!bCryptPasswordEncoder.matches(password, storedPassword)) {
+                throw new Exception("Invalid password");
+            }
+
+        } else {
+            //Checks password for old account, hash it and store hashed
+            if (!storedPassword.equals(password)) {
+                throw new Exception("Invalid password");
+            }
+
+            String newHashedPassword = bCryptPasswordEncoder.encode(password);
+            staffs.setPassword(newHashedPassword);
+            staffsRepository.save(staffs);
         }
 
         String staffStatus = staffs.getStatus();
@@ -175,6 +176,11 @@ public class StaffService {
         List<Staffs> staffs = institution.getStaff();
         return staffs.size();
     }
+
+    private boolean isBCrypt(String password) {
+        return password != null && password.startsWith("$2");
+    }
+
 
     public String addNewSubjects(String subjectName, String semesterId, String levelId) throws Exception {
             Semester semester = semesterRepository.findBySemesterID(semesterId).orElse(null);
@@ -258,28 +264,19 @@ public class StaffService {
     }
 
 
-    public String recoverStaffPassword(String staffId) throws Exception {
+    public String resetStaffPassword(String staffId, String newPassword) throws Exception {
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staff == null)
             throw new Exception("Staff not found");
 
-        return staff.getPassword();
-    }
-
-    //Method for adding complain or important message
-    public String addComplainOrMessage(String instructorId, String viewerConstraint, String message) throws Exception {
-        Staffs staff = staffsRepository.findByStaffId(instructorId).orElse(null);
-        if (staff == null) {
-            return "staff not found";
+        if (bCryptPasswordEncoder.matches(newPassword, staff.getPassword())) {
+            throw new Exception("You can't use old password");
         }
-        Reports report = new Reports();
-        report.setReportId(instructorId);
-        report.setCreationDate(LocalDateTime.now());
-        report.setReportData(message);
-        report.setStatus("UNCHECKED");
-        report.setConstraint(viewerConstraint);
-        reportsRepository.save(report);
-        return "success";
+
+        staff.setPassword(bCryptPasswordEncoder.encode(newPassword));
+        staffsRepository.save(staff);
+
+        return "Password reset successfull";
     }
 
     public List<StaffCaching> loadAllStaffInfo(String staffId) throws Exception {
@@ -298,8 +295,9 @@ public class StaffService {
                 loadInfo -> {
                     String staffIdMapping = loadInfo.getStaffId();
                     String staffFullNameMapping = loadInfo.getFirstName() + " " + loadInfo.getLastName();
+                    String staffRole = loadInfo.getStatus();
 
-                    return new StaffCaching(staffFullNameMapping, staffIdMapping);
+                    return new StaffCaching(staffFullNameMapping, staffIdMapping, staffRole);
                 }
         ).collect(Collectors.toList());
     }
@@ -315,15 +313,25 @@ public class StaffService {
         }
 
         List<Staffs> staffs = institution.getStaff();
-        return staffs.stream().map(
-                allStaff -> {
-                    String staffFullNameMapping = allStaff.getFirstName() + " " + allStaff.getLastName();
-                    String staffIdMapping = allStaff.getStaffId();
-                    String levelNameMapping = allStaff.getLevel().toString();
-
-                    return new RecentStaffView(staffIdMapping, staffFullNameMapping, levelNameMapping);
-                }
-        ).collect(Collectors.toList());
+        List<RecentStaffView> recentStaffViews = new ArrayList<>();
+        for(Staffs staffMember: staffs){
+            RecentStaffView recentStaffView;
+            if(staffMember.getLevel() == null) {
+                recentStaffView = new RecentStaffView(
+                        staffMember.getStaffId(),
+                        staffMember.getFirstName() + " " + staffMember.getLastName(),
+                        null
+                );
+            } else {
+                recentStaffView = new RecentStaffView(
+                        staffMember.getStaffId(),
+                        staffMember.getFirstName() + " " + staffMember.getLastName(),
+                        staffMember.getLevel().getLevelName()
+                );
+            }
+            recentStaffViews.add(recentStaffView);
+        }
+        return recentStaffViews;
     }
 
 

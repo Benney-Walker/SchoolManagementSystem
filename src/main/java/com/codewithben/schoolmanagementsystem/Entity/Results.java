@@ -31,13 +31,15 @@ public class Results {
 
     private LocalDate updatedAt;
 
-    private String updatedBy;
+    @ManyToOne
+    @JoinColumn(nullable = false)
+    private Staffs updatedBy;
 
     private Double totalScore;
 
     private Double averageScore;
 
-    private int position;
+    private String position;
 
 
     public long getResultId() {
@@ -96,11 +98,11 @@ public class Results {
         this.updatedAt = updatedAt;
     }
 
-    public String getUpdatedBy() {
+    public Staffs getUpdatedBy() {
         return updatedBy;
     }
 
-    public void setUpdatedBy(String updatedBy) {
+    public void setUpdatedBy(Staffs updatedBy) {
         this.updatedBy = updatedBy;
     }
 
@@ -120,11 +122,11 @@ public class Results {
         this.averageScore = averageScore;
     }
 
-    public int getPosition() {
+    public String getPosition() {
         return position;
     }
 
-    public void setPosition(int position) {
+    public void setPosition(String position) {
         this.position = position;
     }
 }

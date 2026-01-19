@@ -1,19 +1,14 @@
 package com.codewithben.schoolmanagementsystem.Controller;
 
-import com.codewithben.schoolmanagementsystem.DTO.Academics.LevelCaching;
-import com.codewithben.schoolmanagementsystem.DTO.Academics.RecentStudentsDTO;
-import com.codewithben.schoolmanagementsystem.DTO.Academics.SemesterCaching;
+import com.codewithben.schoolmanagementsystem.DTO.Academics.*;
 import com.codewithben.schoolmanagementsystem.DTO.Institution.AddNewSemester;
+import com.codewithben.schoolmanagementsystem.DTO.Institution.PasswordRecoveryDTO;
 import com.codewithben.schoolmanagementsystem.DTO.Institution.StaffCaching;
 import com.codewithben.schoolmanagementsystem.Entity.Semester;
 import com.codewithben.schoolmanagementsystem.Entity.Staffs;
-import com.codewithben.schoolmanagementsystem.Repository.InstitutiionRepository;
 import com.codewithben.schoolmanagementsystem.Repository.SemesterRepository;
 import com.codewithben.schoolmanagementsystem.Repository.StaffsRepository;
-import com.codewithben.schoolmanagementsystem.Service.FeesService;
-import com.codewithben.schoolmanagementsystem.Service.LevelService;
-import com.codewithben.schoolmanagementsystem.Service.StaffService;
-import com.codewithben.schoolmanagementsystem.Service.StudentService;
+import com.codewithben.schoolmanagementsystem.Service.*;
 import com.codewithben.schoolmanagementsystem.Utility.UtilityClass;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -32,27 +27,28 @@ public class PrincipalController {
 
     private final StudentService studentService;
 
-    private final FeesService feesService;
-
     private final StaffsRepository staffsRepository;
-
-    private final InstitutiionRepository institutionRepository;
 
     private final SemesterRepository semesterRepository;
 
     private final UtilityClass utilityClass;
 
+    private final InstitutionService institutionService;
+
+    private final ReportService reportService;
+
     public PrincipalController( LevelService levelService, StaffService staffService, StudentService studentService,
-                                FeesService feesService, StaffsRepository staffsRepository, InstitutiionRepository institutionRepository,
-                                SemesterRepository semesterRepository, UtilityClass utilityClass) {
+                                StaffsRepository staffsRepository, InstitutionService institutionService,
+                                SemesterRepository semesterRepository, UtilityClass utilityClass,
+                                ReportService reportService) {
         this.levelService = levelService;
         this.staffService = staffService;
         this.studentService = studentService;
-        this.feesService = feesService;
         this.staffsRepository = staffsRepository;
-        this.institutionRepository = institutionRepository;
+        this.institutionService = institutionService;
         this.semesterRepository = semesterRepository;
         this.utilityClass = utilityClass;
+        this.reportService = reportService;
     }
 
     @GetMapping("recently-added-students/{staffId}")
@@ -61,7 +57,7 @@ public class PrincipalController {
         if (staff == null)
             return new ArrayList<>();
         String institutionId = staff.getInstitution().getInstitutionId();
-        String semesterId = utilityClass.getCurrentSemester(institutionId);
+        String semesterId = utilityClass.getCurrentSemesterId(institutionId);
         Semester semester = semesterRepository.findBySemesterID(semesterId).orElse(null);
         if (semester == null)
             return new ArrayList<>();
@@ -83,7 +79,6 @@ public class PrincipalController {
 
     @GetMapping("/load-staffs-info/{staffId}")
     public List<StaffCaching> getAllStaffInfo(@PathVariable String staffId) {
-        System.out.println("Error: " + staffId);
         if (staffId == null)
             return new ArrayList<>();
 
@@ -95,21 +90,16 @@ public class PrincipalController {
         }
     }
 
-    @PostMapping("/recover-staff-password/{staffId}")
-    public ResponseEntity<?> recoverStaffPassword(@PathVariable String staffId) {
+    @PostMapping("/reset-staff-password/{staffId}/{newPassword}")
+    public ResponseEntity<PasswordRecoveryDTO> recoverStaffPassword(@PathVariable String staffId,
+                                                                    @PathVariable String newPassword) {
         try {
-            //Response contains staff password from database
-            String response = staffService.recoverStaffPassword(staffId);
-            return ResponseEntity.ok(Map.of(
-                    "status", "success",
-                    "message", response
-            ));
+            String response = staffService.resetStaffPassword(staffId, newPassword);
+
+            return ResponseEntity.ok().body(new PasswordRecoveryDTO("success", response));
         } catch (Exception ex) {
             System.out.println(ex.getMessage());
-            return ResponseEntity.ok(Map.of(
-                    "status", "failed",
-                    "message", ex.getMessage()
-            ));
+            return ResponseEntity.badRequest().body(new PasswordRecoveryDTO("failed", ex.getMessage()));
         }
     }
 
@@ -142,6 +132,30 @@ public class PrincipalController {
                     "status", "failed",
                     "message", ex.getMessage()
             ));
+        }
+    }
+
+    @PostMapping("/set-grades")
+    public ResponseEntity<String> setGradingCriteria(@RequestBody GradingCriteria gradingCriteria) {
+        try {
+            String response = institutionService.setGradingCriteria(gradingCriteria);
+            return ResponseEntity.ok(response);
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
+    }
+
+    @GetMapping("/principal-view-class-results/{levelId}/{semesterId}")
+    public ResponseEntity<?> viewClassSemesterResults(@PathVariable String levelId,
+                                                      @PathVariable String semesterId) {
+
+        try {
+            List<GenerateStudentReport> reportData = reportService.generateClassReports(levelId, semesterId, null);
+            return ResponseEntity.ok().body(reportData);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 }

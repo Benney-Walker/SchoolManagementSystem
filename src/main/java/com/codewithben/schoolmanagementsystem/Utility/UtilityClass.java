@@ -1,12 +1,10 @@
 package com.codewithben.schoolmanagementsystem.Utility;
 
-import com.codewithben.schoolmanagementsystem.Entity.EntityID_generation;
-import com.codewithben.schoolmanagementsystem.Entity.GradeSystem;
-import com.codewithben.schoolmanagementsystem.Entity.Institution;
-import com.codewithben.schoolmanagementsystem.Entity.Semester;
+import com.codewithben.schoolmanagementsystem.Entity.*;
 import com.codewithben.schoolmanagementsystem.Repository.EntityID_generationRepository;
 import com.codewithben.schoolmanagementsystem.Repository.GradeSystemRepository;
 import com.codewithben.schoolmanagementsystem.Repository.InstitutiionRepository;
+import com.codewithben.schoolmanagementsystem.Repository.ResultsRepository;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -22,13 +20,16 @@ public class UtilityClass {
 
     private final InstitutiionRepository institutiionRepository;
 
+    private final ResultsRepository resultsRepository;
+
     private final AtomicReference<List<GradeSystem>> cache = new AtomicReference<>();
 
     public UtilityClass(EntityID_generationRepository entityID_generationRepository, InstitutiionRepository institutiionRepository,
-                        GradeSystemRepository gradeSystemRepository) {
+                        GradeSystemRepository gradeSystemRepository,  ResultsRepository resultsRepository) {
         this.entityID_generationRepository = entityID_generationRepository;
         this.gradeSystemRepository = gradeSystemRepository;
         this.institutiionRepository = institutiionRepository;
+        this.resultsRepository = resultsRepository;
     }
 
     //Id generation method
@@ -140,7 +141,7 @@ public class UtilityClass {
     }
 
     //Method for finding the current semester
-    public String getCurrentSemester(String institutionId) {
+    public String getCurrentSemesterId(String institutionId) {
         LocalDate currentDate = LocalDate.now();
 
         Institution institution = institutiionRepository.findByInstitutionId(institutionId).orElse(null);
@@ -158,10 +159,42 @@ public class UtilityClass {
 
             // Check if current date is within semester range (inclusive)
             if ((currentDate.isEqual(startDate) || currentDate.isAfter(startDate)) &&
-                    (currentDate.isEqual(endDate) || currentDate.isBefore(endDate))) {
+                    (currentDate.isEqual(endDate) || currentDate.isBefore(endDate))
+                    || currentDate.isBefore(gradePeriod)) {
                 return semester.getSemesterID();
             }
         }
         return "";
     }
+
+    public String getResultPosition(Staffs staff, Semester semester, double total) {
+        Level level = staff.getLevel();
+
+        List<Results> results = resultsRepository
+                .findByLevel_LevelIDAndSemester_SemesterID(
+                        level.getLevelID(), semester.getSemesterID());
+
+        long higherScores = results.stream()
+                .filter(r -> r.getTotalScore() > total)
+                .count();
+
+        int position = (int) higherScores + 1;
+        System.out.println("Higher Scores: " + position);
+
+        return ordinal(position);
+    }
+
+    private String ordinal(int number) {
+        if (number >= 11 && number <= 13) {
+            return number + "th";
+        }
+        switch (number % 10) {
+            case 1: return number + "st";
+            case 2: return number + "nd";
+            case 3: return number + "rd";
+            default: return number + "th";
+        }
+    }
+
+
 }

@@ -1,5 +1,6 @@
 package com.codewithben.schoolmanagementsystem.Entity;
 
+import com.codewithben.schoolmanagementsystem.Contants.StudentStatus;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
@@ -51,6 +52,13 @@ public class Students {
 
     @OneToMany(mappedBy = "student")
     private List<Results> results;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private StudentStatus studentStatus;
+
+    @OneToMany(mappedBy = "student")
+    private List<Attendance> attendance;
 
     public String getStudentId() {
         return studentId;
@@ -169,5 +177,21 @@ public class Students {
 
     public void setSubjectScore(List<SubjectScore> subjectScore) {
         this.subjectScore = subjectScore;
+    }
+
+    public StudentStatus getStudentStatus() {
+        return studentStatus;
+    }
+
+    public void setStudentStatus(StudentStatus studentStatus) {
+        this.studentStatus = studentStatus;
+    }
+
+    public List<Attendance> getAttendance() {
+        return attendance;
+    }
+
+    public void setAttendance(List<Attendance> attendance) {
+        this.attendance = attendance;
     }
 }

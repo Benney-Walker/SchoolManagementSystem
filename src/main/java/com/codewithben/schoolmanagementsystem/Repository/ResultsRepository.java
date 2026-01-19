@@ -1,6 +1,8 @@
 package com.codewithben.schoolmanagementsystem.Repository;
 
 import com.codewithben.schoolmanagementsystem.Entity.Results;
+import com.codewithben.schoolmanagementsystem.Entity.Semester;
+import com.codewithben.schoolmanagementsystem.Entity.Students;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -13,5 +15,7 @@ public interface ResultsRepository extends JpaRepository<Results, Long> {
             String studentId, String semesterId, String levelId
     );
 
-    Optional<Results> findByStudent_StudentIdAndLevel_LevelID(String studentId, String levelId);
+    List<Results> findByLevel_LevelIDAndSemester_SemesterID(String levelId, String semesterId);
+
+    Optional<Results> findByStudentAndSemester(Students student, Semester semester);
 }

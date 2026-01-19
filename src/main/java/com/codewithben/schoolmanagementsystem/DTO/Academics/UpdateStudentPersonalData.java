@@ -15,6 +15,8 @@ public class UpdateStudentPersonalData {
 
     private String gradeName;
 
+    private String status;
+
     public String getStudentId() {
         return studentId;
     }
@@ -37,5 +39,13 @@ public class UpdateStudentPersonalData {
 
     public String getGradeName() {
         return gradeName;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStudentId(String studentId) {
+        this.studentId = studentId;
     }
 }

@@ -8,5 +8,5 @@ import java.util.List;
 public interface FeesReportRepository extends JpaRepository<FeesReport, Long> {
     List<FeesReport> findByStudent_StudentIdAndFees_FeesId(String studentId, int feesId);
 
-    List<FeesReport> findByFees_FeesId(int feesId);
+    List<FeesReport> findByInstitution_InstitutionIdOrderByDateOfPaymentDesc(String institutionId);
 }

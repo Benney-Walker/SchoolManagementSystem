@@ -3,39 +3,28 @@ package com.codewithben.schoolmanagementsystem.DTO.Academics;
 import java.util.List;
 
 public class SubjectScores {
-    private String studentId;
+    private String subjectName;
 
-    private String studentName;
+    private String subjectId;
 
-    private List<GetSubjectStudents> getSubjectStudents;
+    private List<StudentsScoresTable> scoresTable;
 
-    public SubjectScores(String studentId, String studentName, List<GetSubjectStudents> getSubjectStudents) {
-        this.studentId = studentId;
-        this.studentName = studentName;
-        this.getSubjectStudents = getSubjectStudents;
+    public SubjectScores(String subjectName, String subjectId, List<StudentsScoresTable> scoresTable) {
+        this.subjectName = subjectName;
+        this.subjectId = subjectId;
+        this.scoresTable = scoresTable;
     }
 
-    public String getStudentId() {
-        return studentId;
+    public String getSubjectName() {
+        return subjectName;
     }
 
-    public void setStudentId(String studentId) {
-        this.studentId = studentId;
+    public String getSubjectId() {
+        return subjectId;
     }
 
-    public String getStudentName() {
-        return studentName;
-    }
 
-    public void setStudentName(String studentName) {
-        this.studentName = studentName;
-    }
-
-    public List<GetSubjectStudents> getGetSubjectStudents() {
-        return getSubjectStudents;
-    }
-
-    public void setGetSubjectStudents(List<GetSubjectStudents> getSubjectStudents) {
-        this.getSubjectStudents = getSubjectStudents;
+    public List<StudentsScoresTable> getScoresTable() {
+        return scoresTable;
     }
 }

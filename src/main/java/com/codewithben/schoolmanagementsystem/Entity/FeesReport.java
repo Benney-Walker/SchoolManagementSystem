@@ -28,6 +28,9 @@ public class FeesReport {
     @JoinColumn(name = "fees_feesId")
     private Fees fees;
 
+    @ManyToOne
+    private Institution institution;
+
     public long getFeesReportId() {
         return feesReportId;
     }

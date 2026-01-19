@@ -6,9 +6,7 @@ import com.codewithben.schoolmanagementsystem.DTO.Institution.RecentStaffView;
 import com.codewithben.schoolmanagementsystem.DTO.Institution.StudentListPrint;
 import com.codewithben.schoolmanagementsystem.Entity.Staffs;
 import com.codewithben.schoolmanagementsystem.Repository.StaffsRepository;
-import com.codewithben.schoolmanagementsystem.Service.LevelService;
-import com.codewithben.schoolmanagementsystem.Service.StaffService;
-import com.codewithben.schoolmanagementsystem.Service.StudentService;
+import com.codewithben.schoolmanagementsystem.Service.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,12 +26,19 @@ public class StaffController {
 
     private final StudentService studentService;
 
+    private final ReportService reportService;
+
+    private final JasperReportService jasperReportService;
+
     public StaffController(LevelService levelService, StaffService staffService,
-                           StaffsRepository staffsRepository, StudentService studentService) {
+                           StaffsRepository staffsRepository, StudentService studentService,
+                           ReportService reportService,  JasperReportService jasperReportService) {
         this.levelService = levelService;
         this.staffService = staffService;
         this.staffsRepository = staffsRepository;
         this.studentService = studentService;
+        this.reportService = reportService;
+        this.jasperReportService = jasperReportService;
     }
 
     @GetMapping("/total-staffs/{staffId}")
@@ -127,14 +132,6 @@ public class StaffController {
         String parentName = addNewStudent.getParentName();
         String guardianContact = addNewStudent.getGuardianContact();
         String staffId = addNewStudent.getStaffId();
-        System.out.println(firstName);
-        System.out.println(lastName);
-        System.out.println(levelId);
-        System.out.println(gender);
-        System.out.println(dateOfBirth);
-        System.out.println(hometown);
-        System.out.println(parentName);
-        System.out.println(guardianContact);
 
         try {
             String response = studentService.addNewStudent(firstName, lastName, gender, dateOfBirth, hometown, parentName,
@@ -160,9 +157,11 @@ public class StaffController {
         String dateOfBirth = updateStudentPersonalData.getDateOfBirth().toString();
         String guardianName = updateStudentPersonalData.getGuardianName();
         String guardianContact = updateStudentPersonalData.getGuardianContact();
+        String status = updateStudentPersonalData.getStatus();
 
         try {
-            String response = studentService.updateStudentPersonalData(studentId, gender, dateOfBirth, guardianName, guardianContact);
+            String response = studentService.updateStudentPersonalData(studentId, gender, dateOfBirth, guardianName, guardianContact,
+                    status);
             return ResponseEntity.ok(Map.of(
                     "status", response
             ));
@@ -191,7 +190,6 @@ public class StaffController {
         String subjectName = addNewSubject.getSubjectName();
         String levelId = addNewSubject.getGradeId();
         String semesterId = addNewSubject.getSemesterId();
-        System.out.println(semesterId);
 
         try {
             //Response contains subject Id
@@ -212,12 +210,12 @@ public class StaffController {
     }
 
     @GetMapping("/load-grade-and-size/{staffId}")
-    public String loadGradeAndSize(@PathVariable String staffId) {
+    public GradeInfoResponse loadGradeAndSize(@PathVariable String staffId) {
         try {
             return levelService.loadGradeNameAndSize(staffId);
         } catch (Exception ex) {
             ex.printStackTrace();
-            return ex.getMessage();
+            return new GradeInfoResponse(ex.getMessage(), null, null);
         }
     }
 
@@ -232,12 +230,13 @@ public class StaffController {
     }
 
     @GetMapping("/load-subject-students/{subjectId}")
-    public SubjectScores getSubjectStudents(@PathVariable String subjectId) {
+    public ResponseEntity<SubjectScores> getSubjectStudents(@PathVariable String subjectId) {
         try {
-            return studentService.getSubjectStudents(subjectId);
+            SubjectScores subjectScores = studentService.getSubjectStudents(subjectId);
+            return ResponseEntity.ok().body(subjectScores);
         } catch (Exception ex) {
             ex.printStackTrace();
-            return null;
+            return ResponseEntity.badRequest().body(null);
         }
     }
 
@@ -245,20 +244,16 @@ public class StaffController {
     public ResponseEntity<?> saveStudentScores(@RequestParam String studentId,
                                                @RequestParam String subjectId,
                                                @RequestParam String classScore,
-                                               @RequestParam String examScore) {
+                                               @RequestParam String examScore,
+                                               @RequestParam String staffId) {
         try {
             String response = studentService.addStudentSubjectScores(
-                    studentId, subjectId, Double.parseDouble(classScore), Double.parseDouble(examScore)
-            );
-            return ResponseEntity.ok(Map.of(
-                    "status", response
-            ));
+                    studentId, subjectId, Double.parseDouble(classScore), Double.parseDouble(examScore),
+                    staffId);
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.ok(Map.of(
-                    "status", "failed",
-                    "message", e.getMessage()
-            ));
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
@@ -269,6 +264,112 @@ public class StaffController {
         } catch (Exception ex) {
             ex.printStackTrace();
             return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @GetMapping("/generate-class-report/{staffId}/{semesterId}/{promotionGradeId}")
+    public ResponseEntity<?> generateStudentReports(@PathVariable String staffId,
+                                                    @PathVariable String semesterId,
+                                                    @PathVariable String promotionGradeId) {
+
+        Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
+        if (staff == null || staff.getLevel() == null) {
+            return ResponseEntity.badRequest().body("Staff not found or Not assigned Grade");
+        }
+
+        try {
+            List<GenerateStudentReport> reportData = reportService.generateClassReports(staff.getLevel().getLevelID(), semesterId,
+                    promotionGradeId);
+
+            byte[] reportPDF = jasperReportService.generateClassReport(reportData, staff.getInstitution().getInstitutionName());
+
+            return ResponseEntity.ok().body(reportPDF);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
+    }
+
+    @GetMapping("/view-class-results/{staffId}/{semesterId}")
+    public ResponseEntity<?> viewClassSemesterResults(@PathVariable String staffId,
+                                                      @PathVariable String semesterId) {
+        Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
+        if (staff == null || staff.getLevel() == null) {
+            return ResponseEntity.badRequest().body("Staff not found or Not assigned Grade");
+        }
+
+        try {
+            List<GenerateStudentReport> reportData = reportService.generateClassReports(staff.getLevel().getLevelID(), semesterId, null);
+            return ResponseEntity.ok().body(reportData);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/move-passed-students")
+    public ResponseEntity<?> movePassedStudents(@RequestParam String staffId, @RequestParam String semesterId,
+            @RequestParam String passTotalScore, @RequestParam String nextLevelId) {
+
+        Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
+        if (staff == null || staff.getLevel() == null) {
+            return ResponseEntity.badRequest().body("Staff not found or Not assigned Grade");
+        }
+
+        try {
+            String response = reportService.movePassedStudents(staffId, nextLevelId, semesterId, Double.parseDouble(passTotalScore));
+            return ResponseEntity.ok().body(response);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
+    }
+
+    @GetMapping("/load-students-for-attendance/{levelId}/{date}")
+    public ResponseEntity<?> loadStudentsForAttendance(@PathVariable String levelId,
+                                                       @PathVariable String date) {
+        try {
+            return ResponseEntity.ok(
+                    studentService.loadStudentForAttendance(levelId, date)
+            );
+        }catch (Exception ex) {
+            ex.printStackTrace();
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
+    }
+
+    @PostMapping("/mark-attendance")
+    public ResponseEntity<?> markAttendance(@RequestBody Attendance attendance) {
+        String studentId = attendance.getStudentId();
+        String staffId = attendance.getStaffId();
+        String levelId = attendance.getLevelId();
+        String status = attendance.getStatus().toUpperCase();
+
+        try {
+            return ResponseEntity.ok(studentService.markStudentAttendance(
+                    studentId, staffId, levelId, status
+            ));
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
+    }
+
+    @PutMapping("/update-attendance")
+    public ResponseEntity<?> updatedAttendance(@RequestParam String studentId,
+                                               @RequestParam String staffId,
+                                               @RequestParam String levelId,
+                                               @RequestParam String status,
+                                               @RequestParam String dateMarked) {
+        try {
+            return ResponseEntity.ok(
+                    studentService.updateStudentAttendance(
+                            studentId, staffId, levelId, status, LocalDate.parse(dateMarked)
+                    )
+            );
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return ResponseEntity.badRequest().body(ex.getMessage());
         }
     }
 }

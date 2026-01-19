@@ -1,6 +1,6 @@
 package com.codewithben.schoolmanagementsystem.DTO.Academics;
 
-public class GetSubjectStudents {
+public class StudentsScoresTable {
     private String studentId;
 
     private String studentName;
@@ -9,7 +9,7 @@ public class GetSubjectStudents {
 
     private String examScore;
 
-    public GetSubjectStudents(String studentId, String studentName, String classScore, String examScore) {
+    public StudentsScoresTable(String studentId, String studentName, String classScore, String examScore) {
         this.studentId = studentId;
         this.studentName = studentName;
         this.classScore = classScore;

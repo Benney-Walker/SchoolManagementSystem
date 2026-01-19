@@ -9,11 +9,15 @@ public class RecentStudentsDTO {
 
     private String dateOfRegistration;
 
-    public RecentStudentsDTO(String studentId, String studentName, String studentGrade, String dateOfRegistration) {
+    private String status;
+
+    public RecentStudentsDTO(String studentId, String studentName, String studentGrade, String dateOfRegistration,
+                             String status) {
         this.studentId = studentId;
         this.studentName = studentName;
         this.studentGrade = studentGrade;
         this.dateOfRegistration = dateOfRegistration;
+        this.status = status;
     }
 
     public String getStudentId() {
@@ -46,5 +50,13 @@ public class RecentStudentsDTO {
 
     public void setDateOfRegistration(String dateOfRegistration) {
         this.dateOfRegistration = dateOfRegistration;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 }

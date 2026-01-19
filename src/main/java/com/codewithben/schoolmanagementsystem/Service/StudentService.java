@@ -1,8 +1,12 @@
 package com.codewithben.schoolmanagementsystem.Service;
 
+import com.codewithben.schoolmanagementsystem.Contants.AttendanceStatus;
+import com.codewithben.schoolmanagementsystem.Contants.StudentStatus;
 import com.codewithben.schoolmanagementsystem.DTO.Academics.*;
+import com.codewithben.schoolmanagementsystem.DTO.Institution.StudentAttendance;
 import com.codewithben.schoolmanagementsystem.DTO.Institution.StudentListPrint;
 import com.codewithben.schoolmanagementsystem.Entity.*;
+import com.codewithben.schoolmanagementsystem.Entity.Attendance;
 import com.codewithben.schoolmanagementsystem.Repository.*;
 import com.codewithben.schoolmanagementsystem.Utility.UtilityClass;
 import jakarta.transaction.Transactional;
@@ -33,9 +37,14 @@ public class StudentService {
 
     private final SubjectScoreRepository subjectScoreRepository;
 
+    private final GradeSystemRepository gradeSystemRepository;
+
+    private final AttendanceRepository attendanceRepository;
+
     public StudentService(StaffsRepository staffsRepository, LevelRepository levelRepository, StudentsRepository studentsRepository,
                           UtilityClass utilityClass, SubjectsRepository subjectsRepository, SemesterRepository semesterRepository,
-                          ResultsRepository resultsRepository, InstitutiionRepository institutionRepository, SubjectScoreRepository subjectScoreRepository) {
+                          ResultsRepository resultsRepository, InstitutiionRepository institutionRepository, SubjectScoreRepository subjectScoreRepository,
+                          GradeSystemRepository gradeSystemRepository,  AttendanceRepository attendanceRepository) {
         this.staffsRepository = staffsRepository;
         this.levelRepository = levelRepository;
         this.studentsRepository = studentsRepository;
@@ -45,6 +54,8 @@ public class StudentService {
         this.resultsRepository = resultsRepository;
         this.institutionRepository = institutionRepository;
         this.subjectScoreRepository = subjectScoreRepository;
+        this.gradeSystemRepository = gradeSystemRepository;
+        this.attendanceRepository = attendanceRepository;
     }
 
     //Method for adding new student
@@ -79,6 +90,7 @@ public class StudentService {
             student.setLevel(level);
             student.setRegistrationDate(LocalDate.now());
             student.setInstitution(institution);
+            student.setStudentStatus(StudentStatus.ACTIVE);
             studentsRepository.saveAndFlush(student);
 
             //Add student to level list
@@ -105,7 +117,18 @@ public class StudentService {
     }
 
     @Transactional
-    public String addStudentSubjectScores(String studentId, String subjectId, Double classScore, Double examScore) throws Exception {
+    public String addStudentSubjectScores(String studentId, String subjectId, Double classScore, Double examScore,
+                                          String staffId) throws Exception {
+        Staffs staff = staffsRepository.findByStaffId(staffId).
+                orElseThrow(() -> new Exception("Staff not found"));
+
+        List<GradeSystem> gradeSystem = gradeSystemRepository.findAllByInstitution_InstitutionId(
+                staff.getInstitution().getInstitutionId()
+        );
+        if (gradeSystem == null) {
+            throw new Exception("Grading criteria not added to system");
+        }
+
         Students student = studentsRepository.findByStudentId(studentId)
                 .orElseThrow(() -> new Exception("Student Not Found"));
 
@@ -114,6 +137,7 @@ public class StudentService {
 
         String semesterId = subject.getSemester().getSemesterID();
         String levelId = subject.getLevel().getLevelID();
+
 
         // Get or create Results for this student + semester + level
         Results result = resultsRepository
@@ -128,6 +152,7 @@ public class StudentService {
             result.setCreatedAt(LocalDate.now());
             result.setTotalScore(0.0);
             result.setAverageScore(0.0);
+            result.setUpdatedBy(staff);
             result = resultsRepository.save(result);
         }
 
@@ -143,7 +168,7 @@ public class StudentService {
             // Update existing
             oldTotalScore = existingScore.getTotalScore() != null ? existingScore.getTotalScore() : 0.0;
             existingScore.setClassScore(classScore);
-            existingScore.setExamScore(examScore);
+            existingScore.setExamScore((examScore/100)*50);
             existingScore.setTotalScore(totalScore);
             existingScore.setGrade(utilityClass.extractGrade(totalScore));
             existingScore.setRemarks(utilityClass.extractDescription(totalScore));
@@ -153,7 +178,7 @@ public class StudentService {
             SubjectScore subjectScore = new SubjectScore();
             subjectScore.setStudent(student);
             subjectScore.setSubject(subject);
-            subjectScore.setResults(result);  // 👈 Link to result
+            subjectScore.setResults(result);
             subjectScore.setClassScore(classScore);
             subjectScore.setExamScore(examScore);
             subjectScore.setTotalScore(totalScore);
@@ -163,19 +188,20 @@ public class StudentService {
         }
 
         // Recalculate result totals
-        updateResultTotals(result);
+        updateResultTotals(result, staff);
 
         return "success";
     }
 
-    private void updateResultTotals(Results result) {
+    private void updateResultTotals(Results result, Staffs staff) {
         List<SubjectScore> scores = subjectScoreRepository.findByResults_ResultId(result.getResultId());
 
+        double total = 0.0;
         if (scores == null || scores.isEmpty()) {
             result.setTotalScore(0.0);
             result.setAverageScore(0.0);
         } else {
-            double total = scores.stream()
+            total = scores.stream()
                     .mapToDouble(s -> s.getTotalScore() != null ? s.getTotalScore() : 0.0)
                     .sum();
             result.setTotalScore(total);
@@ -183,7 +209,11 @@ public class StudentService {
         }
 
         result.setUpdatedAt(LocalDate.now());
+        result.setUpdatedBy(staff);
+
+        result.setPosition(utilityClass.getResultPosition(staff, result.getSemester(), total));
         resultsRepository.save(result);
+
     }
 
     public StudentResult findStudentResults(String studentId, String semesterId, String levelId) throws Exception {
@@ -218,7 +248,7 @@ public class StudentService {
         String levelName = results.getLevel().getLevelName();
         Double totalScore = results.getTotalScore();
         Double averageScore = results.getAverageScore();
-        String position = String.valueOf(results.getPosition());
+        String position = results.getPosition();
         return new StudentResult(
                 studentID, studentName, levelName, semesterName, totalScore,
                 averageScore, position, subjectResults
@@ -252,40 +282,29 @@ public class StudentService {
                     String fullName = students.getFirstName() + " " + students.getLastName();
                     String studentLevel = students.getLevel().getLevelName();
                     String dateOfRegistration = students.getRegistrationDate().toString();
+                    String status = students.getStudentStatus().toString();
 
-                    return new RecentStudentsDTO(studentId, fullName, studentLevel, dateOfRegistration);
+                    return new RecentStudentsDTO(studentId, fullName, studentLevel, dateOfRegistration,  status);
                 }
         ).collect(Collectors.toList());
     }
 
-    private SubjectScore getSubjectScore(Double classScore, Double examScore, Subjects subject, Students student) {
-        //Add new subject scores for the student
-        SubjectScore subjectScore = new SubjectScore();
-        subjectScore.setClassScore(classScore);
-        subjectScore.setExamScore(examScore);
-        Double totalScore = subjectScore.getExamScore() + subjectScore.getExamScore();
-        subjectScore.setTotalScore(totalScore);
-        subjectScore.setRemarks(utilityClass.extractDescription(totalScore));
-        subjectScore.setGrade(utilityClass.extractGrade(totalScore));
-        subjectScore.setSubject(subject);
-        subjectScore.setStudent(student);
-        subjectScoreRepository.save(subjectScore);
-        return subjectScore;
-    }
-
     public String updateStudentPersonalData(String studentId, String gender, String dataOfBirth, String guardianName,
-                                            String guardianContact) throws Exception {
+                                            String guardianContact, String status) throws Exception {
         Students student = studentsRepository.findByStudentId(studentId).orElse(null);
         if (student == null) {
             throw new Exception("Student Not Found");
         }
 
+        StudentStatus studentStatus = StudentStatus.valueOf(status);
+
         student.setGender(gender);
         student.setDateOfBirth(LocalDate.parse(dataOfBirth));
         student.setParentName(guardianName);
         student.setParentPhoneNumber(guardianContact);
+        student.setStudentStatus(studentStatus);
         studentsRepository.save(student);
-        return "success";
+        return "Student information updated successfully";
     }
 
     public List<StudentsTableDTO> loadGradeStudents(String staffId) throws Exception {
@@ -320,7 +339,7 @@ public class StudentService {
                 .orElseThrow(() -> new Exception("Subject Not Found"));
 
         String subjectName = subject.getSubjectName();
-        List<GetSubjectStudents> subjectStudents = new ArrayList<>();
+        List<StudentsScoresTable> subjectStudents = new ArrayList<>();
 
         Level level = subject.getLevel();
         if (level == null) {
@@ -354,7 +373,7 @@ public class StudentService {
             }
 
             // Add ALL students, with or without scores
-            subjectStudents.add(new GetSubjectStudents(studentId, studentName, classScore, examScore));
+            subjectStudents.add(new StudentsScoresTable(studentId, studentName, classScore, examScore));
         }
 
         return new SubjectScores(subjectId, subjectName, subjectStudents);
@@ -377,5 +396,127 @@ public class StudentService {
                 }
         ).collect(Collectors.toList());
     }
+
+    public List<StudentAttendance> loadStudentForAttendance(String levelId, String attendanceDate) throws Exception {
+        List<StudentAttendance> attendanceList = new ArrayList<>();
+
+        if (attendanceDate.equals("no_date")) {
+            Level level = levelRepository.findByLevelID(levelId)
+                    .orElseThrow(() -> new Exception("Level Not Found"));
+
+            List<Students> students = level.getStudents();
+
+            for (Students student : students) {
+                if (student.getStudentStatus() == StudentStatus.ACTIVE) {
+                    StudentAttendance studentAttendance = new StudentAttendance(
+                            level.getLevelID(),
+                            student.getStudentId(),
+                            student.getFirstName() + " " + student.getLastName(),
+                            AttendanceStatus.ABSENT.toString()
+                    );
+                    attendanceList.add(studentAttendance);
+                }
+            }
+
+            return attendanceList;
+        }
+
+        List<Attendance> markedAttendance = attendanceRepository
+                .findByLevel_LevelIDAndDateMarked(levelId, LocalDate.parse(attendanceDate));
+        if (markedAttendance == null || markedAttendance.isEmpty()) {
+            throw new Exception("Date must today or earlier.");
+        }
+
+        for (Attendance attendance : markedAttendance) {
+            String studentName =
+                    attendance.getStudent().getFirstName() + " " + attendance.getStudent().getLastName();
+            StudentAttendance studentAttendance = new StudentAttendance(
+                    attendance.getLevel().getLevelID(),
+                    attendance.getStudent().getStudentId(),
+                    studentName,
+                    attendance.getStatus().toString()
+            );
+            attendanceList.add(studentAttendance);
+        }
+
+        return attendanceList;
+    }
+
+    public String markStudentAttendance(String studentId, String staffId, String levelId,
+                                        String status) throws Exception {
+
+        Students student = studentsRepository.findByStudentId(studentId)
+                .orElseThrow(() -> new Exception("Student Not Found"));
+
+        String currentSemesterId = utilityClass.getCurrentSemesterId(
+                student.getInstitution().getInstitutionId()
+        );
+
+        List<Attendance> markedAttendance = attendanceRepository
+                .findByLevel_LevelIDAndDateMarked(
+                        levelId, LocalDate.now()
+                );
+        if (markedAttendance != null && !markedAttendance.isEmpty()) {
+            throw new Exception("Today's attendance already marked");
+        }
+
+        Level level = levelRepository.findByLevelID(levelId)
+                .orElseThrow(() -> new Exception("Level Not Found"));
+
+        Semester semester = semesterRepository
+                .findBySemesterID(currentSemesterId).orElseThrow(() -> new Exception("Semester Not Found"));
+
+        Staffs staff = staffsRepository.findByStaffId(staffId)
+                .orElseThrow(() -> new Exception("Staff Not Found"));
+
+
+        Attendance attendance = new Attendance();
+        attendance.setStudent(student);
+        attendance.setSemester(semester);
+        attendance.setLevel(level);
+        attendance.setDateMarked(LocalDate.now());
+        attendance.setStatus(AttendanceStatus.valueOf(status));
+        attendance.setMarkedBy(staff);
+        attendanceRepository.save(attendance);
+
+        List<Attendance> studentAttendance = student.getAttendance();
+        if (studentAttendance == null || studentAttendance.isEmpty()) {
+            studentAttendance = new ArrayList<>();
+        }
+        studentAttendance.add(attendance);
+        studentsRepository.save(student);
+
+        return "success";
+    }
+
+    public String updateStudentAttendance(String studentId, String staffId, String levelId, String status,
+                                          LocalDate dateMarked) throws Exception {
+        if (dateMarked.isBefore(LocalDate.now())) {
+            throw new Exception("You can't update previous attendance");
+        }
+
+        Staffs staff = staffsRepository.findByStaffId(staffId)
+                .orElseThrow(() -> new Exception("Staff Not Found"));
+
+        List<Attendance> markedAttendance = attendanceRepository
+                .findByLevel_LevelIDAndDateMarked(
+                        levelId, LocalDate.now()
+                );
+
+        if (markedAttendance == null) {
+            throw new Exception("Today's attendance not marked");
+        }
+
+        for (Attendance attendance : markedAttendance) {
+            if (attendance.getStudent().getStudentId().equals(studentId)) {
+                attendance.setStatus(AttendanceStatus.valueOf(status));
+                attendance.setMarkedBy(staff);
+                attendanceRepository.save(attendance);
+            }
+        }
+
+        return "success";
+    }
+
 
 }

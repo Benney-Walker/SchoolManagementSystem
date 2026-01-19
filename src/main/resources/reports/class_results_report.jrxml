@@ -1,0 +1,486 @@
+<!-- Created with Jaspersoft Studio version 7.0.3.final using JasperReports Library version 7.0.3-41034ca841d452f3305ba55b9042260aaa1ab5dd  -->
+<jasperReport name="Daffodil_Report_Export_Fixed" language="java" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="d0f73448-43f2-4d05-a589-dfd449fcc729">
+	<style name="Table_CH" mode="Opaque" backcolor="#E8E8E8">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="Table_TD" mode="Opaque" backcolor="#FFFFFF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<dataset name="SubjectsDataset" uuid="9e7971b5-05b0-477e-8d8c-6794d308490a">
+		<field name="subjectName" class="java.lang.String"/>
+		<field name="classScore" class="java.lang.String"/>
+		<field name="examScore" class="java.lang.String"/>
+		<field name="total" class="java.lang.String"/>
+		<field name="position" class="java.lang.String"/>
+		<field name="description" class="java.lang.String"/>
+	</dataset>
+	<field name="studentId" class="java.lang.String"/>
+	<field name="studentName" class="java.lang.String"/>
+	<field name="className" class="java.lang.String"/>
+	<field name="semesterName" class="java.lang.String"/>
+	<field name="subjects" class="java.util.List"/>
+	<field name="academicYear" class="java.lang.String"/>
+	<field name="totalStudents" class="java.lang.String"/>
+	<field name="vacationDate" class="java.lang.String"/>
+	<field name="resumptionDate" class="java.lang.String"/>
+	<field name="promotedTo" class="java.lang.String"/>
+	<field name="attendanceMarked" class="java.lang.String"/>
+	<field name="totalAttendance" class="java.lang.String"/>
+	<field name="instructorName" class="java.lang.String"/>
+	<field name="currentDate" class="java.lang.String"/>
+	<field name="classPosition" class="java.lang.String"/>
+	<detail>
+		<band height="802" splitType="Stretch">
+			<element kind="staticText" uuid="d41b1a8c-7168-4a5b-9497-89d27617f59d" x="0" y="0" width="555" height="25" fontSize="18.0" bold="true" hTextAlign="Center">
+				<text><![CDATA[DAFFODIL INTERNATIONAL SCHOOL]]></text>
+			</element>
+			<element kind="staticText" uuid="dbf99cea-660a-4395-83cc-df0c74921e84" x="0" y="25" width="555" height="15" fontSize="9.0" bold="true" italic="true" hTextAlign="Center">
+				<text><![CDATA[MOTTO: BUILDING EXCEPTIONAL FOUNDATION FOR A REMARKABLE FUTURE]]></text>
+			</element>
+			<element kind="staticText" uuid="789122cd-2b2b-491f-8655-e580f9d6c13f" x="0" y="40" width="555" height="15" bold="true" hTextAlign="Center">
+				<text><![CDATA[WASSA SIMPA, TARKWA]]></text>
+			</element>
+			<element kind="staticText" uuid="51407804-2f5a-48c9-98a5-2111e00dddbe" x="0" y="60" width="555" height="20" fontSize="14.0" bold="true" hTextAlign="Center">
+				<text><![CDATA[TERMINAL REPORT]]></text>
+			</element>
+			<element kind="staticText" uuid="b8494282-5d6b-46e5-89d2-957cefdd60b8" x="10" y="90" width="40" height="15" bold="true">
+				<text><![CDATA[NAME:]]></text>
+			</element>
+			<element kind="textField" uuid="9e631aeb-ad90-4966-bbe0-409388af91f7" x="50" y="90" width="260" height="15">
+				<expression><![CDATA[$F{studentName}]]></expression>
+			</element>
+			<element kind="staticText" uuid="ec4fb5b0-eb50-4e27-9ee1-8ec0eb22cbdf" x="350" y="90" width="80" height="15" bold="true">
+				<text><![CDATA[STUDENT ID:]]></text>
+			</element>
+			<element kind="textField" uuid="55edb437-24d7-4b4e-965e-97bb10fa7a50" x="430" y="90" width="120" height="15">
+				<expression><![CDATA[$F{studentId}]]></expression>
+			</element>
+			<element kind="staticText" uuid="6d1b3e8a-3578-460a-8277-f1c881a28b57" x="10" y="110" width="50" height="15" bold="true">
+				<text><![CDATA[GRADE:]]></text>
+			</element>
+			<element kind="textField" uuid="25a9c4ce-cb2e-4338-a849-9bfe3c119067" x="60" y="110" width="100" height="15">
+				<expression><![CDATA[$F{className}]]></expression>
+			</element>
+			<element kind="staticText" uuid="1a1fd8e9-9055-42dd-8684-e7606e0e8a7c" x="180" y="110" width="80" height="15" bold="true">
+				<text><![CDATA[CLASS SIZE:]]></text>
+			</element>
+			<element kind="textField" uuid="d77b4c33-a85c-48c9-ac94-d67b12fc1c33" x="260" y="110" width="60" height="15">
+				<expression><![CDATA[$F{totalStudents}]]></expression>
+			</element>
+			<element kind="staticText" uuid="fc88c5b4-67a2-487b-a6b5-298d1271d0e5" x="350" y="110" width="40" height="15" bold="true">
+				<text><![CDATA[TERM:]]></text>
+			</element>
+			<element kind="textField" uuid="e20a6961-e1bc-41f1-9b52-a8b5403a7ffb" x="390" y="110" width="100" height="15">
+				<expression><![CDATA[$F{semesterName}]]></expression>
+			</element>
+			<element kind="staticText" uuid="0be1947f-bc42-44a8-85de-99d09a7a2729" x="10" y="130" width="40" height="15" bold="true">
+				<text><![CDATA[YEAR:]]></text>
+			</element>
+			<element kind="textField" uuid="45f5efe4-2d8d-42c8-b713-ce71a20e8188" x="50" y="130" width="100" height="15">
+				<expression><![CDATA[$F{academicYear}]]></expression>
+			</element>
+			<element kind="staticText" uuid="2bd8f6ba-cd71-4349-b746-c0c063bf25f3" x="180" y="130" width="70" height="15" bold="true">
+				<text><![CDATA[VACATION:]]></text>
+			</element>
+			<element kind="textField" uuid="ac931930-db9e-438f-809b-cfcfc0670691" x="250" y="130" width="100" height="15">
+				<expression><![CDATA[$F{vacationDate}]]></expression>
+			</element>
+			<element kind="staticText" uuid="b516db24-72f8-43f0-93c6-a7ec59f43966" x="350" y="130" width="90" height="15" bold="true">
+				<text><![CDATA[RESUMPTION:]]></text>
+			</element>
+			<element kind="textField" uuid="5e291aa8-43dc-4246-960f-0f031e09c886" x="440" y="130" width="100" height="15">
+				<expression><![CDATA[$F{resumptionDate}]]></expression>
+			</element>
+			<element kind="staticText" uuid="106151d6-860c-4be7-adbf-6411647a8248" x="230" y="90" width="60" height="15" bold="true">
+				<text><![CDATA[POSITION:]]></text>
+			</element>
+			<element kind="textField" uuid="c2c9c7e8-647c-4983-8beb-cee1bde05bc0" x="290" y="90" width="40" height="15" bold="true">
+				<expression><![CDATA[$F{classPosition}]]></expression>
+			</element>
+			<element kind="component" uuid="e930e665-15b0-4ca8-98f4-58e84ae3faeb" x="10" y="160" width="535" height="40">
+				<component kind="table">
+					<datasetRun uuid="a0c40a06-cfe9-4dac-a0ba-237c58f62c2e" subDataset="SubjectsDataset">
+						<dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource($F{subjects})]]></dataSourceExpression>
+					</datasetRun>
+					<column kind="single" uuid="cfb9e8e7-70a3-4258-8872-eccc0d32fc23" width="140">
+						<columnHeader height="20" style="Table_CH">
+							<element kind="staticText" uuid="93fcfba7-7fab-4d5d-82af-f1bc3d3698c9" x="0" y="0" width="140" height="20" bold="true" hTextAlign="Center">
+								<text><![CDATA[SUBJECT]]></text>
+							</element>
+						</columnHeader>
+						<detailCell height="20" style="Table_TD">
+							<element kind="textField" uuid="22a5411a-1b5f-4619-be05-b6b84e7ab568" x="5" y="0" width="135" height="20">
+								<expression><![CDATA[$F{subjectName}]]></expression>
+							</element>
+						</detailCell>
+					</column>
+					<column kind="single" uuid="bd5a58af-cd76-4885-bd38-061ff80adca8" width="80">
+						<columnHeader height="20" style="Table_CH">
+							<element kind="staticText" uuid="3a59a02e-f65e-4ec8-bdb9-dbadc9143c52" x="0" y="0" width="80" height="20" bold="true" hTextAlign="Center">
+								<text><![CDATA[CLASS SCORE]]></text>
+							</element>
+						</columnHeader>
+						<detailCell height="20" style="Table_TD">
+							<element kind="textField" uuid="69538ac8-9d32-4460-9951-19be362f6c5e" x="0" y="0" width="80" height="20" hTextAlign="Center">
+								<expression><![CDATA[$F{classScore}]]></expression>
+							</element>
+						</detailCell>
+					</column>
+					<column kind="single" uuid="83e1cdf7-1836-4dff-942d-ef5bb437e07f" width="80">
+						<columnHeader height="20" style="Table_CH">
+							<element kind="staticText" uuid="dd645277-4ce8-4391-83da-b9372ad05676" x="0" y="0" width="80" height="20" bold="true" hTextAlign="Center">
+								<text><![CDATA[EXAM SCORE]]></text>
+							</element>
+						</columnHeader>
+						<detailCell height="20" style="Table_TD">
+							<element kind="textField" uuid="171c5b21-1b63-4ff4-b47e-79c46bffeb15" x="0" y="0" width="80" height="20" hTextAlign="Center">
+								<expression><![CDATA[$F{examScore}]]></expression>
+							</element>
+						</detailCell>
+					</column>
+					<column kind="single" uuid="33df7d36-9fef-4ef0-be3a-ad7835cde588" width="80">
+						<columnHeader height="20" style="Table_CH">
+							<element kind="staticText" uuid="8265868e-0ae3-441e-b399-8c2a7ef794ad" x="0" y="0" width="80" height="20" bold="true" hTextAlign="Center">
+								<text><![CDATA[TOTAL SCORE]]></text>
+							</element>
+						</columnHeader>
+						<detailCell height="20" style="Table_TD">
+							<element kind="textField" uuid="1b7f41a5-1e90-4c46-a215-05bdc4ca9fab" x="0" y="0" width="80" height="20" hTextAlign="Center">
+								<expression><![CDATA[$F{total}]]></expression>
+							</element>
+						</detailCell>
+					</column>
+					<column kind="single" uuid="1ebf9233-c0bf-4f13-9cc8-b7a9086ae879" width="60">
+						<columnHeader height="20" style="Table_CH">
+							<element kind="staticText" uuid="937b5f69-6924-4c86-ad38-b15378ced81a" x="0" y="0" width="60" height="20" bold="true" hTextAlign="Center">
+								<text><![CDATA[GRADE]]></text>
+							</element>
+						</columnHeader>
+						<detailCell height="20" style="Table_TD">
+							<element kind="textField" uuid="754fe790-54d3-49d3-bf06-24f447780f03" x="0" y="0" width="60" height="20" hTextAlign="Center">
+								<expression><![CDATA[$F{position}]]></expression>
+							</element>
+						</detailCell>
+					</column>
+					<column kind="single" uuid="bfb4dac9-42cd-4f48-935c-06fadd95f5e2" width="95">
+						<columnHeader height="20" style="Table_CH">
+							<element kind="staticText" uuid="6f09c905-7faf-468a-9a12-7fb9c422e83c" x="0" y="0" width="95" height="20" bold="true" hTextAlign="Center">
+								<text><![CDATA[REMARKS]]></text>
+							</element>
+						</columnHeader>
+						<detailCell height="20" style="Table_TD">
+							<element kind="textField" uuid="6ba312c7-7a9f-4c05-85c3-e4f21e4267fb" x="5" y="0" width="90" height="20">
+								<expression><![CDATA[$F{description}]]></expression>
+							</element>
+						</detailCell>
+					</column>
+				</component>
+			</element>
+			<element kind="staticText" uuid="3d4db84b-ebde-4f74-bf95-1fb373010790" x="10" y="360" width="150" height="15" bold="true">
+				<text><![CDATA[GRADING SYSTEM]]></text>
+			</element>
+			<element kind="staticText" uuid="20bb7080-cf43-4b43-a09a-7000fd054ff5" x="10" y="375" width="535" height="20" fontSize="10.0" bold="true">
+				<text><![CDATA[80-100 (Proficiency) | 70-79 (Proficiency) | 60-69 (Proficiency) | 50-59 (Developing) | 49-0 (Emerging)]]></text>
+			</element>
+			<element kind="staticText" uuid="bb5a4313-6a7c-490b-bdc0-d41c40160bce" mode="Opaque" x="10" y="405" width="135" height="15" backcolor="#E8E8E8" bold="true">
+				<text><![CDATA[ CONDUCT]]></text>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+			</element>
+			<element kind="staticText" uuid="2682d7e5-4055-4a57-b949-3fedc9a19cdf" mode="Opaque" x="145" y="405" width="80" height="15" backcolor="#E8E8E8" bold="true" hTextAlign="Center">
+				<text><![CDATA[EXCELLENT]]></text>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+			</element>
+			<element kind="staticText" uuid="3d4b49bc-334e-4978-9c6b-526770b7b381" mode="Opaque" x="225" y="405" width="80" height="15" backcolor="#E8E8E8" bold="true" hTextAlign="Center">
+				<text><![CDATA[VERY GOOD]]></text>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+			</element>
+			<element kind="staticText" uuid="d549e34c-73dd-40d9-905c-886c5ea7346a" mode="Opaque" x="305" y="405" width="80" height="15" backcolor="#E8E8E8" bold="true" hTextAlign="Center">
+				<text><![CDATA[GOOD]]></text>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+			</element>
+			<element kind="staticText" uuid="5d83be86-b812-42f7-993d-0f74e18e32a4" mode="Opaque" x="385" y="405" width="80" height="15" backcolor="#E8E8E8" bold="true" hTextAlign="Center">
+				<text><![CDATA[FAIR]]></text>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+			</element>
+			<element kind="staticText" uuid="fa0f0a47-9dab-49cd-a499-5b97f2270dfe" mode="Opaque" x="465" y="405" width="80" height="15" backcolor="#E8E8E8" bold="true" hTextAlign="Center">
+				<text><![CDATA[NOT TO EXPECT.]]></text>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+			</element>
+			<element kind="staticText" uuid="67756978-dbce-4ed0-bc1e-d4f54a7e6042" x="10" y="420" width="135" height="15">
+				<text><![CDATA[ REGULAR]]></text>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+			</element>
+			<element kind="staticText" uuid="f0c469d3-8cb0-461e-9cf5-cd2473beb172" x="145" y="420" width="80" height="15">
+				<text><![CDATA[]]></text>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+			</element>
+			<element kind="staticText" uuid="d8688331-186c-4255-88f9-c593146a8f78" x="225" y="420" width="80" height="15">
+				<text><![CDATA[]]></text>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+			</element>
+			<element kind="staticText" uuid="d7399432-3e60-47fb-8126-b60aeaa11da2" x="305" y="420" width="80" height="15">
+				<text><![CDATA[]]></text>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+			</element>
+			<element kind="staticText" uuid="56dbe770-e1be-4a53-87e1-42bf1c38e379" x="385" y="420" width="80" height="15">
+				<text><![CDATA[]]></text>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+			</element>
+			<element kind="staticText" uuid="17e66c59-88f6-409d-bdc7-67a51ef73db2" x="465" y="420" width="80" height="15">
+				<text><![CDATA[]]></text>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+			</element>
+			<element kind="staticText" uuid="db7eda57-0155-4ada-93cb-10d79b4e2859" x="10" y="435" width="135" height="15">
+				<text><![CDATA[ PUNCTUAL]]></text>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+			</element>
+			<element kind="staticText" uuid="50b75faf-e255-4b37-a80d-1b89c9d5c8ce" x="145" y="435" width="80" height="15">
+				<text><![CDATA[]]></text>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+			</element>
+			<element kind="staticText" uuid="9818b263-27c8-40bd-a359-70a9c34ad01c" x="225" y="435" width="80" height="15">
+				<text><![CDATA[]]></text>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+			</element>
+			<element kind="staticText" uuid="1ff8e0f4-caad-4101-9ab5-ae495b63d783" x="305" y="435" width="80" height="15">
+				<text><![CDATA[]]></text>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+			</element>
+			<element kind="staticText" uuid="a763f20e-ddba-4bae-ac37-871425e6a448" x="385" y="435" width="80" height="15">
+				<text><![CDATA[]]></text>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+			</element>
+			<element kind="staticText" uuid="182398fb-89a3-4090-b3a5-9bc89eaeba6b" x="465" y="435" width="80" height="15">
+				<text><![CDATA[]]></text>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+			</element>
+			<element kind="staticText" uuid="54ae15a1-8424-4329-8ba4-27ad5d4b1f9d" x="10" y="450" width="135" height="15">
+				<text><![CDATA[ PHYSICAL APPEARANCE]]></text>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+			</element>
+			<element kind="staticText" uuid="444707ae-e121-4ae2-832a-9e4e4ef27a7c" x="145" y="450" width="80" height="15">
+				<text><![CDATA[]]></text>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+			</element>
+			<element kind="staticText" uuid="9e61cc2b-855a-4192-9ec1-12d4765ee3a7" x="225" y="450" width="80" height="15">
+				<text><![CDATA[]]></text>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+			</element>
+			<element kind="staticText" uuid="3de4e2d4-9ca1-4224-b012-abea0270aa55" x="305" y="450" width="80" height="15">
+				<text><![CDATA[]]></text>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+			</element>
+			<element kind="staticText" uuid="a86d2ac0-f6e5-48fe-a9fb-c49a33c4fbbb" x="385" y="450" width="80" height="15">
+				<text><![CDATA[]]></text>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+			</element>
+			<element kind="staticText" uuid="81a53912-16e8-4170-9b59-1ddf43a907fb" x="465" y="450" width="80" height="15">
+				<text><![CDATA[]]></text>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+			</element>
+			<element kind="staticText" uuid="466409f8-12ad-44ca-84d1-5a258580006d" x="10" y="465" width="135" height="15">
+				<text><![CDATA[ SOCIAL]]></text>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+			</element>
+			<element kind="staticText" uuid="200d6882-5e89-4251-a626-c97a3c2fd7a8" x="145" y="465" width="80" height="15">
+				<text><![CDATA[]]></text>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+			</element>
+			<element kind="staticText" uuid="a0786c0f-757f-4f17-9b77-9f1afc0f260b" x="225" y="465" width="80" height="15">
+				<text><![CDATA[]]></text>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+			</element>
+			<element kind="staticText" uuid="3180e2d3-393a-411a-b419-759d53bef596" x="305" y="465" width="80" height="15">
+				<text><![CDATA[]]></text>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+			</element>
+			<element kind="staticText" uuid="67c845b8-3ea1-4f9f-88a5-7a344092a76c" x="385" y="465" width="80" height="15">
+				<text><![CDATA[]]></text>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+			</element>
+			<element kind="staticText" uuid="b311f59f-a428-486f-9516-84130bf5782f" x="465" y="465" width="80" height="15">
+				<text><![CDATA[]]></text>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+			</element>
+			<element kind="staticText" uuid="65c12094-dd60-41c9-be80-32e25d61a80e" x="10" y="480" width="135" height="15">
+				<text><![CDATA[ EMOTIONAL]]></text>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+			</element>
+			<element kind="staticText" uuid="800a5ca2-428d-4e5f-863a-5428a7b8ccba" x="145" y="480" width="80" height="15">
+				<text><![CDATA[]]></text>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+			</element>
+			<element kind="staticText" uuid="de7350bf-f460-42e4-b122-b6c0cfc35ea3" x="225" y="480" width="80" height="15">
+				<text><![CDATA[]]></text>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+			</element>
+			<element kind="staticText" uuid="3247999e-55af-48fb-8459-b934e5715b8a" x="305" y="480" width="80" height="15">
+				<text><![CDATA[]]></text>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+			</element>
+			<element kind="staticText" uuid="89bf241e-1585-42ff-97d3-aa8fcd686438" x="385" y="480" width="80" height="15">
+				<text><![CDATA[]]></text>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+			</element>
+			<element kind="staticText" uuid="2581f7f9-83ef-4ae2-b304-a52f232c03b2" x="465" y="480" width="80" height="15">
+				<text><![CDATA[]]></text>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+			</element>
+			<element kind="staticText" uuid="e1780a86-b0ef-4b6b-a5b5-8742d76b3234" x="10" y="495" width="135" height="15">
+				<text><![CDATA[ COGNITIVE SKILLS]]></text>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+			</element>
+			<element kind="staticText" uuid="f156f361-0b03-46df-9fbc-f50c2377d230" x="145" y="495" width="80" height="15">
+				<text><![CDATA[]]></text>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+			</element>
+			<element kind="staticText" uuid="9166b45d-4ee0-4c44-85e0-e6df850af725" x="225" y="495" width="80" height="15">
+				<text><![CDATA[]]></text>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+			</element>
+			<element kind="staticText" uuid="1dd27b28-956b-4cb9-82d2-c15afb24f9fb" x="305" y="495" width="80" height="15">
+				<text><![CDATA[]]></text>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+			</element>
+			<element kind="staticText" uuid="d82fd8ab-8c3e-4a57-a352-bf1506ce45de" x="385" y="495" width="80" height="15">
+				<text><![CDATA[]]></text>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+			</element>
+			<element kind="staticText" uuid="0823634a-0179-44a2-9be5-4060c2c05e66" x="465" y="495" width="80" height="15">
+				<text><![CDATA[]]></text>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+			</element>
+			<element kind="staticText" uuid="bdb108fd-38f7-4cf4-9136-900d95ebd41a" x="10" y="550" width="80" height="15" bold="true">
+				<text><![CDATA[ATTENDANCE:]]></text>
+			</element>
+			<element kind="textField" uuid="46552784-394b-4a4a-a455-671e9299f1d4" x="90" y="550" width="50" height="15">
+				<expression><![CDATA[$F{attendanceMarked}]]></expression>
+			</element>
+			<element kind="staticText" uuid="630b3f1d-5ca4-4b18-88dd-9c43028742ce" x="150" y="550" width="60" height="15" bold="true">
+				<text><![CDATA[OUT OF:]]></text>
+			</element>
+			<element kind="textField" uuid="f6b1c8bc-bcea-42bb-bd7d-5508c6741260" x="210" y="550" width="50" height="15">
+				<expression><![CDATA[$F{totalAttendance}]]></expression>
+			</element>
+			<element kind="staticText" uuid="8b3aa91e-c1cb-465f-9474-0ed740b1b043" x="300" y="550" width="90" height="15" bold="true">
+				<text><![CDATA[PROMOTED TO:]]></text>
+			</element>
+			<element kind="textField" uuid="15e61427-b882-48ad-8baf-1e17696db801" x="390" y="550" width="120" height="15">
+				<expression><![CDATA[$F{promotedTo}]]></expression>
+			</element>
+			<element kind="staticText" uuid="2c308b7f-c4b4-40a2-8a4f-758bb548be26" x="10" y="575" width="100" height="15" bold="true">
+				<text><![CDATA[PECULIAR ISSUE:]]></text>
+			</element>
+			<element kind="line" uuid="293a06cb-a2a0-40d2-854c-c85149a41a6d" x="110" y="590" width="430" height="1"/>
+			<element kind="staticText" uuid="a7965c7a-a939-49b1-94ae-eafa61b24ac3" x="10" y="605" width="130" height="15" bold="true">
+				<text><![CDATA[FACILITATOR REMARKS:]]></text>
+			</element>
+			<element kind="line" uuid="ca025ddf-b5f1-4924-9320-200e35f8bd68" x="145" y="620" width="395" height="1"/>
+			<element kind="staticText" uuid="b8e5d16f-f27e-465d-b33c-bd04f20223cb" x="10" y="635" width="110" height="15" bold="true">
+				<text><![CDATA[FACILITATOR NAME:]]></text>
+			</element>
+			<element kind="textField" uuid="08c2c894-9aa9-4ef5-af86-b6d43b18c369" x="120" y="635" width="200" height="15">
+				<expression><![CDATA[$F{instructorName}]]></expression>
+			</element>
+			<element kind="staticText" uuid="b386964c-229d-479b-90c8-29c4132f3c9e" x="10" y="665" width="170" height="15" bold="true">
+				<text><![CDATA[HEAD FACILITATOR'S SIGNATURE:]]></text>
+			</element>
+			<element kind="line" uuid="7c5cd57e-9a6e-4441-a22a-6761ec5f8518" x="185" y="680" width="150" height="1"/>
+			<element kind="staticText" uuid="34f8cf38-85e5-4f53-b50e-71b632e0f9d4" x="350" y="665" width="40" height="15" bold="true">
+				<text><![CDATA[DATE:]]></text>
+			</element>
+			<element kind="textField" uuid="442f5a97-9afa-4f15-81e5-ecbe38de4748" x="395" y="665" width="100" height="15">
+				<expression><![CDATA[$F{currentDate}]]></expression>
+			</element>
+			<element kind="break" uuid="23d09728-b2f6-4c49-83fc-69ccc838b3c5" x="0" y="790" width="555" height="1"/>
+		</band>
+	</detail>
+</jasperReport>

@@ -13,4 +13,6 @@ public interface LevelRepository extends JpaRepository<Level, Long> {
     Optional<Level> findByLevelNameAndInstitution_InstitutionId(String levelName, String institutionID);
 
     Optional<Level> findByLevelIDAndFees_FeesId(String levelID, int feesId);
+
+    Optional<Level> findByStaff_StaffId(String staffID);
 }

@@ -20,6 +20,9 @@ public class GradeSystem {
     @Column(length = 50)
     private String gradeDescription;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Institution institution;
+
     public Long getId() {
         return id;
     }
@@ -58,5 +61,13 @@ public class GradeSystem {
 
     public void setGradeDescription(String grade) {
         this.gradeDescription = grade;
+    }
+
+    public Institution getInstitution() {
+        return institution;
+    }
+
+    public void setInstitution(Institution institution) {
+        this.institution = institution;
     }
 }

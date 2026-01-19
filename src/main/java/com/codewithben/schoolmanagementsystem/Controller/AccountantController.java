@@ -42,16 +42,10 @@ public class AccountantController {
 
         try {
             String response = feesService.addNewSemesterFees(Double.parseDouble(feesAmount), semesterId, gradeId);
-            return ResponseEntity.ok(Map.of(
-                    "status", "success",
-                    "message", "Fees successfully added."
-            ));
+            return ResponseEntity.ok().body(response);
         } catch  (Exception e) {
             System.out.println("Error: " + e.getMessage());
-            return ResponseEntity.ok(Map.of(
-                    "status", "failed",
-                    "message", e.getMessage()
-            ));
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
@@ -142,7 +136,7 @@ public class AccountantController {
         Institution institution = staff.getInstitution();
         if (institution == null)
             return 0;
-        String semesterId = utilityClass.getCurrentSemester(institution.getInstitutionId());
+        String semesterId = utilityClass.getCurrentSemesterId(institution.getInstitutionId());
 
         List<Level> levels = institution.getLevel();
         double totalSemesterFees = 0;
@@ -163,7 +157,7 @@ public class AccountantController {
         if (institution == null)
             return 0;
 
-        String semesterId = utilityClass.getCurrentSemester(institution.getInstitutionId());
+        String semesterId = utilityClass.getCurrentSemesterId(institution.getInstitutionId());
         List<Level> levels = institution.getLevel();
         double totalAmountPaid = 0;
         for (Level level : levels) {
@@ -171,5 +165,28 @@ public class AccountantController {
             totalAmountPaid += levelFeesPaid;
         }
         return totalAmountPaid;
+    }
+
+    @PutMapping("/update-semester-fees")
+    public ResponseEntity<?> updateFeesAmount(@RequestParam String feesAmount,
+                                              @RequestParam String levelId,
+                                              @RequestParam String semesterId) {
+        try {
+            String response = feesService.updateSemesterFees(Double.parseDouble(feesAmount), semesterId, levelId);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/recent-fees-transactions/{staffId}")
+    public ResponseEntity<?> getRecentPayment(@PathVariable String staffId) {
+        try {
+            return ResponseEntity.ok().body(feesService.getRecentPayments(staffId));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 }

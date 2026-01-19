@@ -9,4 +9,6 @@ import java.util.List;
 @Repository
 public interface GradeSystemRepository extends JpaRepository<GradeSystem, Long> {
     List<GradeSystem> findAllByOrderByLowerRange();
+
+    List<GradeSystem> findAllByInstitution_InstitutionId(String institutionId);
 }
