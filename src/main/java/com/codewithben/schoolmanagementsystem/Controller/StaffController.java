@@ -241,11 +241,11 @@ public class StaffController {
     }
 
     @PostMapping("/save-student-scores")
-    public ResponseEntity<?> saveStudentScores(@RequestParam String studentId,
+    public ResponseEntity<?> saveStudentScores(@RequestParam String staffId,
+                                               @RequestParam String studentId,
                                                @RequestParam String subjectId,
                                                @RequestParam String classScore,
-                                               @RequestParam String examScore,
-                                               @RequestParam String staffId) {
+                                               @RequestParam String examScore) {
         try {
             String response = studentService.addStudentSubjectScores(
                     studentId, subjectId, Double.parseDouble(classScore), Double.parseDouble(examScore),
