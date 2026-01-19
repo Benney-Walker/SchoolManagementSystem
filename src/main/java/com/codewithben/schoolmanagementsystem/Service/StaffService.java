@@ -67,17 +67,6 @@ public class StaffService {
             throw new Exception("Phone number already in use");
         }
 
-        Staffs existingStaff = staffsRepository.findByStatusAndInstitution_InstitutionId(status, institutionId).orElse(null);
-        if (existingStaff != null) {
-            if (status.equals("Accountant")) {
-                throw new Exception("Institution already has " + status);
-            }
-        }
-
-        if (staffsRepository.existsByFirstNameAndLastName(firstName, surName)) {
-            throw new Exception("Staff already exists");
-        }
-
         String staffID = utilityClass.generateEntityId("STAFF");
         Staffs staff = new Staffs();
         staff.setStaffId(staffID);
