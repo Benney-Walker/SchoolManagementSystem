@@ -118,7 +118,7 @@ public class StudentService {
 
     @Transactional
     public String addStudentSubjectScores(String studentId, String subjectId, Double classScore, Double examScore,
-                                          String staffId) throws Exception {
+                                          String staffId, String semesterId) throws Exception {
         Staffs staff = staffsRepository.findByStaffId(staffId).
                 orElseThrow(() -> new Exception("Staff not found"));
 
@@ -135,8 +135,10 @@ public class StudentService {
         Subjects subject = subjectsRepository.findBySubjectId(subjectId)
                 .orElseThrow(() -> new Exception("Subject Not Found"));
 
-        String semesterId = subject.getSemester().getSemesterID();
         String levelId = subject.getLevel().getLevelID();
+
+        Semester semester = semesterRepository.findBySemesterID(semesterId)
+                .orElseThrow(() -> new Exception("Semester Not Found"));
 
 
         // Get or create Results for this student + semester + level
@@ -148,7 +150,7 @@ public class StudentService {
             result = new Results();
             result.setStudent(student);
             result.setLevel(subject.getLevel());
-            result.setSemester(subject.getSemester());
+            result.setSemester(semester);
             result.setCreatedAt(LocalDate.now());
             result.setTotalScore(0.0);
             result.setAverageScore(0.0);
@@ -188,12 +190,12 @@ public class StudentService {
         }
 
         // Recalculate result totals
-        updateResultTotals(result, staff);
+        updateResultTotals(result, staff, subject);
 
         return "success";
     }
 
-    private void updateResultTotals(Results result, Staffs staff) {
+    private void updateResultTotals(Results result, Staffs staff, Subjects subject) {
         List<SubjectScore> scores = subjectScoreRepository.findByResults_ResultId(result.getResultId());
 
         double total = 0.0;
@@ -211,7 +213,7 @@ public class StudentService {
         result.setUpdatedAt(LocalDate.now());
         result.setUpdatedBy(staff);
 
-        result.setPosition(utilityClass.getResultPosition(staff, result.getSemester(), total));
+        result.setPosition(utilityClass.getResultPosition(subject, result.getSemester(), total));
         resultsRepository.save(result);
 
     }

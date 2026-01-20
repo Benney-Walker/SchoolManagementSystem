@@ -1,28 +1,27 @@
 package com.codewithben.schoolmanagementsystem.DTO.Academics;
 
-public class AddNewSubject {
+public class PrintLevelSubjects {
     private String subjectName;
 
-    private String gradeId;
+    private String subjectId;
 
-    public AddNewSubject(String subjectName, String gradeId) {
+    public PrintLevelSubjects(String subjectName, String subjectId) {
         this.subjectName = subjectName;
-        this.gradeId = gradeId;
+        this.subjectId = subjectId;
     }
 
     public String getSubjectName() {
         return subjectName;
     }
-
     public void setSubjectName(String subjectName) {
         this.subjectName = subjectName;
     }
 
-    public String getGradeId() {
-        return gradeId;
+    public String getSubjectId() {
+        return subjectId;
     }
 
-    public void setGradeId(String gradeId) {
-        this.gradeId = gradeId;
+    public void setSubjectId(String subjectId) {
+        this.subjectId = subjectId;
     }
 }

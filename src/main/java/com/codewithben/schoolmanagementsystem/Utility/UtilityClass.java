@@ -167,8 +167,8 @@ public class UtilityClass {
         return "";
     }
 
-    public String getResultPosition(Staffs staff, Semester semester, double total) {
-        Level level = staff.getLevel();
+    public String getResultPosition(Subjects subject, Semester semester, double total) {
+        Level level = subject.getLevel();
 
         List<Results> results = resultsRepository
                 .findByLevel_LevelIDAndSemester_SemesterID(

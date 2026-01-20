@@ -1,5 +1,6 @@
 package com.codewithben.schoolmanagementsystem.Service;
 
+import com.codewithben.schoolmanagementsystem.DTO.Academics.PrintLevelSubjects;
 import com.codewithben.schoolmanagementsystem.DTO.Institution.FindStaffDTO;
 import com.codewithben.schoolmanagementsystem.DTO.Institution.RecentStaffView;
 import com.codewithben.schoolmanagementsystem.DTO.Institution.ReportsDTO;
@@ -156,10 +157,13 @@ public class StaffService {
         return staffStatus + "_" + institutionName + "_" + staffFullName + "_" + staffId;
     }
 
-    public long countTotalStaffs(String institutionId) throws Exception {
-        Institution institution = institutionRepository.findByInstitutionId(institutionId).orElse(null);
+    public long countTotalStaffs(String staffId) throws Exception {
+        Staffs staff = staffsRepository.findByStaffId(staffId)
+                .orElseThrow( () -> new Exception("Staff not found"));
+
+        Institution institution = staff.getInstitution();
         if (institution == null) {
-            return 0;
+            throw new Exception("institution not found");
         }
 
         List<Staffs> staffs = institution.getStaff();
@@ -171,18 +175,12 @@ public class StaffService {
     }
 
 
-    public String addNewSubjects(String subjectName, String semesterId, String levelId) throws Exception {
-            Semester semester = semesterRepository.findBySemesterID(semesterId).orElse(null);
-            if (semester == null) {
-                throw new Exception("Invalid semesterId");
-            }
+    public String addNewSubjects(String subjectName, String levelId) throws Exception {
 
             Level level = levelRepository.findByLevelID(levelId).orElse(null);
             if (level == null) {
                 throw new Exception("Invalid levelId");
             }
-
-            Institution institution = level.getInstitution();
 
             Subjects  subject = subjectsRepository.findBySubjectName(subjectName).orElse(null);
             if (subject != null) {
@@ -194,7 +192,6 @@ public class StaffService {
             subjects.setSubjectId(subjectId);
             subjects.setSubjectName(subjectName.toUpperCase());
             subjects.setLevel(level);
-            subjects.setSemester(semester);
             subjectsRepository.saveAndFlush(subjects);
 
             //Add subject to Level Subjects
@@ -229,7 +226,6 @@ public class StaffService {
 
             subject.setSubjectName(subjectName.toUpperCase());
             subject.setLevel(level);
-            subject.setSemester(semester);
             subjectsRepository.save(subject);
             return "success";
     }
@@ -323,5 +319,23 @@ public class StaffService {
         return recentStaffViews;
     }
 
+    public List<PrintLevelSubjects> printLevelSubjects(String levelId) throws Exception {
+        Level level = levelRepository.findByLevelID(levelId)
+                .orElseThrow(() -> new Exception("Level not found"));
 
+        List<Subjects> subjects = level.getSubjects();
+        if (subjects == null) {
+            throw new Exception("Level has not subjects added");
+        }
+
+        List<PrintLevelSubjects> printLevelSubjects = new ArrayList<>();
+        for (Subjects subject:subjects) {
+            PrintLevelSubjects printLevelSubjects1 = new PrintLevelSubjects(
+                    subject.getSubjectName(),
+                    subject.getSubjectId()
+            );
+            printLevelSubjects.add(printLevelSubjects1);
+        }
+        return printLevelSubjects;
+    }
 }

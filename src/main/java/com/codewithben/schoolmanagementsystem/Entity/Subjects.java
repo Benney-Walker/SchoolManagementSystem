@@ -19,10 +19,6 @@ public class Subjects {
     @JoinColumn(name = "Level_levelID")
     private Level level;
 
-    @ManyToOne
-    @JoinColumn(name = "Semester_semesterID")
-    private Semester semester;
-
     public String getSubjectId() {
         return subjectId;
     }
@@ -53,13 +49,5 @@ public class Subjects {
 
     public void setLevel(Level level) {
         this.level = level;
-    }
-
-    public Semester getSemester() {
-        return semester;
-    }
-
-    public void setSemester(Semester semester) {
-        this.semester = semester;
     }
 }
