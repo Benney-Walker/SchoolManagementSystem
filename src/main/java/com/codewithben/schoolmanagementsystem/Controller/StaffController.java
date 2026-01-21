@@ -105,7 +105,7 @@ public class StaffController {
 
     @GetMapping("v1/staff-list/{staffId}")
     public ResponseEntity<?> noSupport1(@PathVariable String staffId) {
-        return ResponseEntity.badRequest().body(versionSupport);
+        return ResponseEntity.ok(new ArrayList<>());
     }
 
     @GetMapping("v1/find-student-by-id/{studentId}")
