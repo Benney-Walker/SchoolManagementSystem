@@ -28,6 +28,9 @@ public class Attendance {
     @ManyToOne
     private Staffs markedBy;
 
+    @ManyToOne
+    private Institution institution;
+
     public long getId() {
         return id;
     }
@@ -82,5 +85,13 @@ public class Attendance {
 
     public void setMarkedBy(Staffs markedBy) {
         this.markedBy = markedBy;
+    }
+
+    public Institution getInstitution() {
+        return institution;
+    }
+
+    public void setInstitution(Institution institution) {
+        this.institution = institution;
     }
 }

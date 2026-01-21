@@ -9,9 +9,11 @@ public class RecentStaffView {
 
     String staffName;
 
-    String assignedLevel;
+    List<String> assignedLevel;
 
-    public RecentStaffView(String staffId, String staffName, String assignedLevel) {
+    public RecentStaffView() {}
+
+    public RecentStaffView(String staffId, String staffName, List<String> assignedLevel) {
         this.staffName = staffName;
         this.staffId = staffId;
         this.assignedLevel = assignedLevel;
@@ -33,11 +35,11 @@ public class RecentStaffView {
         this.staffId = staffId;
     }
 
-    public String getAssignedLevel() {
+    public List<String> getAssignedLevel() {
         return assignedLevel;
     }
 
-    public void setAssignedLevel(String assignedLevel) {
+    public void setAssignedLevel(List<String> assignedLevel) {
         this.assignedLevel = assignedLevel;
     }
 }

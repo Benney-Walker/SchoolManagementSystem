@@ -4,7 +4,9 @@ import com.codewithben.schoolmanagementsystem.DTO.Academics.*;
 import com.codewithben.schoolmanagementsystem.DTO.Institution.FindStaffDTO;
 import com.codewithben.schoolmanagementsystem.DTO.Institution.RecentStaffView;
 import com.codewithben.schoolmanagementsystem.DTO.Institution.StudentListPrint;
+import com.codewithben.schoolmanagementsystem.Entity.Level;
 import com.codewithben.schoolmanagementsystem.Entity.Staffs;
+import com.codewithben.schoolmanagementsystem.Repository.LevelRepository;
 import com.codewithben.schoolmanagementsystem.Repository.StaffsRepository;
 import com.codewithben.schoolmanagementsystem.Service.*;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +18,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping("/api/")
 public class StaffController {
     private final LevelService levelService;
 
@@ -30,18 +32,24 @@ public class StaffController {
 
     private final JasperReportService jasperReportService;
 
+    private final LevelRepository levelRepository;
+
+    private final String versionSupport = "Version no longer support this function so contact the developer";
+
     public StaffController(LevelService levelService, StaffService staffService,
                            StaffsRepository staffsRepository, StudentService studentService,
-                           ReportService reportService,  JasperReportService jasperReportService) {
+                           ReportService reportService,  JasperReportService jasperReportService,
+                           LevelRepository levelRepository) {
         this.levelService = levelService;
         this.staffService = staffService;
         this.staffsRepository = staffsRepository;
         this.studentService = studentService;
         this.reportService = reportService;
         this.jasperReportService = jasperReportService;
+        this.levelRepository = levelRepository;
     }
 
-    @GetMapping("/total-staffs/{staffId}")
+    @GetMapping("v1/total-staffs/{staffId}")
     public ResponseEntity<?> getTotalStaffs(@PathVariable String staffId) {
 
         try {
@@ -52,7 +60,7 @@ public class StaffController {
         }
     }
 
-    @GetMapping("/total-students/{staffId}")
+    @GetMapping("v1/total-students/{staffId}")
     public long getTotalStudents(@PathVariable String staffId) {
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staff == null)
@@ -68,7 +76,7 @@ public class StaffController {
         return totalStudents;
     }
 
-    @PostMapping("/add-new-grade")
+    @PostMapping("v1/add-new-grade")
     public ResponseEntity<?> addNewGrade(@RequestParam String gradeName,
                                          @RequestParam String instructorId) {
         try {
@@ -85,17 +93,22 @@ public class StaffController {
         }
     }
 
-    @GetMapping("/staff-list/{staffId}")
-    public List<RecentStaffView> loadStaffInfo(@PathVariable String staffId) {
+    @GetMapping("v2/staff-list/{staffId}")
+    public ResponseEntity<?> loadStaffInfo(@PathVariable String staffId) {
         try {
-            return staffService.loadAllStaffData(staffId);
+            return ResponseEntity.ok(staffService.loadAllStaffData(staffId));
         } catch (Exception ex) {
-            System.out.println(ex.getMessage());
-            return new ArrayList<>();
+            ex.printStackTrace();
+            return ResponseEntity.badRequest().body(ex.getMessage());
         }
     }
 
-    @GetMapping("/find-student-by-id/{studentId}")
+    @GetMapping("v1/staff-list/{staffId}")
+    public ResponseEntity<?> noSupport1(@PathVariable String staffId) {
+        return ResponseEntity.badRequest().body(versionSupport);
+    }
+
+    @GetMapping("v1/find-student-by-id/{studentId}")
     public FindStudentDTO findStudentById(@PathVariable String studentId) {
         try {
             return studentService.findStudentByStudentId(studentId);
@@ -105,7 +118,7 @@ public class StaffController {
         }
     }
 
-    @GetMapping("/find-staff-by-id/{staffId}")
+    @GetMapping("v1/find-staff-by-id/{staffId}")
     public FindStaffDTO findStaffById(@PathVariable String staffId) {
 
         try {
@@ -116,7 +129,7 @@ public class StaffController {
         }
     }
 
-    @PostMapping("/add-new-student")
+    @PostMapping("v1/add-new-student")
     public ResponseEntity<?> addNewStudent(@RequestBody AddNewStudent addNewStudent) {
         String firstName = addNewStudent.getFirstName();
         String lastName = addNewStudent.getLastName();
@@ -145,7 +158,7 @@ public class StaffController {
         }
     }
 
-    @PutMapping("/update-student-data")
+    @PutMapping("v1/update-student-data")
     public ResponseEntity<?> updateStudentData(@RequestBody UpdateStudentPersonalData updateStudentPersonalData) {
         String studentId = updateStudentPersonalData.getStudentId();
         String gender = updateStudentPersonalData.getGender();
@@ -168,7 +181,7 @@ public class StaffController {
         }
     }
 
-    @GetMapping("/search-student-results")
+    @GetMapping("v1/search-student-results")
     public StudentResult getStudentResults(@RequestParam String studentId,
                                            @RequestParam String semesterId,
                                            @RequestParam String classId) {
@@ -180,7 +193,7 @@ public class StaffController {
         }
     }
 
-    @PostMapping("/add-subject")
+    @PostMapping("v1/add-subject")
     public ResponseEntity<?> addNewSubject(@RequestBody AddNewSubject addNewSubject) {
         String subjectName = addNewSubject.getSubjectName();
         String levelId = addNewSubject.getGradeId();
@@ -203,7 +216,7 @@ public class StaffController {
 
     }
 
-    @GetMapping("/load-grade-and-size/{staffId}")
+    @GetMapping("v1/load-grade-and-size/{staffId}")
     public GradeInfoResponse loadGradeAndSize(@PathVariable String staffId) {
         try {
             return levelService.loadGradeNameAndSize(staffId);
@@ -213,17 +226,22 @@ public class StaffController {
         }
     }
 
-    @GetMapping("/load-grade-students/{staffId}")
-    public List<StudentsTableDTO> loadGradeStudents(@PathVariable String staffId) {
+    @GetMapping("v2/load-grade-students/{levelId}")
+    public ResponseEntity<?> loadGradeStudents(@PathVariable String levelId) {
         try {
-            return studentService.loadGradeStudents(staffId);
+            return ResponseEntity.ok(levelService.loadGradeStudents(levelId));
         } catch (Exception ex) {
             ex.printStackTrace();
-            return new ArrayList<>();
+            return ResponseEntity.badRequest().build();
         }
     }
 
-    @GetMapping("/load-subject-students/{subjectId}")
+    @GetMapping("v1/load-grade-students/{staffId}")
+    public ResponseEntity<?> noSupport(@PathVariable String staffId) {
+        return ResponseEntity.badRequest().body(versionSupport);
+    }
+
+    @GetMapping("v1/load-subject-students/{subjectId}")
     public ResponseEntity<SubjectScores> getSubjectStudents(@PathVariable String subjectId) {
         try {
             SubjectScores subjectScores = studentService.getSubjectStudents(subjectId);
@@ -234,7 +252,7 @@ public class StaffController {
         }
     }
 
-    @PostMapping("/save-student-scores")
+    @PostMapping("v1/save-student-scores")
     public ResponseEntity<?> saveStudentScores(@RequestParam String staffId,
                                                @RequestParam String studentId,
                                                @RequestParam String subjectId,
@@ -252,7 +270,7 @@ public class StaffController {
         }
     }
 
-    @GetMapping("/students-by-level/{levelId}")
+    @GetMapping("v1/students-by-level/{levelId}")
     public ResponseEntity<List<StudentListPrint>> getLevelStudents(@PathVariable String levelId) {
         try {
             return ResponseEntity.ok(studentService.getLevelStudents(levelId));
@@ -262,21 +280,19 @@ public class StaffController {
         }
     }
 
-    @GetMapping("/generate-class-report/{staffId}/{semesterId}/{promotionGradeId}")
-    public ResponseEntity<?> generateStudentReports(@PathVariable String staffId,
+    @GetMapping("v2/generate-class-report/{levelId}/{semesterId}/{promotionGradeId}")
+    public ResponseEntity<?> generateStudentReports(@PathVariable String levelId,
                                                     @PathVariable String semesterId,
                                                     @PathVariable String promotionGradeId) {
-
-        Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
-        if (staff == null || staff.getLevel() == null) {
-            return ResponseEntity.badRequest().body("Staff not found or Not assigned Grade");
+        Level level = levelRepository.findByLevelID(levelId).orElse(null);
+        if (level == null) {
+            return ResponseEntity.badRequest().body("Level not found");
         }
-
         try {
-            List<GenerateStudentReport> reportData = reportService.generateClassReports(staff.getLevel().getLevelID(), semesterId,
+            List<GenerateStudentReport> reportData = reportService.generateClassReports(levelId, semesterId,
                     promotionGradeId);
 
-            byte[] reportPDF = jasperReportService.generateClassReport(reportData, staff.getInstitution().getInstitutionName());
+            byte[] reportPDF = jasperReportService.generateClassReport(reportData, level.getInstitution().getInstitutionId());
 
             return ResponseEntity.ok().body(reportPDF);
         } catch (Exception ex) {
@@ -285,16 +301,18 @@ public class StaffController {
         }
     }
 
-    @GetMapping("/view-class-results/{staffId}/{semesterId}")
-    public ResponseEntity<?> viewClassSemesterResults(@PathVariable String staffId,
-                                                      @PathVariable String semesterId) {
-        Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
-        if (staff == null || staff.getLevel() == null) {
-            return ResponseEntity.badRequest().body("Staff not found or Not assigned Grade");
-        }
+    @GetMapping("v1/generate-class-report/{staffId}/{semesterId}/{promotionGradeId}")
+    public ResponseEntity<?> noSupport(@PathVariable String staffId,
+                                       @PathVariable String semesterId,
+                                       @PathVariable String promotionGradeId) {
+        return ResponseEntity.badRequest().body(versionSupport);
+    }
 
+    @GetMapping("v2/view-class-results/{levelId}/{semesterId}")
+    public ResponseEntity<?> viewClassSemesterResults(@PathVariable String levelId,
+                                                      @PathVariable String semesterId) {
         try {
-            List<GenerateStudentReport> reportData = reportService.generateClassReports(staff.getLevel().getLevelID(), semesterId, null);
+            List<GenerateStudentReport> reportData = reportService.generateClassReports(levelId, semesterId, null);
             return ResponseEntity.ok().body(reportData);
         } catch (Exception e) {
             e.printStackTrace();
@@ -302,17 +320,20 @@ public class StaffController {
         }
     }
 
-    @GetMapping("/move-passed-students")
-    public ResponseEntity<?> movePassedStudents(@RequestParam String staffId, @RequestParam String semesterId,
-            @RequestParam String passTotalScore, @RequestParam String nextLevelId) {
+    @GetMapping("v1/view-class-results/{staffId}/{semesterId}")
+    public ResponseEntity<?> noSupport(@PathVariable String staffId,
+                                       @PathVariable String semesterId) {
+        return ResponseEntity.badRequest().body(versionSupport);
+    }
 
-        Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
-        if (staff == null || staff.getLevel() == null) {
-            return ResponseEntity.badRequest().body("Staff not found or Not assigned Grade");
-        }
+    @PostMapping("v2/move-passed-students")
+    public ResponseEntity<?> movePassedStudents(@RequestParam String levelId,
+                                                @RequestParam String semesterId,
+                                                @RequestParam String passTotalScore,
+                                                @RequestParam String nextLevelId) {
 
         try {
-            String response = reportService.movePassedStudents(staffId, nextLevelId, semesterId, Double.parseDouble(passTotalScore));
+            String response = reportService.movePassedStudents(levelId, nextLevelId, semesterId, Double.parseDouble(passTotalScore));
             return ResponseEntity.ok().body(response);
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -320,7 +341,15 @@ public class StaffController {
         }
     }
 
-    @GetMapping("/load-students-for-attendance/{levelId}/{date}")
+    @GetMapping("v1/move-passed-students")
+    public ResponseEntity<?> noSupport(@RequestParam String levelId,
+                                       @RequestParam String semesterId,
+                                       @RequestParam String passTotalScore,
+                                       @RequestParam String nextLevelId) {
+        return ResponseEntity.badRequest().body(versionSupport);
+    }
+
+    @GetMapping("v1/load-students-for-attendance/{levelId}/{date}")
     public ResponseEntity<?> loadStudentsForAttendance(@PathVariable String levelId,
                                                        @PathVariable String date) {
         try {
@@ -333,7 +362,7 @@ public class StaffController {
         }
     }
 
-    @PostMapping("/mark-attendance")
+    @PostMapping("v1/mark-attendance")
     public ResponseEntity<?> markAttendance(@RequestBody Attendance attendance) {
         String studentId = attendance.getStudentId();
         String staffId = attendance.getStaffId();
@@ -350,7 +379,7 @@ public class StaffController {
         }
     }
 
-    @PutMapping("/update-attendance")
+    @PutMapping("v1/update-attendance")
     public ResponseEntity<?> updatedAttendance(@RequestParam String studentId,
                                                @RequestParam String staffId,
                                                @RequestParam String levelId,
@@ -368,7 +397,7 @@ public class StaffController {
         }
     }
 
-    @GetMapping("/print-subjects/{levelId}")
+    @GetMapping("v1/print-subjects/{levelId}")
     public ResponseEntity<?> printLevelSubjects(@PathVariable String levelId) {
         try {
             return ResponseEntity.ok(

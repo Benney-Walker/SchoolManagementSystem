@@ -3,6 +3,7 @@ package com.codewithben.schoolmanagementsystem.Service;
 import com.codewithben.schoolmanagementsystem.DTO.Academics.GradeInfoResponse;
 import com.codewithben.schoolmanagementsystem.DTO.Academics.LevelCaching;
 import com.codewithben.schoolmanagementsystem.DTO.Academics.SemesterCaching;
+import com.codewithben.schoolmanagementsystem.DTO.Academics.StudentsTableDTO;
 import com.codewithben.schoolmanagementsystem.Entity.*;
 import com.codewithben.schoolmanagementsystem.Repository.*;
 import com.codewithben.schoolmanagementsystem.Utility.UtilityClass;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 @Service
@@ -61,7 +63,13 @@ public class LevelService {
 
             level = levelRepository.saveAndFlush(level);
 
-            staffs.setLevel(level);
+            List<Level> levels = staffs.getLevel();
+            if (levels == null) {
+                levels = new ArrayList<>();
+            }
+            levels.add(level);
+
+            staffs.setLevel(levels);
 
             staffsRepository.save(staffs);
 
@@ -144,26 +152,68 @@ public class LevelService {
         return "Success";
     }
 
+    // ⚠️ TEMPORARY PATCH
+    // Staff can now have multiple classes (OneToMany)
+    // Current frontend supports only ONE class
+    // Randomly selecting one until next major release
+
     public GradeInfoResponse loadGradeNameAndSize(String staffId) throws  Exception {
         Staffs staffs = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staffs == null)
             throw new Exception("Staff not found");
 
-        Level level = staffs.getLevel();
-        if (level == null)
-            throw new Exception("Level not found");
+        List<Level> levels = staffs.getLevel();
+        if (levels == null || levels.isEmpty())
+            throw new Exception("No level assigned");
 
-        String levelName = level.getLevelName();
-        String[] response = levelName.split("_");
-        String gradeName = null;
-        String gradeNumber = null;
-        if (response.length == 2) {
-            gradeName = response[0];
-            gradeNumber = response[1];
+        Level selectedLevel;
+        if (levels.size() == 1) {
+            selectedLevel = levels.get(0);
+        } else {
+            int randomIndex = new Random().nextInt(levels.size());
+            selectedLevel = levels.get(randomIndex);
         }
-        long studentCount = level.getStudents().size();
-        System.out.println("GradeName: " + gradeName + " gradeNumber: " + gradeNumber + " studentCount: " + studentCount);
 
-        return new GradeInfoResponse(gradeName, gradeNumber, String.valueOf(studentCount));
+        GradeInfoResponse gradeInfoResponse = new GradeInfoResponse();
+
+            String levelName = selectedLevel.getLevelName();
+            String[] response = levelName.split("_");
+            String gradeName = levelName;
+            String gradeNumber = "";
+
+            if (response.length == 2) {
+                gradeName = response[0];
+                gradeNumber = response[1];
+            }
+            long studentCount = selectedLevel.getStudents().size();
+            gradeInfoResponse.setGradeName(gradeName);
+            gradeInfoResponse.setGradeNumber(gradeNumber);
+            gradeInfoResponse.setGradeSize(String.valueOf(studentCount));
+
+
+        return gradeInfoResponse;
+    }
+
+    public List<StudentsTableDTO> loadGradeStudents(String levelId) throws Exception {
+
+        Level level = levelRepository.findByLevelID(levelId).orElse(null);
+        if (level == null) {
+            throw new Exception("No Grade found");
+        }
+
+        List<Students> getStudents = level.getStudents();
+
+        return getStudents.stream().map(
+                students -> {
+                    String studentId = students.getStudentId();
+                    String fullName = students.getFirstName() + " " + students.getLastName();
+                    String getGender = students.getGender();
+                    String homeTown = students.getHomeTown();
+                    String parentName = students.getParentName();
+                    String parentPhoneNumber = students.getParentPhoneNumber();
+
+                    return new StudentsTableDTO(studentId, fullName, getGender, homeTown, parentName, parentPhoneNumber);
+                }
+        ).collect(Collectors.toList());
     }
 }

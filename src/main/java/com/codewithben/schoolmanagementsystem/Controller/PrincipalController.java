@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/v1/")
+@RequestMapping("/api/")
 public class PrincipalController {
     private final LevelService levelService;
 
@@ -51,9 +51,9 @@ public class PrincipalController {
         this.reportService = reportService;
     }
 
-    @GetMapping("recently-added-students/{staffId}")
+    @GetMapping("v1/recently-added-students/{staffId}")
     public List<RecentStudentsDTO> getRecentlyAddedStudents(@PathVariable String staffId) {
-        Staffs  staff = staffsRepository.findByStaffId(staffId).orElse(null);
+        Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staff == null)
             return new ArrayList<>();
         String institutionId = staff.getInstitution().getInstitutionId();
@@ -61,23 +61,33 @@ public class PrincipalController {
         Semester semester = semesterRepository.findBySemesterID(semesterId).orElse(null);
         if (semester == null)
             return new ArrayList<>();
-
         try {
             return studentService.findRecentlyAddedStudents(semester.getSemesterStartDate(), semester.getSemesterEndDate());
         } catch (Exception ex) {
             System.out.println(ex.getMessage());
             return new ArrayList<>();
         }
+    }
+
+
+    @GetMapping("v2/absent-students/{staffId}")
+    public ResponseEntity<?> getAbsentees(@PathVariable String staffId) {
+        try {
+            return ResponseEntity.ok().body(studentService.findAbsentees(staffId));
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
 
     }
 
-    @GetMapping("/load-levels/{staffId}")
+    @GetMapping("v1/load-levels/{staffId}")
     public List<LevelCaching> loadLevelInfo(@PathVariable String staffId) {
 
         return levelService.loadLevelInfo(staffId);
     }
 
-    @GetMapping("/load-staffs-info/{staffId}")
+    @GetMapping("v1/load-staffs-info/{staffId}")
     public List<StaffCaching> getAllStaffInfo(@PathVariable String staffId) {
         if (staffId == null)
             return new ArrayList<>();
@@ -90,7 +100,7 @@ public class PrincipalController {
         }
     }
 
-    @PostMapping("/reset-staff-password/{staffId}/{newPassword}")
+    @PostMapping("v1/reset-staff-password/{staffId}/{newPassword}")
     public ResponseEntity<PasswordRecoveryDTO> recoverStaffPassword(@PathVariable String staffId,
                                                                     @PathVariable String newPassword) {
         try {
@@ -103,7 +113,7 @@ public class PrincipalController {
         }
     }
 
-    @GetMapping("/load-semesters/{staffId}")
+    @GetMapping("v1/load-semesters/{staffId}")
     public List<SemesterCaching> loadSemesterInfo(@PathVariable String staffId) {
         try {
             return levelService.loadSemesterInfo(staffId);
@@ -113,7 +123,7 @@ public class PrincipalController {
         }
     }
 
-    @PostMapping("/add-semester")
+    @PostMapping("v1/add-semester")
     public ResponseEntity<?> addNewSemester(@RequestBody AddNewSemester addNewSemester) {
         String semesterName = addNewSemester.getSemesterName();
         LocalDate startDate = LocalDate.parse(addNewSemester.getStartDate());
@@ -135,7 +145,7 @@ public class PrincipalController {
         }
     }
 
-    @PostMapping("/set-grades")
+    @PostMapping("v1/set-grades")
     public ResponseEntity<String> setGradingCriteria(@RequestBody GradingCriteria gradingCriteria) {
         try {
             String response = institutionService.setGradingCriteria(gradingCriteria);
@@ -146,7 +156,7 @@ public class PrincipalController {
         }
     }
 
-    @GetMapping("/principal-view-class-results/{levelId}/{semesterId}")
+    @GetMapping("v1/principal-view-class-results/{levelId}/{semesterId}")
     public ResponseEntity<?> viewClassSemesterResults(@PathVariable String levelId,
                                                       @PathVariable String semesterId) {
 

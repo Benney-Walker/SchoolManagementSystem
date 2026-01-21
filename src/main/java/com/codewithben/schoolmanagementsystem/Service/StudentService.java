@@ -286,9 +286,39 @@ public class StudentService {
                     String dateOfRegistration = students.getRegistrationDate().toString();
                     String status = students.getStudentStatus().toString();
 
-                    return new RecentStudentsDTO(studentId, fullName, studentLevel, dateOfRegistration,  status);
+
+                    return new RecentStudentsDTO(studentId, fullName, studentLevel, dateOfRegistration, status);
                 }
         ).collect(Collectors.toList());
+    }
+
+    //This loads all the absentees for the day
+    public List<AbsenteesView> findAbsentees(String staffId) throws Exception {
+        Staffs  staff = staffsRepository.findByStaffId(staffId)
+                .orElseThrow(() -> new Exception("staff not found"));
+
+        String institutionId = staff.getInstitution().getInstitutionId();
+        LocalDate currentDate = LocalDate.now();
+
+        List<Attendance> absentees = attendanceRepository.findByStatusAndDateMarkedAndInstitution_InstitutionId(
+                AttendanceStatus.ABSENT, currentDate, institutionId
+        );
+
+        if (absentees == null || absentees.isEmpty()) {
+            throw new Exception("No absentees for today");
+        }
+
+        List<AbsenteesView> absenteesViews = new ArrayList<>();
+        for (Attendance attendance : absentees) {
+            AbsenteesView absenteesView = null;
+            absenteesView.setStudentId(attendance.getStudent().getStudentId());
+            absenteesView.setStudentName(attendance.getStudent().getFirstName() + " " + attendance.getStudent().getLastName());
+            absenteesView.setStudentGrade(attendance.getStudent().getLevel().getLevelName());
+            absenteesView.setInstructorName(attendance.getLevel().getStaff().getFirstName() + " " + attendance.getLevel().getStaff().getLastName());
+            absenteesView.setInstructorId(attendance.getLevel().getStaff().getStaffId());
+            absenteesViews.add(absenteesView);
+        }
+        return absenteesViews;
     }
 
     public String updateStudentPersonalData(String studentId, String gender, String dataOfBirth, String guardianName,
@@ -307,33 +337,6 @@ public class StudentService {
         student.setStudentStatus(studentStatus);
         studentsRepository.save(student);
         return "Student information updated successfully";
-    }
-
-    public List<StudentsTableDTO> loadGradeStudents(String staffId) throws Exception {
-        Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
-        if (staff == null) {
-            throw new Exception("Staff Not Found");
-        }
-
-        Level level = staff.getLevel();
-        if (level == null) {
-            throw new Exception("No Grade is assigned to staff");
-        }
-
-        List<Students> getStudents = level.getStudents();
-
-        return getStudents.stream().map(
-                students -> {
-                    String studentId = students.getStudentId();
-                    String fullName = students.getFirstName() + " " + students.getLastName();
-                    String getGender = students.getGender();
-                    String homeTown = students.getHomeTown();
-                    String parentName = students.getParentName();
-                    String parentPhoneNumber = students.getParentPhoneNumber();
-
-                    return new StudentsTableDTO(studentId, fullName, getGender, homeTown, parentName, parentPhoneNumber);
-                }
-        ).collect(Collectors.toList());
     }
 
     public SubjectScores getSubjectStudents(String subjectId) throws Exception {
@@ -450,6 +453,8 @@ public class StudentService {
         Students student = studentsRepository.findByStudentId(studentId)
                 .orElseThrow(() -> new Exception("Student Not Found"));
 
+        Institution institution = student.getInstitution();
+
         String currentSemesterId = utilityClass.getCurrentSemesterId(
                 student.getInstitution().getInstitutionId()
         );
@@ -479,6 +484,7 @@ public class StudentService {
         attendance.setDateMarked(LocalDate.now());
         attendance.setStatus(AttendanceStatus.valueOf(status));
         attendance.setMarkedBy(staff);
+        attendance.setInstitution(institution);
         attendanceRepository.save(attendance);
 
         List<Attendance> studentAttendance = student.getAttendance();

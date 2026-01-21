@@ -292,27 +292,29 @@ public class StaffService {
         if (staff == null) {
             throw new Exception("Staff not found");
         }
-        Institution institution = institutionRepository.findByInstitutionId(staff.getInstitution().getInstitutionId()).orElse(null);
-        if (institution == null) {
-            throw new Exception("Institution not found");
-        }
+        Institution institution = staff.getInstitution();
 
         List<Staffs> staffs = institution.getStaff();
         List<RecentStaffView> recentStaffViews = new ArrayList<>();
+
         for(Staffs staffMember: staffs){
-            RecentStaffView recentStaffView;
+            RecentStaffView recentStaffView = new RecentStaffView();
             if(staffMember.getLevel() == null) {
-                recentStaffView = new RecentStaffView(
-                        staffMember.getStaffId(),
-                        staffMember.getFirstName() + " " + staffMember.getLastName(),
-                        null
-                );
+                recentStaffView.setStaffId(staffMember.getStaffId());
+                recentStaffView.setStaffName(staffMember.getFirstName() + " " + staffMember.getLastName());
+                recentStaffView.setAssignedLevel(new ArrayList<>());
+
             } else {
-                recentStaffView = new RecentStaffView(
-                        staffMember.getStaffId(),
-                        staffMember.getFirstName() + " " + staffMember.getLastName(),
-                        staffMember.getLevel().getLevelName()
-                );
+                recentStaffView.setStaffId(staffMember.getStaffId());
+                recentStaffView.setStaffName(staffMember.getFirstName() + " " + staffMember.getLastName());
+
+                List<Level> levels = staffMember.getLevel();
+                List<String> assignedLevels = new ArrayList<>();
+                for(Level level: levels){
+                    assignedLevels.add(level.getLevelName());
+                }
+
+                recentStaffView.setAssignedLevel(assignedLevels);
             }
             recentStaffViews.add(recentStaffView);
         }

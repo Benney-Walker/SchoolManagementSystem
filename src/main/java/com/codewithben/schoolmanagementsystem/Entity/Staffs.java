@@ -43,9 +43,8 @@ public class Staffs {
     @JoinColumn(nullable = false, name = "Institution_institutionId")
     private Institution institution;
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-    @JoinColumn(name = "level_LevelID")
-    private Level level;
+    @OneToMany(mappedBy = "staff")
+    private List<Level> level;
 
     public String getStaffId() {
         return staffId;
@@ -135,11 +134,11 @@ public class Staffs {
         this.institution = institution;
     }
 
-    public Level getLevel() {
+    public List<Level> getLevel() {
         return level;
     }
 
-    public void setLevel(Level levelId) {
+    public void setLevel(List<Level> levelId) {
         this.level = levelId;
     }
 }
