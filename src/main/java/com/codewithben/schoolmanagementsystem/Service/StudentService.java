@@ -404,10 +404,10 @@ public class StudentService {
 
     public List<StudentAttendance> loadStudentForAttendance(String levelId, String attendanceDate) throws Exception {
         List<StudentAttendance> attendanceList = new ArrayList<>();
+        Level level = levelRepository.findByLevelID(levelId)
+                .orElseThrow(() -> new Exception("Level Not Found"));
 
         if (attendanceDate.equals("no_date")) {
-            Level level = levelRepository.findByLevelID(levelId)
-                    .orElseThrow(() -> new Exception("Level Not Found"));
 
             List<Students> students = level.getStudents();
 
@@ -429,19 +429,36 @@ public class StudentService {
         List<Attendance> markedAttendance = attendanceRepository
                 .findByLevel_LevelIDAndDateMarked(levelId, LocalDate.parse(attendanceDate));
         if (markedAttendance == null || markedAttendance.isEmpty()) {
-            throw new Exception("Date must today or earlier.");
+            throw new Exception("Date must be today or earlier.");
         }
 
-        for (Attendance attendance : markedAttendance) {
-            String studentName =
-                    attendance.getStudent().getFirstName() + " " + attendance.getStudent().getLastName();
-            StudentAttendance studentAttendance = new StudentAttendance(
-                    attendance.getLevel().getLevelID(),
-                    attendance.getStudent().getStudentId(),
-                    studentName,
-                    attendance.getStatus().toString()
-            );
-            attendanceList.add(studentAttendance);
+        List<Students> students = level.getStudents();
+        for (Students student : students) {
+            if (student.getStudentStatus() == StudentStatus.ACTIVE) {
+
+                //Get today's attendance for students
+                Attendance attendanceStatus = attendanceRepository.findByStudent_StudentIdAndDateMarked(
+                        student.getStudentId(), LocalDate.parse(attendanceDate)
+                ).orElse(null);
+                
+                if (attendanceStatus == null) {
+                    StudentAttendance studentAttendance = new StudentAttendance(
+                            level.getLevelID(),
+                            student.getStudentId(),
+                            student.getFirstName() + " " + student.getLastName(),
+                            AttendanceStatus.ABSENT.toString() //Set status to absent if it's null
+                    );
+                    attendanceList.add(studentAttendance);
+                } else {
+                    StudentAttendance studentAttendance = new StudentAttendance(
+                            level.getLevelID(),
+                            student.getStudentId(),
+                            student.getFirstName() + " " + student.getLastName(),
+                            attendanceStatus.getStatus().toString()
+                    );
+                    attendanceList.add(studentAttendance);
+                }
+            }
         }
 
         return attendanceList;
@@ -464,7 +481,7 @@ public class StudentService {
                         levelId, LocalDate.now()
                 );
         if (markedAttendance != null && !markedAttendance.isEmpty()) {
-            throw new Exception("Today's attendance already marked");
+            throw new Exception("Attendance already marked. Use update button to update instead.");
         }
 
         Level level = levelRepository.findByLevelID(levelId)
