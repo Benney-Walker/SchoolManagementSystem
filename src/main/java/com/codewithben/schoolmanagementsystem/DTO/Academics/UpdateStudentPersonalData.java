@@ -1,51 +1,120 @@
 package com.codewithben.schoolmanagementsystem.DTO.Academics;
 
-import java.time.LocalDate;
-
 public class UpdateStudentPersonalData {
     private String studentId;
 
+    private String firstName;
+
+    private String lastName;
+
     private String gender;
 
-    private LocalDate dateOfBirth;
+    private String dateOfBirth;
 
-    private String guardianName;
+    private String parentName;
 
-    private String guardianContact;
+    private String parentPhoneNumber;
 
-    private String gradeName;
+    private String gradeId;
 
     private String status;
 
+    private String homeTown;
+
+    public UpdateStudentPersonalData() {}
+
+    public UpdateStudentPersonalData(String studentId, String firstName, String lastName,
+                                     String gender, String dateOfBirth, String parentName,
+                                     String parentPhoneNumber, String gradeId, String status, String homeTown) {
+        this.studentId = studentId;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.gender = gender;
+        this.dateOfBirth = dateOfBirth;
+        this.parentName = parentName;
+        this.parentPhoneNumber = parentPhoneNumber;
+        this.gradeId = gradeId;
+        this.status = status;
+        this.homeTown = homeTown;
+    }
+
     public String getStudentId() {
         return studentId;
+    }
+
+    public void setStudentId(String studentId) {
+        this.studentId = studentId;
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
     }
 
     public String getGender() {
         return gender;
     }
 
-    public LocalDate getDateOfBirth() {
+    public void setGender(String gender) {
+        this.gender = gender;
+    }
+
+    public String getDateOfBirth() {
         return dateOfBirth;
     }
 
-    public String getGuardianName() {
-        return guardianName;
+    public void setDateOfBirth(String dateOfBirth) {
+        this.dateOfBirth = dateOfBirth;
     }
 
-    public String getGuardianContact() {
-        return guardianContact;
+    public String getParentName() {
+        return parentName;
     }
 
-    public String getGradeName() {
-        return gradeName;
+    public void setParentName(String parentName) {
+        this.parentName = parentName;
+    }
+
+    public String getParentPhoneNumber() {
+        return parentPhoneNumber;
+    }
+
+    public void setParentPhoneNumber(String parentPhoneNumber) {
+        this.parentPhoneNumber = parentPhoneNumber;
+    }
+
+    public String getGradeId() {
+        return gradeId;
+    }
+
+    public void setGradeId(String gradeId) {
+        this.gradeId = gradeId;
     }
 
     public String getStatus() {
         return status;
     }
 
-    public void setStudentId(String studentId) {
-        this.studentId = studentId;
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getHomeTown() {
+        return homeTown;
+    }
+
+    public void setHomeTown(String homeTown) {
+        this.homeTown = homeTown;
     }
 }

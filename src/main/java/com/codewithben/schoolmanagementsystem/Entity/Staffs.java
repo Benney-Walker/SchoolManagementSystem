@@ -1,5 +1,7 @@
 package com.codewithben.schoolmanagementsystem.Entity;
 
+import com.codewithben.schoolmanagementsystem.Contants.StaffRoles;
+import com.codewithben.schoolmanagementsystem.Contants.StaffStatus;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
@@ -22,7 +24,7 @@ public class Staffs {
     private String gender;
 
     @Column(nullable = false)
-    private LocalDate dateOfBirth;
+    private String dateOfBirth;
 
     @Column(nullable = false)
     private String password;
@@ -32,6 +34,9 @@ public class Staffs {
 
     @Column(nullable = false)
     private String phoneNumber;
+
+    @Enumerated(EnumType.STRING)
+    private StaffRoles staffRoles;
 
     @Column(nullable = false)
     private String status;
@@ -45,6 +50,30 @@ public class Staffs {
 
     @OneToMany(mappedBy = "staff")
     private List<Level> level;
+
+    @Enumerated(EnumType.STRING)
+    private StaffStatus staffStatus;
+
+    public Staffs() {}
+
+    public Staffs(String staffId, String firstName, String lastName, String gender,
+                  String dateOfBirth, String password, String email, String phoneNumber,
+                  StaffRoles staffRoles, String status, LocalDate dateOfRegistration, Institution institution, List<Level> level, StaffStatus staffStatus) {
+        this.staffId = staffId;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.gender = gender;
+        this.dateOfBirth = dateOfBirth;
+        this.password = password;
+        this.email = email;
+        this.phoneNumber = phoneNumber;
+        this.staffRoles = staffRoles;
+        this.status = status;
+        this.dateOfRegistration = dateOfRegistration;
+        this.institution = institution;
+        this.level = level;
+        this.staffStatus = staffStatus;
+    }
 
     public String getStaffId() {
         return staffId;
@@ -78,11 +107,11 @@ public class Staffs {
         this.gender = gender;
     }
 
-    public LocalDate getDateOfBirth() {
+    public String getDateOfBirth() {
         return dateOfBirth;
     }
 
-    public void setDateOfBirth(LocalDate dateOfBirth) {
+    public void setDateOfBirth(String dateOfBirth) {
         this.dateOfBirth = dateOfBirth;
     }
 
@@ -108,6 +137,14 @@ public class Staffs {
 
     public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
+    }
+
+    public StaffRoles getStaffRoles() {
+        return staffRoles;
+    }
+
+    public void setStaffRoles(StaffRoles staffRoles) {
+        this.staffRoles = staffRoles;
     }
 
     public String getStatus() {
@@ -138,7 +175,15 @@ public class Staffs {
         return level;
     }
 
-    public void setLevel(List<Level> levelId) {
-        this.level = levelId;
+    public void setLevel(List<Level> level) {
+        this.level = level;
+    }
+
+    public StaffStatus getStaffStatus() {
+        return staffStatus;
+    }
+
+    public void setStaffStatus(StaffStatus staffStatus) {
+        this.staffStatus = staffStatus;
     }
 }

@@ -11,6 +11,8 @@ public class AbsenteesView {
 
     private String instructorId;
 
+    public AbsenteesView() {}
+
     public AbsenteesView(String studentId, String studentName, String studentGrade, String instructorName,
                          String instructorId) {
         this.studentId = studentId;

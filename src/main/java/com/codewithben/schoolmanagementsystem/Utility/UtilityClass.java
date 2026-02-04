@@ -155,13 +155,13 @@ public class UtilityClass {
         for (Semester semester : semesters) {
             LocalDate startDate = semester.getSemesterStartDate();
             LocalDate endDate = semester.getSemesterEndDate();
-            LocalDate gradePeriod = endDate.plusWeeks(2);
+            LocalDate gradePeriod = endDate.plusWeeks(1);
 
             // Check if current date is within semester range (inclusive)
-            if ((currentDate.isEqual(startDate) || currentDate.isAfter(startDate)) &&
-                    (currentDate.isEqual(endDate) || currentDate.isBefore(endDate))
-                    || currentDate.isBefore(gradePeriod)) {
-                return semester.getSemesterID();
+            if (currentDate.isEqual(startDate) || currentDate.isAfter(startDate)) {
+                if (currentDate.isEqual(endDate) || currentDate.isBefore(gradePeriod)) {
+                    return semester.getSemesterID();
+                }
             }
         }
         return "";

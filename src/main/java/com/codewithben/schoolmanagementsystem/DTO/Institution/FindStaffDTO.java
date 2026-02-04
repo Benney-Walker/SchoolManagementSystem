@@ -1,7 +1,5 @@
 package com.codewithben.schoolmanagementsystem.DTO.Institution;
 
-import java.time.LocalDate;
-
 public class FindStaffDTO {
 
     private String staffId;
@@ -12,19 +10,23 @@ public class FindStaffDTO {
 
     private String gender;
 
-    private LocalDate dateOfBirth;
+    private String dateOfBirth;
 
     private String email;
 
     private String phoneNumber;
 
-    private String status;
+    private String staffRole;
+
+    private String staffStatus;
 
     private String dateOfRegistration;
 
+    public FindStaffDTO() {}
+
     public FindStaffDTO(String staffId, String firstName, String surname,
-                        String gender, LocalDate dateOfBirth, String email, String phoneNumber, String status,
-                        String dateOfRegistration) {
+                        String gender, String dateOfBirth, String email, String phoneNumber, String staffRole,
+                        String staffStatus, String dateOfRegistration) {
         this.staffId = staffId;
         this.firstName = firstName;
         this.surname = surname;
@@ -32,7 +34,8 @@ public class FindStaffDTO {
         this.dateOfBirth = dateOfBirth;
         this.email = email;
         this.phoneNumber = phoneNumber;
-        this.status = status;
+        this.staffRole = staffRole;
+        this.staffStatus = staffStatus;
         this.dateOfRegistration = dateOfRegistration;
     }
 
@@ -68,11 +71,11 @@ public class FindStaffDTO {
         this.gender = gender;
     }
 
-    public LocalDate getDateOfBirth() {
+    public String getDateOfBirth() {
         return dateOfBirth;
     }
 
-    public void setDateOfBirth(LocalDate dateOfBirth) {
+    public void setDateOfBirth(String dateOfBirth) {
         this.dateOfBirth = dateOfBirth;
     }
 
@@ -92,12 +95,20 @@ public class FindStaffDTO {
         this.phoneNumber = phoneNumber;
     }
 
-    public String getStatus() {
-        return status;
+    public String getStaffRole() {
+        return staffRole;
     }
 
-    public void setStatus(String status) {
-        this.status = status;
+    public void setStaffRole(String staffRole) {
+        this.staffRole = staffRole;
+    }
+
+    public String getStaffStatus() {
+        return staffStatus;
+    }
+
+    public void setStaffStatus(String staffStatus) {
+        this.staffStatus = staffStatus;
     }
 
     public String getDateOfRegistration() {

@@ -25,6 +25,12 @@ public class Institution {
     @OneToMany(mappedBy = "institution")
     private List<Semester> semester;
 
+    @OneToMany(mappedBy = "institution")
+    private List<Fees> fees;
+
+    @OneToMany(mappedBy = "institution")
+    private List<FeesReport> feesReport;
+
     public String getInstitutionId() {
         return institutionId;
     }
@@ -71,5 +77,21 @@ public class Institution {
 
     public void setSemester(List<Semester> semester) {
         this.semester = semester;
+    }
+
+    public List<Fees> getFees() {
+        return fees;
+    }
+
+    public void setFees(List<Fees> fees) {
+        this.fees = fees;
+    }
+
+    public List<FeesReport> getFeesReport() {
+        return feesReport;
+    }
+
+    public void setFeesReport(List<FeesReport> feesReport) {
+        this.feesReport = feesReport;
     }
 }

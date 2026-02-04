@@ -12,7 +12,7 @@ public interface StaffsRepository extends JpaRepository<Staffs, Long> {
 
     boolean existsByPhoneNumberAndInstitution_InstitutionId(String phoneNumber, String institutionId);
 
-    Optional<Staffs> findByStatusAndInstitution_InstitutionId(String status, String institutionId);
-
     boolean existsByFirstNameAndLastName(String firstName, String lastName);
+
+    boolean existsByStaffId(String staffId);
 }

@@ -1,9 +1,10 @@
 package com.codewithben.schoolmanagementsystem.Service;
 
+import com.codewithben.schoolmanagementsystem.Contants.StaffRoles;
+import com.codewithben.schoolmanagementsystem.Contants.StaffStatus;
 import com.codewithben.schoolmanagementsystem.DTO.Academics.PrintLevelSubjects;
 import com.codewithben.schoolmanagementsystem.DTO.Institution.FindStaffDTO;
-import com.codewithben.schoolmanagementsystem.DTO.Institution.RecentStaffView;
-import com.codewithben.schoolmanagementsystem.DTO.Institution.ReportsDTO;
+import com.codewithben.schoolmanagementsystem.DTO.Institution.ViewStaffList;
 import com.codewithben.schoolmanagementsystem.DTO.Institution.StaffCaching;
 import com.codewithben.schoolmanagementsystem.Entity.*;
 import com.codewithben.schoolmanagementsystem.Repository.*;
@@ -12,8 +13,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -55,9 +56,9 @@ public class StaffService {
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
     }
 
-    public String addNewStaff(String firstName, String surName, String gender, LocalDate dateOfBirth,
+    public String addNewStaff(String firstName, String surName, String gender, String dateOfBirth,
                               String institutionId, String email, String password, String phoneNumber,
-                              String status) throws Exception {
+                              String staffRole) throws Exception {
 
         Institution institution = institutionRepository.findByInstitutionId(institutionId).orElse(null);
         if (institution == null) {
@@ -81,7 +82,8 @@ public class StaffService {
         staff.setPassword(hashedPassword);
         staff.setPhoneNumber(phoneNumber);
         staff.setDateOfRegistration(LocalDate.now());
-        staff.setStatus(status);
+        staff.setStaffRoles(StaffRoles.valueOf(staffRole));
+        staff.setStaffStatus(StaffStatus.ACTIVE);
 
         // Set the owning side of the relationship - this is ALL you need!
         staff.setInstitution(institution);
@@ -93,45 +95,71 @@ public class StaffService {
     }
 
     public FindStaffDTO findStaffById(String id) throws Exception {
-        Staffs staff = staffsRepository.findByStaffId(id).orElse(null);
+        Staffs staff = staffsRepository.findByStaffId(id)
+                .orElseThrow(() -> new Exception("Invalid staff ID"));
 
-        if (staff == null) {
-            throw new Exception("Staff not found");
-        }
+        FindStaffDTO staffData = new FindStaffDTO();
+        staffData.setStaffId(staff.getStaffId());
+        staffData.setFirstName(staff.getFirstName());
+        staffData.setSurname(staff.getLastName());
+        staffData.setGender(staff.getGender());
+        staffData.setDateOfBirth(staff.getDateOfBirth());
+        staffData.setEmail(staff.getEmail());
+        staffData.setPhoneNumber(staff.getPhoneNumber());
+        staffData.setStaffRole(staff.getStaffRoles().toString());
+        staffData.setStaffStatus(staff.getStaffStatus().toString());
+        staffData.setDateOfRegistration(staff.getDateOfRegistration().toString());
 
-        return new FindStaffDTO(
-                staff.getStaffId(), staff.getFirstName(),
-                staff.getLastName(), staff.getGender(),
-                staff.getDateOfBirth(), staff.getEmail(), staff.getPhoneNumber(),
-                staff.getStatus(), staff.getDateOfRegistration().toString()
-        );
+        return staffData;
     }
 
-    /*public FindStaffDTO findStaffByFullName(String firstName, String lastName) throws Exception {
-        Staffs staff = staffsRepository.findByFirstNameAndLastName(firstName, lastName).orElse(null);
+    public String updateStaffInfo(FindStaffDTO updateInfo) throws Exception {
+        Staffs staff = staffsRepository.findByStaffId(updateInfo.getStaffId())
+                .orElseThrow(() -> new Exception("Staff not found"));
 
-        if (staff == null) {
-            return null;
-        }
+        staff.setFirstName(updateInfo.getFirstName());
+        staff.setLastName(updateInfo.getSurname());
+        staff.setGender(updateInfo.getGender());
+        staff.setDateOfBirth(updateInfo.getDateOfBirth());
+        staff.setEmail(updateInfo.getEmail());
+        staff.setPhoneNumber(updateInfo.getPhoneNumber());
+        staff.setStaffRoles(StaffRoles.valueOf(updateInfo.getStaffRole()));
+        staff.setStaffStatus(StaffStatus.valueOf(updateInfo.getStaffStatus()));
+        staffsRepository.save(staff);
 
-        return new FindStaffDTO(
-                staff.getStaffId(), staff.getFirstName(),
-                staff.getLastName(), staff.getGender(),
-                staff.getDateOfBirth(), staff.getEmail(), staff.getPhoneNumber(),
-                staff.getStatus(), staff.getDateOfRegistration(),
-                staff.getSubject().stream().toList(), staff.getLevelId().stream().toList()
-        );
-    }*/
+        return "Staff Info Updated Successfully";
+    }
 
     public String staffAuthentication(String loginId, String password) throws Exception {
 
-        Staffs staffs = staffsRepository.findByStaffId(loginId).orElse(null);
+        Staffs staff = staffsRepository.findByStaffId(loginId).orElse(null);
 
-        if(staffs == null){
+        if(staff == null){
             throw new Exception("Invalid ID");
         }
 
-        String storedPassword = staffs.getPassword();
+        if (staff.getStaffStatus() != null) {
+            if (staff.getStaffStatus() != StaffStatus.ACTIVE) {
+                throw new Exception("Staff account inactive");
+            }
+        } else {
+            staff.setStaffStatus(StaffStatus.ACTIVE);
+        }
+
+        if (staff.getStaffRoles() == null) {
+            String staffRole  = staff.getStatus();
+            if (staffRole.equals("Teaching Staff")) {
+                staffRole = "TEACHING_STAFF";
+            } else if (staffRole.equals("General Staff")) {
+                staffRole = "GENERAL_STAFF";
+            } else {
+                staffRole = staffRole.toUpperCase();
+            }
+            staff.setStaffRoles(StaffRoles.valueOf(staffRole));
+            staffsRepository.save(staff);
+        }
+
+        String storedPassword = staff.getPassword();
         if (isBCrypt(storedPassword)) {
             //Checks password for new account
             if (!bCryptPasswordEncoder.matches(password, storedPassword)) {
@@ -145,16 +173,16 @@ public class StaffService {
             }
 
             String newHashedPassword = bCryptPasswordEncoder.encode(password);
-            staffs.setPassword(newHashedPassword);
-            staffsRepository.save(staffs);
+            staff.setPassword(newHashedPassword);
+            staffsRepository.save(staff);
         }
 
-        String staffStatus = staffs.getStatus();
-        String institutionName = staffs.getInstitution().getInstitutionName();
-        String staffFullName = staffs.getFirstName() + " " + staffs.getLastName();
-        String staffId = staffs.getStaffId();
+        String staffRole = staff.getStaffRoles().toString();
+        String institutionName = staff.getInstitution().getInstitutionName();
+        String staffFullName = staff.getFirstName() + " " + staff.getLastName();
+        String staffId = staff.getStaffId();
 
-        return staffStatus + "_" + institutionName + "_" + staffFullName + "_" + staffId;
+        return staffRole + "_" + institutionName + "_" + staffFullName + "_" + staffId;
     }
 
     public long countTotalStaffs(String staffId) throws Exception {
@@ -167,6 +195,10 @@ public class StaffService {
         }
 
         List<Staffs> staffs = institution.getStaff();
+        if (staffs == null || staffs.isEmpty()) {
+            throw new Exception("Institution has no staff");
+        }
+
         return staffs.size();
     }
 
@@ -182,7 +214,7 @@ public class StaffService {
                 throw new Exception("Invalid levelId");
             }
 
-            Subjects  subject = subjectsRepository.findBySubjectName(subjectName).orElse(null);
+            Subjects  subject = subjectsRepository.findBySubjectNameAndLevel_LevelID(subjectName, levelId).orElse(null);
             if (subject != null) {
                 throw new Exception("Subject already exists");
             }
@@ -205,49 +237,6 @@ public class StaffService {
 
             return subjectId;
     }
-
-    public String updateSubjectDetails(String subjectName, String semesterId, String levelId) throws Exception {
-
-
-            Subjects subject = subjectsRepository.findBySubjectName(subjectName.toUpperCase()).orElse(null);
-            if (subject == null) {
-                throw new Exception("Subject does not exist");
-            }
-
-            Semester semester = semesterRepository.findBySemesterID(semesterId).orElse(null);
-            if (semester == null) {
-                throw new Exception("Invalid semesterId");
-            }
-
-            Level level = levelRepository.findByLevelID(levelId).orElse(null);
-            if (level == null) {
-                throw new Exception("Invalid levelId");
-            }
-
-            subject.setSubjectName(subjectName.toUpperCase());
-            subject.setLevel(level);
-            subjectsRepository.save(subject);
-            return "success";
-    }
-
-    public String deleteSubject(String subjectName) {
-        if (subjectName == null) {
-            return "null input data";
-        }
-
-        try {
-            Subjects subject = subjectsRepository.findBySubjectName(subjectName.toUpperCase()).orElse(null);
-            if (subject == null) {
-                return "subject not found";
-            }
-
-            subjectsRepository.delete(subject);
-            return "success";
-        } catch (Exception e) {
-            return "Failed Error: " + e.getMessage();
-        }
-    }
-
 
     public String resetStaffPassword(String staffId, String newPassword) throws Exception {
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
@@ -275,38 +264,74 @@ public class StaffService {
         }
 
         List<Staffs> staffs = institution.getStaff();
+        if (staffs == null || staffs.isEmpty()) {
+            return Collections.emptyList();
+        }
 
         return staffs.stream().map(
                 loadInfo -> {
                     String staffIdMapping = loadInfo.getStaffId();
                     String staffFullNameMapping = loadInfo.getFirstName() + " " + loadInfo.getLastName();
-                    String staffRole = loadInfo.getStatus();
+                    String staffRole;
+
+                    if (loadInfo.getStaffRoles() != null) {
+                        staffRole = loadInfo.getStaffRoles().name();
+                    } else {
+                        staffRole = loadInfo.getStatus(); // legacy fallback
+                    }
+
 
                     return new StaffCaching(staffFullNameMapping, staffIdMapping, staffRole);
                 }
         ).collect(Collectors.toList());
     }
 
-    public List<RecentStaffView> loadAllStaffData(String staffId) throws Exception {
+    public List<ViewStaffList> loadAllStaffList(String staffId) throws Exception {
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staff == null) {
             throw new Exception("Staff not found");
         }
+
         Institution institution = staff.getInstitution();
+        if (institution == null) {
+            throw new Exception("Institution not found");
+        }
 
         List<Staffs> staffs = institution.getStaff();
-        List<RecentStaffView> recentStaffViews = new ArrayList<>();
+        if (staffs == null || staffs.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<ViewStaffList> viewStaffLists = new ArrayList<>();
 
         for(Staffs staffMember: staffs){
-            RecentStaffView recentStaffView = new RecentStaffView();
+            ViewStaffList viewStaffList = new ViewStaffList();
             if(staffMember.getLevel() == null) {
-                recentStaffView.setStaffId(staffMember.getStaffId());
-                recentStaffView.setStaffName(staffMember.getFirstName() + " " + staffMember.getLastName());
-                recentStaffView.setAssignedLevel(new ArrayList<>());
+                viewStaffList.setStaffId(staffMember.getStaffId());
+                viewStaffList.setStaffName(staffMember.getFirstName() + " " + staffMember.getLastName());
+
+                String staffRole;
+
+                if (staffMember.getStaffRoles() != null) {
+                    staffRole = staffMember.getStaffRoles().name();
+                } else {
+                    staffRole = staffMember.getStatus(); // legacy fallback
+                }
+
+                viewStaffList.setStaffRole(staffRole);
+                viewStaffList.setAssignedLevel(new ArrayList<>());
 
             } else {
-                recentStaffView.setStaffId(staffMember.getStaffId());
-                recentStaffView.setStaffName(staffMember.getFirstName() + " " + staffMember.getLastName());
+                viewStaffList.setStaffId(staffMember.getStaffId());
+                viewStaffList.setStaffName(staffMember.getFirstName() + " " + staffMember.getLastName());
+                String staffRole;
+
+                if (staffMember.getStaffRoles() != null) {
+                    staffRole = staffMember.getStaffRoles().name();
+                } else {
+                    staffRole = staffMember.getStatus(); // legacy fallback
+                }
+                viewStaffList.setStaffRole(staffRole);
 
                 List<Level> levels = staffMember.getLevel();
                 List<String> assignedLevels = new ArrayList<>();
@@ -314,11 +339,11 @@ public class StaffService {
                     assignedLevels.add(level.getLevelName());
                 }
 
-                recentStaffView.setAssignedLevel(assignedLevels);
+                viewStaffList.setAssignedLevel(assignedLevels);
             }
-            recentStaffViews.add(recentStaffView);
+            viewStaffLists.add(viewStaffList);
         }
-        return recentStaffViews;
+        return viewStaffLists;
     }
 
     public List<PrintLevelSubjects> printLevelSubjects(String levelId) throws Exception {
@@ -326,8 +351,8 @@ public class StaffService {
                 .orElseThrow(() -> new Exception("Level not found"));
 
         List<Subjects> subjects = level.getSubjects();
-        if (subjects == null) {
-            throw new Exception("Level has not subjects added");
+        if (subjects == null || subjects.isEmpty()) {
+            throw new Exception("Level has no subjects added");
         }
 
         List<PrintLevelSubjects> printLevelSubjects = new ArrayList<>();

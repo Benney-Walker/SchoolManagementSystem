@@ -10,7 +10,6 @@ import com.codewithben.schoolmanagementsystem.Service.StaffService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
 import java.util.Map;
 
 @RestController
@@ -58,7 +57,7 @@ public class AuthenticationController {
         String firstName = enrollNewStaffDTO.getFirstName();
         String lastName = enrollNewStaffDTO.getLastName();
         String gender = enrollNewStaffDTO.getGender();
-        LocalDate dateOfBirth = enrollNewStaffDTO.getDateOfBirth();
+        String dateOfBirth = enrollNewStaffDTO.getDateOfBirth();
         String email = enrollNewStaffDTO.getEmail();
         String password = enrollNewStaffDTO.getPassword();
         String phoneNumber = enrollNewStaffDTO.getPhoneNumber();

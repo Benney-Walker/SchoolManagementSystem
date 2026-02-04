@@ -25,6 +25,10 @@ public class Fees {
     @JoinColumn(nullable = false, name = "Level_levelID")
     private Level level;
 
+    @ManyToOne
+    @JoinColumn(name = "institution_institutionId")
+    private Institution institution;
+
     public int getFeesId() {
 
         return feesId;
@@ -69,5 +73,13 @@ public class Fees {
 
     public void setLevel(Level level) {
         this.level = level;
+    }
+
+    public Institution getInstitution() {
+        return institution;
+    }
+
+    public void setInstitution(Institution institution) {
+        this.institution = institution;
     }
 }

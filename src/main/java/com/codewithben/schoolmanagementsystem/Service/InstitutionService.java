@@ -53,6 +53,7 @@ public class InstitutionService {
         gradeSystem.setGradeDescription(gradingCriteria.getGradeDescription());
         gradeSystem.setInstitution(institution);
         gradeSystemRepository.save(gradeSystem);
-        return "success";
+
+        return "Grade Criteria added successfully";
     }
 }

@@ -1,9 +1,9 @@
 package com.codewithben.schoolmanagementsystem.DTO.Academics;
 
-public class StudentsScoresTable {
+public class SaveStudentScores {
     private String studentId;
 
-    private String studentName;
+    private String scoresInfo;
 
     private String exercise1Score;
 
@@ -19,12 +19,10 @@ public class StudentsScoresTable {
 
     private String calculatedExamScore;
 
-    public StudentsScoresTable() {}
-
-    public StudentsScoresTable(String studentId, String studentName, String exercise1Score, String classTestScore,
-                               String exercise2Score, String projectScore, String classScore, String examScore, String calculatedExamScore) {
+    public SaveStudentScores(String studentId, String scoresInfo, String exercise1Score, String classTestScore,
+                             String exercise2Score, String projectScore, String classScore, String examScore, String calculatedExamScore) {
         this.studentId = studentId;
-        this.studentName = studentName;
+        this.scoresInfo = scoresInfo;
         this.exercise1Score = exercise1Score;
         this.classTestScore = classTestScore;
         this.exercise2Score = exercise2Score;
@@ -42,12 +40,12 @@ public class StudentsScoresTable {
         this.studentId = studentId;
     }
 
-    public String getStudentName() {
-        return studentName;
+    public String getScoresInfo() {
+        return scoresInfo;
     }
 
-    public void setStudentName(String studentName) {
-        this.studentName = studentName;
+    public void setScoresInfo(String scoresInfo) {
+        this.scoresInfo = scoresInfo;
     }
 
     public String getExercise1Score() {

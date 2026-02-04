@@ -1,21 +1,23 @@
 package com.codewithben.schoolmanagementsystem.DTO.Institution;
 
-import com.codewithben.schoolmanagementsystem.Entity.Subjects;
-
 import java.util.List;
 
-public class RecentStaffView {
+public class ViewStaffList {
     String staffId;
 
     String staffName;
 
+    String staffRole;
+
     List<String> assignedLevel;
 
-    public RecentStaffView() {}
+    public ViewStaffList() {}
 
-    public RecentStaffView(String staffId, String staffName, List<String> assignedLevel) {
+    public ViewStaffList(String staffId, String staffName,
+                         String staffRole, List<String> assignedLevel) {
         this.staffName = staffName;
         this.staffId = staffId;
+        this.staffRole = staffRole;
         this.assignedLevel = assignedLevel;
     }
 
@@ -33,6 +35,14 @@ public class RecentStaffView {
 
     public void setStaffId(String staffId) {
         this.staffId = staffId;
+    }
+
+    public String getStaffRole() {
+        return staffRole;
+    }
+
+    public void setStaffRole(String staffRole) {
+        this.staffRole = staffRole;
     }
 
     public List<String> getAssignedLevel() {

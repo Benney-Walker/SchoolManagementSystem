@@ -1,26 +1,23 @@
 package com.codewithben.schoolmanagementsystem.Controller;
 
 import com.codewithben.schoolmanagementsystem.DTO.Academics.*;
-import com.codewithben.schoolmanagementsystem.DTO.Institution.AddNewSemester;
-import com.codewithben.schoolmanagementsystem.DTO.Institution.PasswordRecoveryDTO;
-import com.codewithben.schoolmanagementsystem.DTO.Institution.StaffCaching;
-import com.codewithben.schoolmanagementsystem.Entity.Semester;
-import com.codewithben.schoolmanagementsystem.Entity.Staffs;
+import com.codewithben.schoolmanagementsystem.DTO.Institution.*;
 import com.codewithben.schoolmanagementsystem.Repository.SemesterRepository;
 import com.codewithben.schoolmanagementsystem.Repository.StaffsRepository;
 import com.codewithben.schoolmanagementsystem.Service.*;
 import com.codewithben.schoolmanagementsystem.Utility.UtilityClass;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/")
 public class PrincipalController {
+    private static final Logger log = LogManager.getLogger(PrincipalController.class);
     private final LevelService levelService;
 
     private final StaffService staffService;
@@ -51,75 +48,61 @@ public class PrincipalController {
         this.reportService = reportService;
     }
 
-    @GetMapping("v1/recently-added-students/{staffId}")
-    public List<RecentStudentsDTO> getRecentlyAddedStudents(@PathVariable String staffId) {
-        Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
-        if (staff == null)
-            return new ArrayList<>();
-        String institutionId = staff.getInstitution().getInstitutionId();
-        String semesterId = utilityClass.getCurrentSemesterId(institutionId);
-        Semester semester = semesterRepository.findBySemesterID(semesterId).orElse(null);
-        if (semester == null)
-            return new ArrayList<>();
-        try {
-            return studentService.findRecentlyAddedStudents(semester.getSemesterStartDate(), semester.getSemesterEndDate());
-        } catch (Exception ex) {
-            System.out.println(ex.getMessage());
-            return new ArrayList<>();
-        }
-    }
-
 
     @GetMapping("v2/absent-students/{staffId}")
     public ResponseEntity<?> getAbsentees(@PathVariable String staffId) {
         try {
-            return ResponseEntity.ok().body(studentService.findAbsentees(staffId));
+            return ResponseEntity.ok().body(studentService.findInstitutionAbsentees(staffId));
         } catch (Exception ex) {
-            ex.printStackTrace();
+            System.out.println(ex.getMessage());
             return ResponseEntity.badRequest().body(ex.getMessage());
         }
 
     }
 
-    @GetMapping("v1/load-levels/{staffId}")
-    public List<LevelCaching> loadLevelInfo(@PathVariable String staffId) {
-
-        return levelService.loadLevelInfo(staffId);
-    }
-
-    @GetMapping("v1/load-staffs-info/{staffId}")
-    public List<StaffCaching> getAllStaffInfo(@PathVariable String staffId) {
-        if (staffId == null)
-            return new ArrayList<>();
-
+    @GetMapping("v2/load-levels/{staffId}")
+    public ResponseEntity<?> loadGradesCache(@PathVariable String staffId) {
         try {
-            return staffService.loadAllStaffInfo(staffId);
+            return ResponseEntity.ok(levelService.loadLevelInfo(staffId));
         } catch (Exception ex) {
-            System.out.println(ex.getMessage());
-            return new ArrayList<>();
+            System.out.println("Error: " + ex.getMessage());
+            return ResponseEntity.badRequest().body(ex.getMessage());
         }
     }
 
-    @PostMapping("v1/reset-staff-password/{staffId}/{newPassword}")
-    public ResponseEntity<PasswordRecoveryDTO> recoverStaffPassword(@PathVariable String staffId,
-                                                                    @PathVariable String newPassword) {
+    @GetMapping("v1/load-staffs-info/{staffId}")
+    public ResponseEntity<?> loadStaffCache(@PathVariable String staffId) {
         try {
-            String response = staffService.resetStaffPassword(staffId, newPassword);
-
-            return ResponseEntity.ok().body(new PasswordRecoveryDTO("success", response));
+            return ResponseEntity.ok(
+                    staffService.loadAllStaffInfo(staffId)
+            );
         } catch (Exception ex) {
-            System.out.println(ex.getMessage());
-            return ResponseEntity.badRequest().body(new PasswordRecoveryDTO("failed", ex.getMessage()));
+            ex.printStackTrace();
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
+    }
+
+    @PostMapping("v2/reset-staff-password/{staffId}/{newPassword}")
+    public ResponseEntity<?> recoverStaffPassword(@PathVariable String staffId,
+                                                  @PathVariable String newPassword) {
+        try {
+
+            return ResponseEntity.ok(
+                    staffService.resetStaffPassword(staffId, newPassword)
+            );
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return ResponseEntity.badRequest().body(ex.getMessage());
         }
     }
 
     @GetMapping("v1/load-semesters/{staffId}")
-    public List<SemesterCaching> loadSemesterInfo(@PathVariable String staffId) {
+    public ResponseEntity<?> loadSemesterCaching(@PathVariable String staffId) {
         try {
-            return levelService.loadSemesterInfo(staffId);
+            return ResponseEntity.ok(levelService.loadSemesterCaching(staffId));
         } catch (Exception ex) {
-            System.out.println(ex.getMessage());
-            return new ArrayList<>();
+            System.out.println("Error: " + ex.getMessage());
+            return ResponseEntity.badRequest().body(ex.getMessage());
         }
     }
 
@@ -145,27 +128,76 @@ public class PrincipalController {
         }
     }
 
-    @PostMapping("v1/set-grades")
-    public ResponseEntity<String> setGradingCriteria(@RequestBody GradingCriteria gradingCriteria) {
+    @PostMapping("v2/set-grades")
+    public ResponseEntity<?> setGradingCriteria(@RequestBody GradingCriteria gradingCriteria) {
         try {
-            String response = institutionService.setGradingCriteria(gradingCriteria);
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(
+                    institutionService.setGradingCriteria(gradingCriteria)
+            );
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
+    }
+
+    @GetMapping("v2/find-and-update-classes/{searchParameter}/{staffId}")
+    public ResponseEntity<?> findClassInfo(@PathVariable String searchParameter,
+                                           @PathVariable String staffId) {
+        try {
+            return ResponseEntity.ok(levelService.findClassInfo(
+                    searchParameter, staffId
+            ));
         } catch (Exception ex) {
             System.out.println(ex.getMessage());
             return ResponseEntity.badRequest().body(ex.getMessage());
         }
     }
 
-    @GetMapping("v1/principal-view-class-results/{levelId}/{semesterId}")
-    public ResponseEntity<?> viewClassSemesterResults(@PathVariable String levelId,
-                                                      @PathVariable String semesterId) {
-
+    @PutMapping("v2/update-class-info")
+    public ResponseEntity<?> updateClassInfo(@RequestBody FindAndUpdateClassInfo updateInfo) {
         try {
-            List<GenerateStudentReport> reportData = reportService.generateClassReports(levelId, semesterId, null);
-            return ResponseEntity.ok().body(reportData);
+            return ResponseEntity.ok(
+                    levelService.updateClassInfo(updateInfo)
+            );
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
+    }
+
+    @PutMapping("v2/update-staff-info")
+    public ResponseEntity<?> updateStaffInfo(@RequestBody FindStaffDTO info) {
+        try {
+            return ResponseEntity.ok(
+                    staffService.updateStaffInfo(info)
+            );
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @GetMapping("v2/search-semester/{semesterId}")
+    public ResponseEntity<?> searchSemesterInfo(@PathVariable String semesterId) {
+        try {
+            return ResponseEntity.ok(
+                    levelService.findSemesterInfo(semesterId)
+            );
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
+    }
+
+    @PutMapping("v2/update-semester-info")
+    public ResponseEntity<?> updateSemesterInfo(@RequestBody FindSemester updateInfo) {
+        try {
+            return ResponseEntity.ok(
+                    levelService.updateSemesterInfo(updateInfo)
+            );
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return ResponseEntity.badRequest().body(ex.getMessage());
         }
     }
 }

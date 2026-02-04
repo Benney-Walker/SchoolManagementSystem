@@ -22,4 +22,8 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
     Optional<Attendance> findByStudent_StudentIdAndDateMarked(
             String studentId, LocalDate dateMarked
     );
+
+    List<Attendance> findByStudent_StudentIdAndSemester_SemesterID(
+            String studentId, String semesterId
+    );
 }

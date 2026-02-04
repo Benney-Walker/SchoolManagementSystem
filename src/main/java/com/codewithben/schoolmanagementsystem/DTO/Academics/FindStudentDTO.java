@@ -1,9 +1,5 @@
 package com.codewithben.schoolmanagementsystem.DTO.Academics;
 
-import com.codewithben.schoolmanagementsystem.Entity.Level;
-
-import java.time.LocalDate;
-
 public class FindStudentDTO {
     
     private String studentId;
@@ -20,20 +16,13 @@ public class FindStudentDTO {
 
     private String parentPhoneNumber;
     
-    private String gradeName;
+    private String gradeId;
 
-    public FindStudentDTO(String studentId, String firstName, String lastName,
-                          String gender, String dateOfBirth,
-                          String parentName, String parentPhoneNumber, String gradeName) {
-        this.studentId = studentId;
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.gender = gender;
-        this.dateOfBirth = dateOfBirth;
-        this.parentName = parentName;
-        this.parentPhoneNumber = parentPhoneNumber;
-        this.gradeName = gradeName;
-    }
+    private String status;
+
+    private String homeTown;
+
+    public FindStudentDTO() {}
 
     public String getStudentId() {
         return studentId;
@@ -92,11 +81,27 @@ public class FindStudentDTO {
         this.parentPhoneNumber = parentPhoneNumber;
     }
 
-    public String getGradeName() {
-        return gradeName;
+    public String getGradeId() {
+        return gradeId;
     }
 
-    public void setGradeName(String gradeName) {
-        this.gradeName = gradeName;
+    public void setGradeId(String gradeId) {
+        this.gradeId = gradeId;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getHomeTown() {
+        return homeTown;
+    }
+
+    public void setHomeTown(String homeTown) {
+        this.homeTown = homeTown;
     }
 }

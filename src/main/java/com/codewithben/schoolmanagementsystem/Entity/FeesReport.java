@@ -29,6 +29,7 @@ public class FeesReport {
     private Fees fees;
 
     @ManyToOne
+    @JoinColumn(name = "institution_institutionId")
     private Institution institution;
 
     public long getFeesReportId() {
@@ -93,5 +94,13 @@ public class FeesReport {
 
     public void setFees(Fees fees) {
         this.fees = fees;
+    }
+
+    public Institution getInstitution() {
+        return institution;
+    }
+
+    public void setInstitution(Institution institution) {
+        this.institution = institution;
     }
 }

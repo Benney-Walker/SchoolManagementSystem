@@ -4,6 +4,10 @@ import com.codewithben.schoolmanagementsystem.DTO.Academics.GradeInfoResponse;
 import com.codewithben.schoolmanagementsystem.DTO.Academics.LevelCaching;
 import com.codewithben.schoolmanagementsystem.DTO.Academics.SemesterCaching;
 import com.codewithben.schoolmanagementsystem.DTO.Academics.StudentsTableDTO;
+import com.codewithben.schoolmanagementsystem.DTO.Institution.FindAndUpdateClassInfo;
+import com.codewithben.schoolmanagementsystem.DTO.Institution.FindSemester;
+import com.codewithben.schoolmanagementsystem.DTO.Institution.GradeInformation;
+import com.codewithben.schoolmanagementsystem.DTO.Institution.StudentRoaster;
 import com.codewithben.schoolmanagementsystem.Entity.*;
 import com.codewithben.schoolmanagementsystem.Repository.*;
 import com.codewithben.schoolmanagementsystem.Utility.UtilityClass;
@@ -12,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
@@ -73,44 +78,48 @@ public class LevelService {
 
             staffsRepository.save(staffs);
 
-            return "Success";
+            return "Grade added successfully";
         }
         throw new Exception("Level already exists");
     }
 
-    public List<LevelCaching> loadLevelInfo(String staffId) {
-        Staffs staffs = staffsRepository.findByStaffId(staffId).orElse(null);
-        if (staffs == null)
-            return new ArrayList<>();
+    public List<LevelCaching> loadLevelInfo(String staffId) throws Exception {
+        Staffs staffs = staffsRepository.findByStaffId(staffId)
+                .orElseThrow(() -> new Exception("You can't access staff list"));
 
         Institution institution = staffs.getInstitution();
-        if (institution == null)
-            return new ArrayList<>();
+        if (institution == null) {
+            throw new Exception("Institution not found");
+        }
 
         List<Level> levels = institution.getLevel();
+        if (levels == null || levels.isEmpty()) {
+            return Collections.emptyList();
+        }
 
         return levels.stream().map(
                 loadInfo -> {
                     String levelName = loadInfo.getLevelName();
                     String levelID = loadInfo.getLevelID();
 
-                    System.out.println("Level name: " + levelName + " level ID: " + levelID);
-
                     return new LevelCaching(levelID, levelName);
                 }
         ).collect(Collectors.toList());
     }
 
-    public List<SemesterCaching> loadSemesterInfo(String staffId) throws Exception {
+    public List<SemesterCaching> loadSemesterCaching(String staffId) throws Exception {
         Staffs staffs = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staffs == null)
-            throw new Exception("Staff not found");
+            throw new Exception("You can access semester list");
 
         Institution institution = institutiionRepository.findByInstitutionId(staffs.getInstitution().getInstitutionId()).orElse(null);
         if (institution == null)
             throw new Exception("Institution not found");
 
         List<Semester> semesters = institution.getSemester();
+        if (semesters == null || semesters.isEmpty()) {
+            return Collections.emptyList();
+        }
 
         return semesters.stream().map(
                 loadInfo -> {
@@ -152,68 +161,111 @@ public class LevelService {
         return "Success";
     }
 
-    // ⚠️ TEMPORARY PATCH
-    // Staff can now have multiple classes (OneToMany)
-    // Current frontend supports only ONE class
-    // Randomly selecting one until next major release
-
-    public GradeInfoResponse loadGradeNameAndSize(String staffId) throws  Exception {
-        Staffs staffs = staffsRepository.findByStaffId(staffId).orElse(null);
-        if (staffs == null)
-            throw new Exception("Staff not found");
+    public List<GradeInformation> loadStaffGrades(String staffId) throws Exception {
+        Staffs staffs = staffsRepository.findByStaffId(staffId)
+                .orElseThrow(() -> new Exception("Staff not found"));
 
         List<Level> levels = staffs.getLevel();
         if (levels == null || levels.isEmpty())
-            throw new Exception("No level assigned");
+            return Collections.emptyList();
 
-        Level selectedLevel;
-        if (levels.size() == 1) {
-            selectedLevel = levels.get(0);
-        } else {
-            int randomIndex = new Random().nextInt(levels.size());
-            selectedLevel = levels.get(randomIndex);
+        List<GradeInformation> gradesInformation = new ArrayList<>();
+        for (Level level : levels) {
+            String gradeId = level.getLevelID();
+            String gradeName = level.getLevelName();
+            int countStudent = level.getStudents() == null ? 0 : level.getStudents().size();
+            String gradeStudentsCount = String.valueOf(countStudent);
+            List<StudentRoaster> gradeStudents = new ArrayList<>();
+
+            List<Students> students = level.getStudents() == null ?
+                    new ArrayList<>() : level.getStudents();
+                for (Students gradeStudent : students) {
+                    String studentId = gradeStudent.getStudentId();
+                    String fullName = gradeStudent.getFirstName() + " " + gradeStudent.getLastName();
+                    String gender = gradeStudent.getGender();
+                    String homeTown = gradeStudent.getHomeTown();
+                    String parentName = gradeStudent.getParentName();
+                    String parentPhoneNumber = gradeStudent.getParentPhoneNumber();
+
+                    StudentRoaster student = new StudentRoaster(
+                            studentId, fullName, gender, homeTown, parentName, parentPhoneNumber
+                    );
+                    gradeStudents.add(student);
+                }
+
+            GradeInformation gradeInformation = new GradeInformation(
+                    gradeId, gradeName, gradeStudentsCount, gradeStudents
+            );
+
+            gradesInformation.add(gradeInformation);
         }
 
-        GradeInfoResponse gradeInfoResponse = new GradeInfoResponse();
-
-            String levelName = selectedLevel.getLevelName();
-            String[] response = levelName.split("_");
-            String gradeName = levelName;
-            String gradeNumber = "";
-
-            if (response.length == 2) {
-                gradeName = response[0];
-                gradeNumber = response[1];
-            }
-            long studentCount = selectedLevel.getStudents().size();
-            gradeInfoResponse.setGradeName(gradeName);
-            gradeInfoResponse.setGradeNumber(gradeNumber);
-            gradeInfoResponse.setGradeSize(String.valueOf(studentCount));
-
-
-        return gradeInfoResponse;
+        return gradesInformation;
     }
 
-    public List<StudentsTableDTO> loadGradeStudents(String levelId) throws Exception {
+    public FindAndUpdateClassInfo findClassInfo(String searchParameter, String staffId) throws Exception {
+        Staffs staff = staffsRepository.findByStaffId(staffId)
+                .orElseThrow(() -> new Exception("Staff not found"));
 
-        Level level = levelRepository.findByLevelID(levelId).orElse(null);
-        if (level == null) {
-            throw new Exception("No Grade found");
+        if (searchParameter.startsWith("LV")) {
+            Level level = levelRepository.findByLevelID(searchParameter)
+                    .orElseThrow(() -> new Exception("Level not found. Verify entered Id"));
+
+            return new FindAndUpdateClassInfo(level.getLevelID(), level.getLevelName(), level.getStaff().getStaffId());
         }
 
-        List<Students> getStudents = level.getStudents();
+        Level level  = levelRepository.findByLevelNameAndInstitution_InstitutionId(
+                searchParameter, staff.getInstitution().getInstitutionId()
+        ).orElseThrow(() -> new Exception("Level not found. Verify entered grade name"));
 
-        return getStudents.stream().map(
-                students -> {
-                    String studentId = students.getStudentId();
-                    String fullName = students.getFirstName() + " " + students.getLastName();
-                    String getGender = students.getGender();
-                    String homeTown = students.getHomeTown();
-                    String parentName = students.getParentName();
-                    String parentPhoneNumber = students.getParentPhoneNumber();
+        return new FindAndUpdateClassInfo(
+                level.getLevelID(), level.getLevelName(), level.getStaff().getStaffId()
+        );
+    }
 
-                    return new StudentsTableDTO(studentId, fullName, getGender, homeTown, parentName, parentPhoneNumber);
-                }
-        ).collect(Collectors.toList());
+    public String updateClassInfo(FindAndUpdateClassInfo updateInfo) throws Exception {
+        if (updateInfo == null) {
+            throw new Exception("Update info empty");
+        }
+
+        Staffs staff = staffsRepository.findByStaffId(updateInfo.getStaffId())
+                .orElseThrow(() -> new Exception("Staff not found"));
+
+        Level level = levelRepository.findByLevelID(updateInfo.getLevelId())
+                .orElseThrow(() -> new Exception("Level not found"));
+
+        level.setLevelName(updateInfo.getLevelName());
+        level.setStaff(staff);
+        levelRepository.save(level);
+
+        return "Grade information updated";
+    }
+
+    public FindSemester findSemesterInfo(String semesterId) throws Exception {
+        Semester semester = semesterRepository.findBySemesterID(semesterId)
+                .orElseThrow(() -> new Exception("Semester not found"));
+
+        FindSemester findSemester = new FindSemester();
+        findSemester.setSemesterID(semesterId);
+        findSemester.setSemesterName(semester.getSemesterName());
+        findSemester.setSemesterStartDate(semester.getSemesterStartDate().toString());
+        findSemester.setSemesterEndDate(semester.getSemesterEndDate().toString());
+        findSemester.setAcademicYear(semester.getAcademicYear());
+
+        return findSemester;
+
+    }
+
+    public String updateSemesterInfo(FindSemester updateInfo) throws Exception {
+        Semester semester = semesterRepository.findBySemesterID(updateInfo.getSemesterID())
+                .orElseThrow(() -> new Exception("Semester not found"));
+
+        semester.setSemesterName(updateInfo.getSemesterName());
+        semester.setSemesterStartDate(LocalDate.parse(updateInfo.getSemesterStartDate()));
+        semester.setSemesterEndDate(LocalDate.parse(updateInfo.getSemesterEndDate()));
+        semester.setAcademicYear(updateInfo.getAcademicYear());
+        semesterRepository.save(semester);
+
+        return "Semester information updated";
     }
 }
