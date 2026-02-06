@@ -8,6 +8,7 @@ import com.codewithben.schoolmanagementsystem.Entity.Staffs;
 import com.codewithben.schoolmanagementsystem.Repository.InstitutiionRepository;
 import com.codewithben.schoolmanagementsystem.Repository.StaffsRepository;
 import com.codewithben.schoolmanagementsystem.Service.FeesService;
+import com.codewithben.schoolmanagementsystem.Service.StudentService;
 import com.codewithben.schoolmanagementsystem.Utility.UtilityClass;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,13 +28,16 @@ public class AccountantController {
 
     private final StaffsRepository staffsRepository;
 
+    private final StudentService studentService;
+
     public AccountantController(FeesService feesService, UtilityClass utilityClass, InstitutiionRepository institutiionRepository,
-                                StaffsRepository staffsRepository) {
+                                StaffsRepository staffsRepository, StudentService studentService) {
 
         this.feesService = feesService;
         this.utilityClass = utilityClass;
         this.institutiionRepository = institutiionRepository;
         this.staffsRepository = staffsRepository;
+        this.studentService = studentService;
     }
 
     @PostMapping("v2/add-new-fees")
@@ -68,13 +72,62 @@ public class AccountantController {
         }
     }
 
-    @GetMapping("v2/search-fees-report")
-    public ResponseEntity<?> searchStudentFeesReport(@RequestParam String studentId,
-                                                             @RequestParam String semesterId,
-                                                             @RequestParam String gradeId) {
+    @GetMapping("v2/fetch-payment-records/{studentId}/{semesterId}")
+    public ResponseEntity<?> fetchPaymentRecords(@PathVariable String studentId,
+                                                 @PathVariable String semesterId) {
         try {
             return ResponseEntity.ok(
-                    feesService.findStudentFeesPaymentDetails(studentId, gradeId, semesterId)
+                    feesService.fetchPaymentRecords(studentId, semesterId)
+            );
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
+    }
+
+    @PutMapping("v2/update-payment-details")
+    public ResponseEntity<?> updatePaymentRecords(@RequestBody StudentPaymentRecords update) {
+        try {
+            return ResponseEntity.ok(
+                    feesService.updatePaymentRecords(update)
+            );
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
+    }
+
+    @DeleteMapping("v2/delete-payment-record/{transactionId}")
+    public ResponseEntity<?> deletePaymentRecord(@PathVariable String transactionId) {
+        try {
+            return ResponseEntity.ok(
+                    feesService.deletePaymentRecord(transactionId)
+            );
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
+    }
+
+    @GetMapping("v2/get-student-name/{studentId}")
+    public ResponseEntity<?> getStudentName(@PathVariable String studentId) {
+        try {
+            return ResponseEntity.ok(
+                    studentService.getStudentName(studentId)
+            );
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
+    }
+
+    @GetMapping("v2/search-fees-report")
+    public ResponseEntity<?> searchStudentFeesReport(@RequestParam String studentId,
+                                                     @RequestParam String semesterId,
+                                                     @RequestParam String gradeId) {
+        try {
+            return ResponseEntity.ok(
+                    feesService.findStudentFeesPaymentDetails(studentId, semesterId, gradeId)
             );
         } catch (Exception e) {
             e.printStackTrace();

@@ -18,10 +18,10 @@ public class StudentFeesPaymentDisplay {
 
     private String feesBalance;
 
-    private List<StudentPaymentHistory> studentPaymentHistory;
+    private List<PaymentHistory> paymentHistory;
 
     public StudentFeesPaymentDisplay(String studentId, String studentName, String semesterName, String levelName, String totalFeesAmount,
-                                     String totalAmountPaid, String feesBalance, List<StudentPaymentHistory> studentPaymentHistory) {
+                                     String totalAmountPaid, String feesBalance, List<PaymentHistory> paymentHistory) {
         this.studentId = studentId;
         this.studentName = studentName;
         this.semesterName = semesterName;
@@ -29,7 +29,7 @@ public class StudentFeesPaymentDisplay {
         this.totalFeesAmount = totalFeesAmount;
         this.totalAmountPaid = totalAmountPaid;
         this.feesBalance = feesBalance;
-        this.studentPaymentHistory = studentPaymentHistory;
+        this.paymentHistory = paymentHistory;
     }
 
     public String getStudentId() {
@@ -88,11 +88,11 @@ public class StudentFeesPaymentDisplay {
         this.feesBalance = feesBalance;
     }
 
-    public List<StudentPaymentHistory> getStudentPaymentHistory() {
-        return studentPaymentHistory;
+    public List<PaymentHistory> getPaymentHistory() {
+        return paymentHistory;
     }
 
-    public void setStudentPaymentHistory(List<StudentPaymentHistory> studentPaymentHistory) {
-        this.studentPaymentHistory = studentPaymentHistory;
+    public void setPaymentHistory(List<PaymentHistory> paymentHistory) {
+        this.paymentHistory = paymentHistory;
     }
 }

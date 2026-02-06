@@ -45,31 +45,34 @@ public class FeesService {
     }
 
     // Displays student Fees
-    public StudentFeesPaymentDisplay findStudentFeesPaymentDetails(String studentId, String levelId, String semesterId) throws Exception {
-
-        Fees fees = feesRepository.findBySemester_SemesterIDAndLevel_LevelID(
-                semesterId, levelId
-        ).orElse(null);
-        if (fees == null) {
-            throw new Exception("Fees Not Found");
-        }
-
-        List<FeesReport> feesReports = fees.getFeesReport();
-
+    public StudentFeesPaymentDisplay findStudentFeesPaymentDetails(String studentId, String semesterId, String levelId) throws Exception {
         Students student = studentsRepository.findByStudentId(studentId).orElse(null);
         if (student == null) {
             throw new Exception("Invalid student id");
         }
 
+        Fees fees = feesRepository.findBySemester_SemesterIDAndLevel_LevelID(
+                semesterId, levelId
+        ).orElse(null);
+        if (fees == null) {
+            throw new Exception("Semester fee not added");
+        }
+
+        List<FeesReport> feesReports = fees.getFeesReport();
+        if (feesReports == null || feesReports.isEmpty()) {
+            throw new Exception("No Records found");
+        }
+
+
         //ArrayList to Store Fees Report
-        List<StudentPaymentHistory> paymentHistoryList = new ArrayList<>();
+        List<PaymentHistory> paymentHistoryList = new ArrayList<>();
         double totalAmountPaid = 0.0;
 
         for (FeesReport feesReport : feesReports) {
             if (feesReport.getStudent().getStudentId().equals(student.getStudentId())) {
                 totalAmountPaid += feesReport.getAmountPaid();
 
-                StudentPaymentHistory paymentHistory = new StudentPaymentHistory(
+                PaymentHistory paymentHistory = new PaymentHistory(
                         feesReport.getDateOfPayment().toString(),
                         String.valueOf(feesReport.getAmountPaid()),
                         String.valueOf(feesReport.getFeesBalance()),
@@ -79,6 +82,11 @@ public class FeesService {
                 paymentHistoryList.add(paymentHistory);
             }
         }
+
+        if (paymentHistoryList.isEmpty()) {
+            throw new Exception("No Records found");
+        }
+
         //Build Student Info
         String studentIdLoadInfo = student.getStudentId();
         String studentFullName = student.getFirstName() + " " + student.getLastName();
@@ -99,6 +107,74 @@ public class FeesService {
                 paymentHistoryList
         );
 
+    }
+
+    public List<StudentPaymentRecords> fetchPaymentRecords(String studentId, String semesterId) throws Exception {
+        Students student = studentsRepository.findByStudentId(studentId).orElse(null);
+        if (student == null) {
+            throw new Exception("Invalid student id");
+        }
+
+        Fees fees = feesRepository.findBySemester_SemesterIDAndLevel_LevelID(
+                semesterId, student.getLevel().getLevelID()
+        ).orElse(null);
+        if (fees == null) {
+            throw new Exception("Fees Not Found");
+        }
+
+        List<FeesReport> feesReports = fees.getFeesReport();
+        if (feesReports == null || feesReports.isEmpty()) {
+            throw new Exception("No records found");
+        }
+
+        List<StudentPaymentRecords> studentPaymentRecordsList = new ArrayList<>();
+        for (FeesReport feesReport : feesReports) {
+            if (feesReport.getStudent().getStudentId().equals(student.getStudentId())) {
+                StudentPaymentRecords records = new StudentPaymentRecords();
+                records.setPaymentId(feesReport.getFeesReportId());
+                records.setStudentId(feesReport.getStudent().getStudentId());
+                records.setStudentName(feesReport.getStudent().getFirstName() + " " + feesReport.getStudent().getLastName());
+                records.setDateOfPayment(feesReport.getDateOfPayment().toString());
+                records.setAmount(feesReport.getAmountPaid().toString());
+                records.setSemesterId(feesReport.getFees().getSemester().getSemesterID());
+                records.setPayerName(feesReport.getPersonWhoPaid());
+                records.setPayerContact(feesReport.getPhoneNumber());
+                studentPaymentRecordsList.add(records);
+            }
+        }
+
+        return studentPaymentRecordsList;
+    }
+
+    public String updatePaymentRecords(StudentPaymentRecords update) throws Exception {
+        FeesReport feesReport = feesReportRepository.findByFeesReportId(update.getPaymentId())
+                .orElseThrow(() -> new Exception("Record Not Found"));
+
+        feesReport.setAmountPaid(Double.parseDouble(update.getAmount()));
+        feesReport.setPhoneNumber(update.getPayerContact());
+        feesReport.setPersonWhoPaid(update.getPayerName());
+        feesReportRepository.save(feesReport);
+
+        double totalPreviouslyPaid = feesReportRepository
+                .findByStudent_StudentIdAndFees_FeesId(update.getStudentId(), feesReport.getFees().getFeesId())
+                .stream()
+                .mapToDouble(FeesReport::getAmountPaid)
+                .sum();
+
+        double feesBalance = feesReport.getFees().getAmountToBePayed() - totalPreviouslyPaid;
+        feesReport.setFeesBalance(feesBalance);
+        feesReportRepository.save(feesReport);
+
+        return "Fees Records updated successfully";
+    }
+
+    public String deletePaymentRecord(String transactionId) throws Exception {
+        FeesReport paymentRecord = feesReportRepository.findByFeesReportId(transactionId)
+                .orElseThrow(() -> new Exception("Record Not Found"));
+
+        feesReportRepository.delete(paymentRecord);
+
+        return "Payment Record deleted successfully";
     }
 
     public List<ClassFeesSummary> loadClassFeesSummary(String staffId) throws Exception {
@@ -256,6 +332,7 @@ public class FeesService {
 
         // Create and save
         FeesReport feesReport = new FeesReport();
+        feesReport.setFeesReportId(utilityClass.generateEntityId("TRANSACTION"));
         feesReport.setAmountPaid(amountPaid);
         feesReport.setPersonWhoPaid(personWhoPaid);
         feesReport.setPhoneNumber(phoneNumber);

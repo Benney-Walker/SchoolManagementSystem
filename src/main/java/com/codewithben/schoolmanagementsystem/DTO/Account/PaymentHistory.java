@@ -1,6 +1,6 @@
 package com.codewithben.schoolmanagementsystem.DTO.Account;
 
-public class StudentPaymentHistory {
+public class PaymentHistory {
 
     private String dateOfPayment;
 
@@ -12,7 +12,7 @@ public class StudentPaymentHistory {
 
     private String contactInfo;
 
-    public StudentPaymentHistory(String dateOfPayment, String amountPaid, String feesBalance, String personWhoPaid, String contactInfo) {
+    public PaymentHistory(String dateOfPayment, String amountPaid, String feesBalance, String personWhoPaid, String contactInfo) {
         this.dateOfPayment = dateOfPayment;
         this.amountPaid = amountPaid;
         this.feesBalance = feesBalance;

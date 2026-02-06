@@ -7,8 +7,7 @@ import java.time.LocalDate;
 @Entity
 public class FeesReport {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long feesReportId;
+    private String feesReportId;
 
     private Double amountPaid;
 
@@ -32,11 +31,26 @@ public class FeesReport {
     @JoinColumn(name = "institution_institutionId")
     private Institution institution;
 
-    public long getFeesReportId() {
+    public FeesReport() {}
+
+    public FeesReport(String feesReportId, Double amountPaid, double feesBalance, String personWhoPaid, String phoneNumber,
+                      LocalDate dateOfPayment, Students student, Fees fees, Institution institution) {
+        this.feesReportId = feesReportId;
+        this.amountPaid = amountPaid;
+        this.feesBalance = feesBalance;
+        this.personWhoPaid = personWhoPaid;
+        this.phoneNumber = phoneNumber;
+        this.dateOfPayment = dateOfPayment;
+        this.student = student;
+        this.fees = fees;
+        this.institution = institution;
+    }
+
+    public String getFeesReportId() {
         return feesReportId;
     }
 
-    public void setFeesReportId(long feesReportId) {
+    public void setFeesReportId(String feesReportId) {
         this.feesReportId = feesReportId;
     }
 
