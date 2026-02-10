@@ -9,6 +9,7 @@ import com.codewithben.schoolmanagementsystem.DTO.Institution.StaffCaching;
 import com.codewithben.schoolmanagementsystem.Entity.*;
 import com.codewithben.schoolmanagementsystem.Repository.*;
 import com.codewithben.schoolmanagementsystem.Utility.UtilityClass;
+import jakarta.transaction.Transactional;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -75,7 +76,7 @@ public class StaffService {
         staff.setFirstName(firstName);
         staff.setLastName(surName);
         staff.setGender(gender);
-        staff.setDateOfBirth(dateOfBirth);
+        staff.setDateOfBirth(LocalDate.parse(dateOfBirth));
         staff.setEmail(email);
 
         String hashedPassword = bCryptPasswordEncoder.encode(password);
@@ -85,10 +86,7 @@ public class StaffService {
         staff.setStaffRoles(StaffRoles.valueOf(staffRole));
         staff.setStaffStatus(StaffStatus.ACTIVE);
 
-        // Set the owning side of the relationship - this is ALL you need!
         staff.setInstitution(institution);
-
-        // Save only the staff - the FK will be set automatically
         staffsRepository.save(staff);
 
         return staffID;
@@ -103,7 +101,7 @@ public class StaffService {
         staffData.setFirstName(staff.getFirstName());
         staffData.setSurname(staff.getLastName());
         staffData.setGender(staff.getGender());
-        staffData.setDateOfBirth(staff.getDateOfBirth());
+        staffData.setDateOfBirth(String.valueOf(staff.getDateOfBirth()));
         staffData.setEmail(staff.getEmail());
         staffData.setPhoneNumber(staff.getPhoneNumber());
         staffData.setStaffRole(staff.getStaffRoles().toString());
@@ -120,7 +118,7 @@ public class StaffService {
         staff.setFirstName(updateInfo.getFirstName());
         staff.setLastName(updateInfo.getSurname());
         staff.setGender(updateInfo.getGender());
-        staff.setDateOfBirth(updateInfo.getDateOfBirth());
+        staff.setDateOfBirth(LocalDate.parse(updateInfo.getDateOfBirth()));
         staff.setEmail(updateInfo.getEmail());
         staff.setPhoneNumber(updateInfo.getPhoneNumber());
         staff.setStaffRoles(StaffRoles.valueOf(updateInfo.getStaffRole()));
@@ -130,6 +128,7 @@ public class StaffService {
         return "Staff Info Updated Successfully";
     }
 
+    @Transactional
     public String staffAuthentication(String loginId, String password) throws Exception {
 
         Staffs staff = staffsRepository.findByStaffId(loginId).orElse(null);
@@ -144,19 +143,6 @@ public class StaffService {
             }
         } else {
             staff.setStaffStatus(StaffStatus.ACTIVE);
-        }
-
-        if (staff.getStaffRoles() == null) {
-            String staffRole  = staff.getStatus();
-            if (staffRole.equals("Teaching Staff")) {
-                staffRole = "TEACHING_STAFF";
-            } else if (staffRole.equals("General Staff")) {
-                staffRole = "GENERAL_STAFF";
-            } else {
-                staffRole = staffRole.toUpperCase();
-            }
-            staff.setStaffRoles(StaffRoles.valueOf(staffRole));
-            staffsRepository.save(staff);
         }
 
         String storedPassword = staff.getPassword();
@@ -182,7 +168,7 @@ public class StaffService {
         String staffFullName = staff.getFirstName() + " " + staff.getLastName();
         String staffId = staff.getStaffId();
 
-        return staffRole + "_" + institutionName + "_" + staffFullName + "_" + staffId;
+        return staffRole + "," + institutionName + "," + staffFullName + "," + staffId;
     }
 
     public long countTotalStaffs(String staffId) throws Exception {
@@ -272,14 +258,7 @@ public class StaffService {
                 loadInfo -> {
                     String staffIdMapping = loadInfo.getStaffId();
                     String staffFullNameMapping = loadInfo.getFirstName() + " " + loadInfo.getLastName();
-                    String staffRole;
-
-                    if (loadInfo.getStaffRoles() != null) {
-                        staffRole = loadInfo.getStaffRoles().name();
-                    } else {
-                        staffRole = loadInfo.getStatus(); // legacy fallback
-                    }
-
+                    String staffRole = loadInfo.getStaffRoles().name();
 
                     return new StaffCaching(staffFullNameMapping, staffIdMapping, staffRole);
                 }
@@ -309,29 +288,14 @@ public class StaffService {
             if(staffMember.getLevel() == null) {
                 viewStaffList.setStaffId(staffMember.getStaffId());
                 viewStaffList.setStaffName(staffMember.getFirstName() + " " + staffMember.getLastName());
-
-                String staffRole;
-
-                if (staffMember.getStaffRoles() != null) {
-                    staffRole = staffMember.getStaffRoles().name();
-                } else {
-                    staffRole = staffMember.getStatus(); // legacy fallback
-                }
-
-                viewStaffList.setStaffRole(staffRole);
+                viewStaffList.setStaffRole(staffMember.getStaffRoles().name());
                 viewStaffList.setAssignedLevel(new ArrayList<>());
 
             } else {
                 viewStaffList.setStaffId(staffMember.getStaffId());
                 viewStaffList.setStaffName(staffMember.getFirstName() + " " + staffMember.getLastName());
-                String staffRole;
 
-                if (staffMember.getStaffRoles() != null) {
-                    staffRole = staffMember.getStaffRoles().name();
-                } else {
-                    staffRole = staffMember.getStatus(); // legacy fallback
-                }
-                viewStaffList.setStaffRole(staffRole);
+                viewStaffList.setStaffRole(staffMember.getStaffRoles().name());
 
                 List<Level> levels = staffMember.getLevel();
                 List<String> assignedLevels = new ArrayList<>();

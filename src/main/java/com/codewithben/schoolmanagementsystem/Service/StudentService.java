@@ -173,8 +173,12 @@ public class StudentService {
 
         // Check if score already exists
         SubjectScore subjectScore = subjectScoreRepository
-                .findByStudent_StudentIdAndSubject_SubjectId(student.getStudentId(), subjectId)
-                .orElse(null);
+                .findByStudent_StudentIdAndSubject_SubjectIdAndResults_ResultId(
+                        student.getStudentId(),
+                        subject.getSubjectId(),
+                        result.getResultId()
+                ).orElse(null);
+
         double classScore = Double.parseDouble(scores.getClassScore());
         double calculatedExamScore = Double.parseDouble(scores.getCalculatedExamScore());
         double totalScore =  classScore + calculatedExamScore;
@@ -191,27 +195,26 @@ public class StudentService {
             subjectScore.setClassScore(classScore);
             subjectScore.setExamScore(Double.parseDouble(scores.getExamScore()));
             subjectScore.setCalculatedExamScore(calculatedExamScore);
+            subjectScore.setGrade(utilityClass.extractGrade(totalScore));
+            subjectScore.setRemarks(utilityClass.extractDescription(totalScore));
             subjectScore.setTotalScore(totalScore);
-            subjectScoreRepository.save(subjectScore);
 
-            // Recalculate result totals
-            updateResultTotals(result, staff, subject);
+        } else {
 
-            return "Scores successfully added";
+            subjectScore.setExercise1Score(Double.parseDouble(scores.getExercise1Score()));
+            subjectScore.setClassTestScore(Double.parseDouble(scores.getClassTestScore()));
+            subjectScore.setExercise2Score(Double.parseDouble(scores.getExercise2Score()));
+            subjectScore.setProjectScore(Double.parseDouble(scores.getProjectScore()));
+            subjectScore.setClassScore(classScore);
+            subjectScore.setExamScore(Double.parseDouble(scores.getExamScore()));
+            subjectScore.setCalculatedExamScore(calculatedExamScore);
+            subjectScore.setTotalScore(totalScore);
+
         }
 
-        subjectScore.setExercise1Score(Double.parseDouble(scores.getExercise1Score()));
-        subjectScore.setClassTestScore(Double.parseDouble(scores.getClassTestScore()));
-        subjectScore.setExercise2Score(Double.parseDouble(scores.getExercise2Score()));
-        subjectScore.setProjectScore(Double.parseDouble(scores.getProjectScore()));
-        subjectScore.setClassScore(classScore);
-        subjectScore.setExamScore(Double.parseDouble(scores.getExamScore()));
-        subjectScore.setCalculatedExamScore(calculatedExamScore);
-        subjectScore.setTotalScore(totalScore);
         subjectScoreRepository.save(subjectScore);
-
-        // Recalculate result totals
         updateResultTotals(result, staff, subject);
+
         return "Scores successfully added";
     }
 
@@ -223,19 +226,19 @@ public class StudentService {
             result.setTotalScore(0.0);
             result.setAverageScore(0.0);
         } else {
-            total = scores.stream()
-                    .mapToDouble(s -> s.getTotalScore() != null ? s.getTotalScore() : 0.0)
-                    .sum();
+
+            for(SubjectScore score : scores) {
+                total += score.getTotalScore();
+            }
             result.setTotalScore(total);
             result.setAverageScore(total / scores.size());
         }
 
         result.setUpdatedAt(LocalDate.now());
         result.setUpdatedBy(staff);
-
-        result.setPosition(utilityClass.getResultPosition(subject, result.getSemester(), total));
         resultsRepository.save(result);
 
+        utilityClass.reArrangePositions(subject, result.getSemester());
     }
 
     public StudentResult findStudentResults(String studentId, String semesterId, String levelId) throws Exception {
@@ -243,7 +246,9 @@ public class StudentService {
         if (student == null) {
             throw new Exception("student not found");
         }
-        Results results = resultsRepository.findByStudent_StudentIdAndSemester_SemesterIDAndLevel_LevelID(studentId, semesterId, levelId).orElse(null);
+        Results results = resultsRepository.findByStudent_StudentIdAndSemester_SemesterIDAndLevel_LevelID(
+                studentId, semesterId, levelId
+        ).orElse(null);
         if (results == null) {
             throw new Exception("results not found");
         }
@@ -288,8 +293,8 @@ public class StudentService {
         }
 
 
-        String firstName = null;
-        String lastName = null;
+        String firstName;
+        String lastName;
         if (!searchPar1.isEmpty() && !searchPar2.equals("empty")) {
             firstName = searchPar1;
             lastName = searchPar2;
@@ -401,7 +406,6 @@ public class StudentService {
                 .orElseThrow(() -> new Exception("Subject Not Found"));
 
         String subjectName = subject.getSubjectName();
-        List<StudentsScoresTable> subjectStudents = new ArrayList<>();
 
         Level level = subject.getLevel();
         if (level == null) {
@@ -413,49 +417,44 @@ public class StudentService {
             throw new Exception("Students not added to system");
         }
 
+        List<StudentsScoresTable> subjectStudents = new ArrayList<>();
         for (Students student : students) {
             String studentId = student.getStudentId();
             String studentName = student.getFirstName() + " " + student.getLastName();
 
-            // Default scores for students without scores yet
-            String ex1 = "0";
-            String classTest = "0";
-            String ex2 = "0";
-            String projectScore = "0";
-            String classScore = "0";
-            String examScore = "0";
-            String calExamScore = "0";
+            StudentsScoresTable scoresTable = new StudentsScoresTable();
 
             // Check if student has scores for this subject
-            List<SubjectScore> scores = student.getSubjectScore();
-            if (scores != null) {
-                for (SubjectScore score : scores) {
-                    if (score.getSubject() != null &&
-                            subjectId.equals(score.getSubject().getSubjectId())) {
-                        ex1 = score.getExercise1Score() != null ? score.getExercise1Score().toString() : "0";
-                        classTest = score.getClassTestScore() != null ? score.getClassTestScore().toString() : "0";
-                        ex2 = score.getExercise2Score() != null ? score.getExercise2Score().toString() : "0";
-                        projectScore = score.getProjectScore() != null ? score.getProjectScore().toString() : "0";
-                        classScore = score.getClassScore() != null ? score.getClassScore().toString() : "0";
-                        examScore = score.getExamScore() != null ? score.getExamScore().toString() : "0";
-                        calExamScore = score.getCalculatedExamScore() != null ? score.getCalculatedExamScore().toString() : "0";
-                        break;
-                    }
-                }
+            SubjectScore score = subjectScoreRepository.findByStudent_StudentIdAndSubject_SubjectId(
+                    studentId, subjectId
+            ).orElse(null);
+
+            if (score == null) {
+
+                scoresTable.setStudentId(studentId);
+                scoresTable.setStudentName(studentName);
+                scoresTable.setExercise1Score("0");
+                scoresTable.setClassTestScore("0");
+                scoresTable.setExercise2Score("0");
+                scoresTable.setProjectScore("0");
+                scoresTable.setClassScore("0");
+                scoresTable.setExamScore("0");
+                scoresTable.setCalculatedExamScore("0");
+
+            } else {
+
+                scoresTable.setStudentId(studentId);
+                scoresTable.setStudentName(studentName);
+                scoresTable.setExercise1Score(String.valueOf(score.getExercise1Score()));
+                scoresTable.setClassTestScore(String.valueOf(score.getClassTestScore()));
+                scoresTable.setExercise2Score(String.valueOf(score.getExercise2Score()));
+                scoresTable.setProjectScore(String.valueOf(score.getProjectScore()));
+                scoresTable.setClassScore(String.valueOf(score.getClassScore()));
+                scoresTable.setExamScore(String.valueOf(score.getExamScore()));
+                scoresTable.setCalculatedExamScore(String.valueOf(score.getCalculatedExamScore()));
+
             }
 
-            StudentsScoresTable scoresTable = new StudentsScoresTable();
-            scoresTable.setStudentId(studentId);
-            scoresTable.setStudentName(studentName);
-            scoresTable.setExercise1Score(ex1);
-            scoresTable.setClassTestScore(classTest);
-            scoresTable.setExercise2Score(ex2);
-            scoresTable.setProjectScore(projectScore);
-            scoresTable.setClassScore(classScore);
-            scoresTable.setExamScore(examScore);
-            scoresTable.setCalculatedExamScore(calExamScore);
-
-            // Add ALL students, with or without scores
             subjectStudents.add(scoresTable);
         }
 
@@ -488,6 +487,12 @@ public class StudentService {
 
         if (attendanceDate.equals("no_date")) {
 
+            List<Attendance> checkAttendance = attendanceRepository
+                    .findByLevel_LevelIDAndDateMarked(levelId, LocalDate.now());
+            if (checkAttendance != null && !checkAttendance.isEmpty()) {
+                throw new Exception("Class attendance already marked. Switch to update if necessary");
+            }
+
             List<Students> students = level.getStudents();
 
             for (Students student : students) {
@@ -505,9 +510,13 @@ public class StudentService {
             return attendanceList;
         }
 
+        LocalDate dateOfAttendance = LocalDate.parse(attendanceDate);
         List<Attendance> markedAttendance = attendanceRepository
-                .findByLevel_LevelIDAndDateMarked(levelId, LocalDate.parse(attendanceDate));
-        if (markedAttendance == null || markedAttendance.isEmpty()) {
+                .findByLevel_LevelIDAndDateMarked(levelId, dateOfAttendance);
+        if (dateOfAttendance.equals(LocalDate.now()) && markedAttendance == null
+                || markedAttendance.isEmpty()) {
+            throw new Exception("Today's attendance not marked");
+        } else if (markedAttendance == null || markedAttendance.isEmpty()) {
             throw new Exception("Date must be today or earlier.");
         }
 

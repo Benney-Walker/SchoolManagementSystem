@@ -8,6 +8,7 @@ import com.codewithben.schoolmanagementsystem.Repository.ResultsRepository;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -96,11 +97,6 @@ public class UtilityClass {
         }
     }
 
-    //This clears cache when the grading criteria is updated
-    public void invalidateCache() {
-        cache.set(null);
-    }
-
     //Load (Cached) list ordered by LowerRange
     private List<GradeSystem> getOrderedCacheList() {
         List<GradeSystem> list = cache.get();
@@ -121,7 +117,7 @@ public class UtilityClass {
                 return grade.getGrade() + "_" + grade.getGradeDescription();
             }
         }
-        return "grade range not found";
+        return " ";
     }
 
     //Extract grade
@@ -159,7 +155,7 @@ public class UtilityClass {
         for (Semester semester : semesters) {
             LocalDate startDate = semester.getSemesterStartDate();
             LocalDate endDate = semester.getSemesterEndDate();
-            LocalDate gradePeriod = endDate.plusWeeks(1);
+            LocalDate gradePeriod = endDate.plusDays(10);
 
             // Check if current date is within semester range (inclusive)
             if (currentDate.isEqual(startDate) || currentDate.isAfter(startDate)) {
@@ -171,21 +167,37 @@ public class UtilityClass {
         return "";
     }
 
-    public String getResultPosition(Subjects subject, Semester semester, double total) {
+    public void reArrangePositions(Subjects subject, Semester semester) {
         Level level = subject.getLevel();
 
-        List<Results> results = resultsRepository
-                .findByLevel_LevelIDAndSemester_SemesterID(
-                        level.getLevelID(), semester.getSemesterID());
+        // 1. Fetch results sorted by score (High to Low)
+        List<Results> resultsList = resultsRepository
+                .findByLevel_LevelIDAndSemester_SemesterIDOrderByTotalScoreDesc(
+                        level.getLevelID(), semester.getSemesterID()
+                );
 
-        long higherScores = results.stream()
-                .filter(r -> r.getTotalScore() > total)
-                .count();
+        if (resultsList == null || resultsList.isEmpty()) {
+            return;
+        }
 
-        int position = (int) higherScores + 1;
-        System.out.println("Higher Scores: " + position);
+        int currentRank = 0;
+        double lastScore = -1.0;
 
-        return ordinal(position);
+        for (int i = 0; i < resultsList.size(); i++) {
+            Results currentResult = resultsList.get(i);
+            double score = currentResult.getTotalScore();
+
+
+            if (score != lastScore) {
+                currentRank = i + 1;
+                lastScore = score;
+            }
+
+            currentRank = i + 1;
+
+            currentResult.setPosition(ordinal(currentRank));
+            resultsRepository.save(currentResult);
+        }
     }
 
     private String ordinal(int number) {

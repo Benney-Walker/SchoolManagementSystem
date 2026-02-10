@@ -93,7 +93,7 @@ public class AuthenticationController {
 
         try {
             String response = staffService.staffAuthentication(staffId, password);
-            String[] responseSplit = response.split("_");
+            String[] responseSplit = response.split(",");
             String role = "";
             String institutionName = "";
             String staffFullName = "";
@@ -105,25 +105,6 @@ public class AuthenticationController {
                 returnStaffId = responseSplit[3];
             }
 
-            if (role.equals("Principal"))
-                return ResponseEntity.ok(Map.of(
-                        "status", "success",
-                        "role", role,
-                        "institutionName", institutionName,
-                        "staffFullName", staffFullName,
-                        "returnStaffId", returnStaffId
-                ));
-            if (role.equals("Accountant"))
-                return ResponseEntity.ok(Map.of(
-                         "status", "success",
-                         "role", role,
-                         "institutionName", institutionName,
-                         "staffFullName", staffFullName,
-                        "returnStaffId", returnStaffId
-                ));
-
-
-
             return ResponseEntity.ok(Map.of(
                     "status", "success",
                     "role", role,
@@ -132,7 +113,7 @@ public class AuthenticationController {
                     "returnStaffId", returnStaffId
             ));
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            e.printStackTrace();
             return ResponseEntity.ok(Map.of(
                     "status", "failed",
                     "message", e.getMessage()

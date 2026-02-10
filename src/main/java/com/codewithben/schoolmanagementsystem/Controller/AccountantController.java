@@ -135,6 +135,19 @@ public class AccountantController {
         }
     }
 
+    @GetMapping("v2/fetch-grade-fees-report/{levelId}/{semesterId}")
+    public ResponseEntity<?> fetchGradesFeesReport(@PathVariable String levelId,
+                                                   @PathVariable String semesterId) {
+        try {
+            return ResponseEntity.ok(
+                    feesService.fetchGradeFeesReport(levelId, semesterId)
+            );
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
+    }
+
     @GetMapping("v2/class-summary-fees/{staffId}")
     public ResponseEntity<?> getClassSummaryFees(@PathVariable String staffId) {
         try {

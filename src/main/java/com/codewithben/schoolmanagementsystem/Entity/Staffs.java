@@ -24,7 +24,7 @@ public class Staffs {
     private String gender;
 
     @Column(nullable = false)
-    private String dateOfBirth;
+    private LocalDate dateOfBirth;
 
     @Column(nullable = false)
     private String password;
@@ -37,9 +37,6 @@ public class Staffs {
 
     @Enumerated(EnumType.STRING)
     private StaffRoles staffRoles;
-
-    @Column(nullable = false)
-    private String status;
 
     @Column(nullable = false)
     private LocalDate dateOfRegistration;
@@ -57,8 +54,8 @@ public class Staffs {
     public Staffs() {}
 
     public Staffs(String staffId, String firstName, String lastName, String gender,
-                  String dateOfBirth, String password, String email, String phoneNumber,
-                  StaffRoles staffRoles, String status, LocalDate dateOfRegistration, Institution institution, List<Level> level, StaffStatus staffStatus) {
+                  LocalDate dateOfBirth, String password, String email, String phoneNumber,
+                  StaffRoles staffRoles, LocalDate dateOfRegistration, Institution institution, List<Level> level, StaffStatus staffStatus) {
         this.staffId = staffId;
         this.firstName = firstName;
         this.lastName = lastName;
@@ -68,7 +65,6 @@ public class Staffs {
         this.email = email;
         this.phoneNumber = phoneNumber;
         this.staffRoles = staffRoles;
-        this.status = status;
         this.dateOfRegistration = dateOfRegistration;
         this.institution = institution;
         this.level = level;
@@ -107,11 +103,11 @@ public class Staffs {
         this.gender = gender;
     }
 
-    public String getDateOfBirth() {
+    public LocalDate getDateOfBirth() {
         return dateOfBirth;
     }
 
-    public void setDateOfBirth(String dateOfBirth) {
+    public void setDateOfBirth(LocalDate dateOfBirth) {
         this.dateOfBirth = dateOfBirth;
     }
 
@@ -145,14 +141,6 @@ public class Staffs {
 
     public void setStaffRoles(StaffRoles staffRoles) {
         this.staffRoles = staffRoles;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
     }
 
     public LocalDate getDateOfRegistration() {

@@ -1,5 +1,6 @@
 package com.codewithben.schoolmanagementsystem.Service;
 
+import com.codewithben.schoolmanagementsystem.Contants.StudentStatus;
 import com.codewithben.schoolmanagementsystem.DTO.Account.*;
 import com.codewithben.schoolmanagementsystem.DTO.Institution.FetchFeesDetails;
 import com.codewithben.schoolmanagementsystem.Entity.*;
@@ -209,6 +210,44 @@ public class FeesService {
         return classFeesSummaryList;
     }
 
+    public List<GradeFeesReport> fetchGradeFeesReport(String levelId, String semesterId) throws Exception {
+        Fees fee = feesRepository.findBySemester_SemesterIDAndLevel_LevelID(
+                semesterId, levelId
+        ).orElseThrow(() -> new Exception("Semester Fee not Added for the selected class"));
+
+        List<FeesReport> records = fee.getFeesReport();
+        List<Students> levelStudents = fee.getLevel().getStudents();
+
+        List<GradeFeesReport> gradeFeesReportList = new ArrayList<>();
+        for (Students student : levelStudents) {
+            if (student.getStudentStatus() == StudentStatus.INACTIVE ||
+            student.getStudentStatus() == StudentStatus.COMPLETED) {
+                continue;
+            }
+
+            double amountPaid = 0;
+            for (FeesReport feesReport : records) {
+                if (feesReport.getStudent().getStudentId().equals(student.getStudentId())) {
+                    amountPaid = feesReport.getAmountPaid();
+                }
+            }
+
+            double totalFees = fee.getAmountToBePayed();
+            double outstandingBalance = totalFees - amountPaid;
+
+            GradeFeesReport paymentRecord = new GradeFeesReport();
+            paymentRecord.setStudentId(student.getStudentId());
+            paymentRecord.setStudentName(student.getFirstName() + " " + student.getLastName());
+            paymentRecord.setTotalAmountToPay(String.valueOf(totalFees));
+            paymentRecord.setAmountPayed(String.valueOf(amountPaid));
+            paymentRecord.setOutstanding(String.valueOf(outstandingBalance));
+
+            gradeFeesReportList.add(paymentRecord);
+        }
+
+        return gradeFeesReportList;
+    }
+
     private Double getExpectedLevelFees(String levelId) {
         Level level = levelRepository.findByLevelID(levelId).orElse(null);
         if (level == null) {
@@ -319,7 +358,7 @@ public class FeesService {
         Institution institution = student.getInstitution();
 
         Fees fees = feesRepository.findBySemester_SemesterIDAndLevel_LevelID(semesterId, levelId)
-                .orElseThrow(() -> new Exception("Fee not found"));
+                .orElseThrow(() -> new Exception("Fees for the expected class not added to system"));
 
         // Calculate total already paid by this student for this fee
         double totalPreviouslyPaid = feesReportRepository
@@ -402,6 +441,9 @@ public class FeesService {
 
         //Get current Semester
         String currentSemester = utilityClass.getCurrentSemesterId(institution.getInstitutionId());
+        if (currentSemester == null || currentSemester.isEmpty()) {
+            throw new Exception("Semester not found");
+        }
 
         for (Students student: students) {
             String levelId = student.getLevel().getLevelID();
@@ -438,6 +480,10 @@ public class FeesService {
                 feesSummaryTables.add(feesSummaryTable);
             }
         }
+
+        if (feesSummaryTables.isEmpty()) {
+            throw new Exception("No records found");
+        }
         return feesSummaryTables;
     }
 
@@ -467,10 +513,7 @@ public class FeesService {
             String levelId = student.getLevel().getLevelID();
 
             Fees fee = feesRepository.findBySemester_SemesterIDAndLevel_LevelID(currentSemester, levelId)
-                    .orElse(null);
-            if (fee == null) {
-                throw new Exception("Not all semester fees added");
-            }
+                    .orElseThrow(() -> new Exception("Not all semester fees added"));
 
             double feeAmount = fee.getAmountToBePayed() != null ? fee.getAmountToBePayed() : 0.0;
             double amountPaid = 0.0;
@@ -501,6 +544,10 @@ public class FeesService {
                 feesSummaryTables.add(feesSummaryTable);
             }
         }
+
+        if (feesSummaryTables.isEmpty()) {
+            throw new Exception("No records found");
+        }
         return feesSummaryTables;
     }
 
@@ -517,6 +564,9 @@ public class FeesService {
 
         //Get current Semester
         String currentSemester = utilityClass.getCurrentSemesterId(institution.getInstitutionId());
+        if (currentSemester == null || currentSemester.isEmpty()) {
+            throw new Exception("Semester not found");
+        }
 
         for (Students student: students) {
             String levelId = student.getLevel().getLevelID();
@@ -551,6 +601,10 @@ public class FeesService {
                 );
                 feesSummaryTables.add(feesSummaryTable);
             }
+        }
+
+        if (feesSummaryTables.isEmpty()) {
+            throw new Exception("No records found");
         }
         return feesSummaryTables;
     }

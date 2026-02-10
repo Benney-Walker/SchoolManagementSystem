@@ -120,7 +120,7 @@ public class ReportService {
                 .orElseThrow(()-> new Exception("Semester not found"));
 
         //This gets the promotion grade if it's third term
-        String nextGrade = getPromotionGrade(promotionGradeId);
+        String nextGrade = getPromotionGradeName(promotionGradeId);
 
         //This gets the resuming date for the next semester
         String resumingDate = getResumingDate(level, semester);
@@ -179,7 +179,7 @@ public class ReportService {
                 SubjectReportDTO subjectReportDTO = new SubjectReportDTO(
                         subjectScore.getSubject().getSubjectName(),
                         subjectScore.getClassScore().toString(),
-                        subjectScore.getExamScore().toString(),
+                        subjectScore.getCalculatedExamScore().toString(),
                         subjectScore.getTotalScore().toString(),
                         subjectScore.getGrade(),
                         subjectScore.getRemarks()
@@ -202,7 +202,7 @@ public class ReportService {
         return generateStudentReports;
     }
 
-    private String getPromotionGrade(String promotionGradeId) {
+    private String getPromotionGradeName(String promotionGradeId) {
         String nextGrade = "-";
         if (!promotionGradeId.equals("no_promotion")) {
             Level promotionGrade = levelRepository.findByLevelID(promotionGradeId).orElse(null);
