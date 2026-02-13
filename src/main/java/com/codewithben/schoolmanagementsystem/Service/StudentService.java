@@ -141,7 +141,7 @@ public class StudentService {
         );
 
         if (gradeSystem == null || gradeSystem.isEmpty()) {
-            throw new Exception("Grading criteria not added to system");
+            throw new Exception("Grading criteria not added to system. Contact your administrator");
         }
 
         Subjects subject = subjectsRepository.findBySubjectId(subjectId)
@@ -564,13 +564,14 @@ public class StudentService {
                 student.getInstitution().getInstitutionId()
         );
 
-        List<Attendance> markedAttendance = attendanceRepository
-                .findByLevel_LevelIDAndDateMarked(
-                        levelId, LocalDate.now()
-                );
-        if (markedAttendance != null && !markedAttendance.isEmpty()) {
-            throw new Exception("Attendance already marked. Use update button to update instead.");
+        Attendance markedAttendance = attendanceRepository
+                .findByStudent_StudentIdAndDateMarked(
+                        studentId, LocalDate.now()
+                ).orElse(null);
+        if (markedAttendance != null) {
+            return "marked";
         }
+
 
         Level level = levelRepository.findByLevelID(levelId)
                 .orElseThrow(() -> new Exception("Level Not Found"));
