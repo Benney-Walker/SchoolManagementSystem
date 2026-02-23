@@ -1,5 +1,7 @@
 package com.codewithben.schoolmanagementsystem.Service;
 
+import com.codewithben.schoolmanagementsystem.Contants.LogStatus;
+import com.codewithben.schoolmanagementsystem.Contants.LogType;
 import com.codewithben.schoolmanagementsystem.Contants.StudentStatus;
 import com.codewithben.schoolmanagementsystem.DTO.Account.*;
 import com.codewithben.schoolmanagementsystem.DTO.Institution.FetchFeesDetails;
@@ -30,11 +32,13 @@ public class FeesService {
 
     private final UtilityClass utilityClass;
 
+    private final AdminService adminService;
+
     private final InstitutiionRepository institutionRepository;
 
     public FeesService(FeesRepository feesRepository, StudentsRepository studentsRepository, FeesReportRepository feesReportRepository,
                        SemesterRepository semesterRepository, LevelRepository levelRepository,  StaffsRepository staffsRepository, UtilityClass utilityClass,
-                       InstitutiionRepository institutionRepository) {
+                       InstitutiionRepository institutionRepository, AdminService adminService) {
         this.feesRepository = feesRepository;
         this.studentsRepository = studentsRepository;
         this.feesReportRepository = feesReportRepository;
@@ -43,10 +47,12 @@ public class FeesService {
         this.staffsRepository = staffsRepository;
         this.utilityClass = utilityClass;
         this.institutionRepository = institutionRepository;
+        this.adminService = adminService;
     }
 
     // Displays student Fees
-    public StudentFeesPaymentDisplay findStudentFeesPaymentDetails(String studentId, String semesterId, String levelId) throws Exception {
+    public StudentFeesPaymentDisplay findStudentFeesPaymentDetails(String studentId, String semesterId, String levelId, String staffId) throws Exception {
+        
         Students student = studentsRepository.findByStudentId(studentId).orElse(null);
         if (student == null) {
             throw new Exception("Invalid student id");

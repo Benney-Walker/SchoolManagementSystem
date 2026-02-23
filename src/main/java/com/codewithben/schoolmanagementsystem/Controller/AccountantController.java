@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/")
+@RequestMapping("/api/accountant/")
 public class AccountantController {
     private final FeesService feesService;
 
@@ -124,10 +124,11 @@ public class AccountantController {
     @GetMapping("v2/search-fees-report")
     public ResponseEntity<?> searchStudentFeesReport(@RequestParam String studentId,
                                                      @RequestParam String semesterId,
-                                                     @RequestParam String gradeId) {
+                                                     @RequestParam String gradeId,
+                                                     @RequestParam String staffId) {
         try {
             return ResponseEntity.ok(
-                    feesService.findStudentFeesPaymentDetails(studentId, semesterId, gradeId)
+                    feesService.findStudentFeesPaymentDetails(studentId, semesterId, gradeId, staffId)
             );
         } catch (Exception e) {
             e.printStackTrace();

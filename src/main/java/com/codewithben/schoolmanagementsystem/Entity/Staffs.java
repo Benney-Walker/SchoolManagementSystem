@@ -41,6 +41,8 @@ public class Staffs {
     @Column(nullable = false)
     private LocalDate dateOfRegistration;
 
+    private String status;
+
     @ManyToOne
     @JoinColumn(nullable = false, name = "Institution_institutionId")
     private Institution institution;
@@ -55,7 +57,7 @@ public class Staffs {
 
     public Staffs(String staffId, String firstName, String lastName, String gender,
                   LocalDate dateOfBirth, String password, String email, String phoneNumber,
-                  StaffRoles staffRoles, LocalDate dateOfRegistration, Institution institution, List<Level> level, StaffStatus staffStatus) {
+                  StaffRoles staffRoles, LocalDate dateOfRegistration, String status, Institution institution, List<Level> level, StaffStatus staffStatus) {
         this.staffId = staffId;
         this.firstName = firstName;
         this.lastName = lastName;
@@ -66,6 +68,7 @@ public class Staffs {
         this.phoneNumber = phoneNumber;
         this.staffRoles = staffRoles;
         this.dateOfRegistration = dateOfRegistration;
+        this.status = status;
         this.institution = institution;
         this.level = level;
         this.staffStatus = staffStatus;
@@ -149,6 +152,14 @@ public class Staffs {
 
     public void setDateOfRegistration(LocalDate dateOfRegistration) {
         this.dateOfRegistration = dateOfRegistration;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 
     public Institution getInstitution() {

@@ -15,7 +15,7 @@ import java.time.LocalDate;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/")
+@RequestMapping("/api/principal/")
 public class PrincipalController {
     private static final Logger log = LogManager.getLogger(PrincipalController.class);
     private final LevelService levelService;

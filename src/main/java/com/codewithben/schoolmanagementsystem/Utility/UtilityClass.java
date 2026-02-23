@@ -76,6 +76,10 @@ public class UtilityClass {
             String prefix = "TX";
             long entityCode = 100800300L;
             newCode = getStringCode(entityName, prefix, entityCode);
+        } else if (entityName.equals("LOG")) {
+            String prefix = "LOG";
+            long entityCode = 100000L;
+            newCode = getStringCode(entityName, prefix, entityCode);
         }
 
         return newCode;

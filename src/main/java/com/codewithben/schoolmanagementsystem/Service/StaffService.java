@@ -76,6 +76,7 @@ public class StaffService {
         staff.setFirstName(firstName);
         staff.setLastName(surName);
         staff.setGender(gender);
+        staff.setStatus("NULL");
         staff.setDateOfBirth(LocalDate.parse(dateOfBirth));
         staff.setEmail(email);
 
