@@ -5,6 +5,7 @@ import com.codewithben.schoolmanagementsystem.Contants.StaffStatus;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -35,8 +36,14 @@ public class Staffs {
     @Column(nullable = false)
     private String phoneNumber;
 
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(
+            name = "staff_roles", // Cleaner table name
+            joinColumns = @JoinColumn(name = "staff_id") // Cleaner join column
+    )
     @Enumerated(EnumType.STRING)
-    private StaffRoles staffRoles;
+    @Column(name = "role_name") // The column holding the actual role string
+    private List<StaffRoles> staffRoles = new ArrayList<>();
 
     @Column(nullable = false)
     private LocalDate dateOfRegistration;
@@ -57,7 +64,7 @@ public class Staffs {
 
     public Staffs(String staffId, String firstName, String lastName, String gender,
                   LocalDate dateOfBirth, String password, String email, String phoneNumber,
-                  StaffRoles staffRoles, LocalDate dateOfRegistration, String status, Institution institution, List<Level> level, StaffStatus staffStatus) {
+                  List<StaffRoles> staffRoles, LocalDate dateOfRegistration, String status, Institution institution, List<Level> level, StaffStatus staffStatus) {
         this.staffId = staffId;
         this.firstName = firstName;
         this.lastName = lastName;
@@ -138,11 +145,11 @@ public class Staffs {
         this.phoneNumber = phoneNumber;
     }
 
-    public StaffRoles getStaffRoles() {
+    public List<StaffRoles> getStaffRoles() {
         return staffRoles;
     }
 
-    public void setStaffRoles(StaffRoles staffRoles) {
+    public void setStaffRoles(List<StaffRoles> staffRoles) {
         this.staffRoles = staffRoles;
     }
 
@@ -170,7 +177,7 @@ public class Staffs {
         this.institution = institution;
     }
 
-    public List<Level> getLevel() {
+    public List<Level> getLevels() {
         return level;
     }
 

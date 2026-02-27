@@ -21,7 +21,7 @@ public class Logs {
     private LogType actionType;
 
     @Column(length = 5000)
-    private String message;
+    private String actionData;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, name = "createdBy_staffId")
@@ -33,13 +33,13 @@ public class Logs {
     public Logs() {}
 
     public Logs (String actionId, LocalDate actionDate, LocalTime actionTime, LogType actionType,
-                 LogStatus status, String message) {
+                 LogStatus status, String actionData) {
         this.actionId = actionId;
         this.actionDate = actionDate;
         this.actionTime = actionTime;
         this.actionType = actionType;
         this.status = status;
-        this.message = message;
+        this.actionData = actionData;
     }
 
     public String getActionId() {
@@ -90,11 +90,11 @@ public class Logs {
         this.createdBy = createdBy;
     }
 
-    public String getMessage() {
-        return message;
+    public String getActionData() {
+        return actionData;
     }
 
-    public void setMessage(String message) {
-        this.message = message;
+    public void setActionData(String message) {
+        this.actionData = message;
     }
 }

@@ -32,7 +32,7 @@ public class AdminService {
             logs.setActionDate(LocalDate.now());
             logs.setActionTime(LocalTime.now());
             logs.setActionType(logType);
-            logs.setMessage(message);
+            logs.setActionData(message);
             logs.setCreatedBy(createdBy);
             logs.setStatus(logStatus);
             logsRepository.save(logs);
@@ -54,7 +54,7 @@ public class AdminService {
             logsDTO.setDate(log.getActionDate().toString());
             logsDTO.setTime(log.getActionTime().toString());
             logsDTO.setType(log.getActionType().toString());
-            logsDTO.setMessage(log.getMessage());
+            logsDTO.setMessage(log.getActionData());
             logsDTO.setCreatedBy(log.getCreatedBy().getFirstName() + " " + log.getCreatedBy().getLastName());
             logsDTO.setStatus(log.getStatus().toString());
 

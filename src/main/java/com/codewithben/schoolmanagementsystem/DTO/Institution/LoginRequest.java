@@ -1,11 +1,11 @@
 package com.codewithben.schoolmanagementsystem.DTO.Institution;
 
-public class StaffLoginDTO {
+public class LoginRequest {
     private String staffId;
 
     private String password;
 
-    public StaffLoginDTO(String staffId, String password) {
+    public LoginRequest(String staffId, String password) {
         this.staffId = staffId;
         this.password = password;
     }

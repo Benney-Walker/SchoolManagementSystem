@@ -1,9 +1,7 @@
 package com.codewithben.schoolmanagementsystem.Service;
 
-import com.codewithben.schoolmanagementsystem.DTO.Academics.GradeInfoResponse;
 import com.codewithben.schoolmanagementsystem.DTO.Academics.LevelCaching;
 import com.codewithben.schoolmanagementsystem.DTO.Academics.SemesterCaching;
-import com.codewithben.schoolmanagementsystem.DTO.Academics.StudentsTableDTO;
 import com.codewithben.schoolmanagementsystem.DTO.Institution.FindAndUpdateClassInfo;
 import com.codewithben.schoolmanagementsystem.DTO.Institution.FindSemester;
 import com.codewithben.schoolmanagementsystem.DTO.Institution.GradeInformation;
@@ -18,7 +16,6 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Random;
 import java.util.stream.Collectors;
 
 @Service
@@ -68,7 +65,7 @@ public class LevelService {
 
             level = levelRepository.saveAndFlush(level);
 
-            List<Level> levels = staffs.getLevel();
+            List<Level> levels = staffs.getLevels();
             if (levels == null) {
                 levels = new ArrayList<>();
             }
@@ -165,7 +162,7 @@ public class LevelService {
         Staffs staffs = staffsRepository.findByStaffId(staffId)
                 .orElseThrow(() -> new Exception("Staff not found"));
 
-        List<Level> levels = staffs.getLevel();
+        List<Level> levels = staffs.getLevels();
         if (levels == null || levels.isEmpty())
             return Collections.emptyList();
 

@@ -1,5 +1,7 @@
 package com.codewithben.schoolmanagementsystem.Controller;
 
+import com.codewithben.schoolmanagementsystem.Contants.LogStatus;
+import com.codewithben.schoolmanagementsystem.Contants.LogType;
 import com.codewithben.schoolmanagementsystem.DTO.Account.*;
 import com.codewithben.schoolmanagementsystem.DTO.Institution.FetchFeesDetails;
 import com.codewithben.schoolmanagementsystem.Entity.Institution;
@@ -7,6 +9,7 @@ import com.codewithben.schoolmanagementsystem.Entity.Level;
 import com.codewithben.schoolmanagementsystem.Entity.Staffs;
 import com.codewithben.schoolmanagementsystem.Repository.InstitutiionRepository;
 import com.codewithben.schoolmanagementsystem.Repository.StaffsRepository;
+import com.codewithben.schoolmanagementsystem.Service.AdminService;
 import com.codewithben.schoolmanagementsystem.Service.FeesService;
 import com.codewithben.schoolmanagementsystem.Service.StudentService;
 import com.codewithben.schoolmanagementsystem.Utility.UtilityClass;
@@ -30,52 +33,74 @@ public class AccountantController {
 
     private final StudentService studentService;
 
+    private final AdminService adminService;
+
     public AccountantController(FeesService feesService, UtilityClass utilityClass, InstitutiionRepository institutiionRepository,
-                                StaffsRepository staffsRepository, StudentService studentService) {
+                                StaffsRepository staffsRepository, StudentService studentService, AdminService adminService) {
 
         this.feesService = feesService;
         this.utilityClass = utilityClass;
         this.institutiionRepository = institutiionRepository;
         this.staffsRepository = staffsRepository;
         this.studentService = studentService;
+        this.adminService = adminService;
     }
 
     @PostMapping("v2/add-new-fees")
     public ResponseEntity<?> addNewFees(@RequestParam String gradeId,
                                         @RequestParam String semesterId,
-                                        @RequestParam String feesAmount) {
+                                        @RequestParam String feesAmount,
+                                        @RequestParam String staffId) {
+        Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
 
         try {
-            String response = feesService.addNewSemesterFees(Double.parseDouble(feesAmount), semesterId, gradeId);
-            return ResponseEntity.ok().body(response);
+            adminService.logSystemActivities(LogType.TRANSACTION, LogStatus.SUCCESS,
+                    "Added semester fees for gradeID: " + gradeId, staff);
+            return ResponseEntity.ok().body(
+                    feesService.addNewSemesterFees(Double.parseDouble(feesAmount), semesterId, gradeId)
+            );
         } catch  (Exception e) {
             e.printStackTrace();
+            adminService.logSystemActivities(LogType.TRANSACTION, LogStatus.FAILED,
+                    e.getMessage(), staff);
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
     @PostMapping("v2/add-fees-payment")
-    public ResponseEntity<?> addNewFeePayment(@RequestBody NewFeesPaymentDTO newFeesPaymentDTO) {
-        String studentId = newFeesPaymentDTO.getStudentId();
-        Double amountPaid = newFeesPaymentDTO.getAmountPaid();
-        String personWhoPaid = newFeesPaymentDTO.getPayerName();
-        String phoneNumber = newFeesPaymentDTO.getPayerPhone();
-        String semesterId = newFeesPaymentDTO.getSemesterId();
+    public ResponseEntity<?> addNewFeePayment(@RequestBody NewFeesPaymentDTO data) {
+        String studentId = data.getStudentId();
+        Double amountPaid = data.getAmountPaid();
+        String personWhoPaid = data.getPayerName();
+        String phoneNumber = data.getPayerPhone();
+        String semesterId = data.getSemesterId();
+
+        Staffs staff = staffsRepository.findByStaffId(data.getStaffId()).orElse(null);
 
         try {
+            adminService.logSystemActivities(LogType.TRANSACTION, LogStatus.SUCCESS,
+                    "New payment record for studentID: " + studentId, staff);
+
             return ResponseEntity.ok(
                     feesService.addNewFeePayment(studentId, amountPaid, personWhoPaid, phoneNumber, semesterId)
             );
         } catch (Exception e) {
+            adminService.logSystemActivities(LogType.TRANSACTION, LogStatus.FAILED,
+                    e.getMessage(), staff);
             e.printStackTrace();
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
-    @GetMapping("v2/fetch-payment-records/{studentId}/{semesterId}")
-    public ResponseEntity<?> fetchPaymentRecords(@PathVariable String studentId,
-                                                 @PathVariable String semesterId) {
+    @GetMapping("v2/fetch-payment-records")
+    public ResponseEntity<?> fetchPaymentRecords(@RequestParam String studentId,
+                                                 @RequestParam String semesterId,
+                                                 @RequestParam String staffId) {
+        Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
+
         try {
+            adminService.logSystemActivities(LogType.TRANSACTION, LogStatus.SUCCESS,
+                    "", staff);
             return ResponseEntity.ok(
                     feesService.fetchPaymentRecords(studentId, semesterId)
             );
@@ -126,9 +151,12 @@ public class AccountantController {
                                                      @RequestParam String semesterId,
                                                      @RequestParam String gradeId,
                                                      @RequestParam String staffId) {
+        Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
+
         try {
+
             return ResponseEntity.ok(
-                    feesService.findStudentFeesPaymentDetails(studentId, semesterId, gradeId, staffId)
+                    feesService.findStudentFeesPaymentDetails(studentId, semesterId, gradeId)
             );
         } catch (Exception e) {
             e.printStackTrace();

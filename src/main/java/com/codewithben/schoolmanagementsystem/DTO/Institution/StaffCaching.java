@@ -1,16 +1,15 @@
 package com.codewithben.schoolmanagementsystem.DTO.Institution;
 
+import java.util.List;
+
 public class StaffCaching {
     private String staffName;
 
     private String staffId;
 
-    private String staffRole;
-
-    public StaffCaching(String staffName, String staffId,  String staffRole) {
+    public StaffCaching(String staffName, String staffId) {
         this.staffName = staffName;
         this.staffId = staffId;
-        this.staffRole = staffRole;
     }
 
     public String getStaffName() {
@@ -27,13 +26,5 @@ public class StaffCaching {
 
     public void setStaffId(String staffId) {
         this.staffId = staffId;
-    }
-
-    public String getStaffRole() {
-        return staffRole;
-    }
-
-    public void setStaffRole(String staffRole) {
-        this.staffRole = staffRole;
     }
 }

@@ -32,13 +32,11 @@ public class FeesService {
 
     private final UtilityClass utilityClass;
 
-    private final AdminService adminService;
-
     private final InstitutiionRepository institutionRepository;
 
     public FeesService(FeesRepository feesRepository, StudentsRepository studentsRepository, FeesReportRepository feesReportRepository,
                        SemesterRepository semesterRepository, LevelRepository levelRepository,  StaffsRepository staffsRepository, UtilityClass utilityClass,
-                       InstitutiionRepository institutionRepository, AdminService adminService) {
+                       InstitutiionRepository institutionRepository) {
         this.feesRepository = feesRepository;
         this.studentsRepository = studentsRepository;
         this.feesReportRepository = feesReportRepository;
@@ -47,11 +45,10 @@ public class FeesService {
         this.staffsRepository = staffsRepository;
         this.utilityClass = utilityClass;
         this.institutionRepository = institutionRepository;
-        this.adminService = adminService;
     }
 
     // Displays student Fees
-    public StudentFeesPaymentDisplay findStudentFeesPaymentDetails(String studentId, String semesterId, String levelId, String staffId) throws Exception {
+    public StudentFeesPaymentDisplay findStudentFeesPaymentDetails(String studentId, String semesterId, String levelId) throws Exception {
         
         Students student = studentsRepository.findByStudentId(studentId).orElse(null);
         if (student == null) {

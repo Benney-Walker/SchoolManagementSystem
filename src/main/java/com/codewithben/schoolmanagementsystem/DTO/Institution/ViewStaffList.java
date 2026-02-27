@@ -3,18 +3,18 @@ package com.codewithben.schoolmanagementsystem.DTO.Institution;
 import java.util.List;
 
 public class ViewStaffList {
-    String staffId;
+    private String staffId;
 
-    String staffName;
+    private String staffName;
 
-    String staffRole;
+    private List<String> staffRole;
 
-    List<String> assignedLevel;
+    private List<String> assignedLevel;
 
     public ViewStaffList() {}
 
     public ViewStaffList(String staffId, String staffName,
-                         String staffRole, List<String> assignedLevel) {
+                         List<String> staffRole, List<String> assignedLevel) {
         this.staffName = staffName;
         this.staffId = staffId;
         this.staffRole = staffRole;
@@ -37,11 +37,11 @@ public class ViewStaffList {
         this.staffId = staffId;
     }
 
-    public String getStaffRole() {
+    public List<String> getStaffRole() {
         return staffRole;
     }
 
-    public void setStaffRole(String staffRole) {
+    public void setStaffRole(List<String> staffRole) {
         this.staffRole = staffRole;
     }
 
