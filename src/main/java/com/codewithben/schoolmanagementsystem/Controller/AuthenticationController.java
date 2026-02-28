@@ -17,7 +17,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -78,13 +77,13 @@ public class AuthenticationController {
         String email = enrollNewStaffDTO.getEmail();
         String password = enrollNewStaffDTO.getPassword();
         String phoneNumber = enrollNewStaffDTO.getPhoneNumber();
-        String status = enrollNewStaffDTO.getStatus();
+        String role = enrollNewStaffDTO.getRole();
         String institutionID = enrollNewStaffDTO.getInstitutionId();
 
         Institution institution = institutiionRepository.findByInstitutionId(institutionID).orElse(null);
         if (institution == null) {
             return ResponseEntity.ok(Map.of(
-                    "status", "failed",
+                    "role", "failed",
                     "message", "Institution not found"
             ));
         }
@@ -92,9 +91,9 @@ public class AuthenticationController {
         try {
             //Response contains just the staff Id
             String response = staffService.addNewStaff(firstName, lastName, gender, dateOfBirth, institutionID,
-                    email, password, phoneNumber, status);
+                    email, password, phoneNumber, role);
             return ResponseEntity.ok(Map.of(
-                    "status", "success",
+                    "role", "success",
                     "message", response
             ));
         } catch (Exception e) {
@@ -114,23 +113,15 @@ public class AuthenticationController {
             );
 
             Staffs staff = staffService.getStaffDetails(loginRequest.getStaffId());
-            System.out.println("Staff roles: " + staff.getStaffRoles());
 
-
-            String rolesHeader = staff.getStaffRoles().stream()
+            List<String> rolesList = staff.getStaffRoles().stream()
                     .map(Enum::name)
-                    .collect(Collectors.joining(","));
+                    .toList();
 
             String token = jwtUtility.generateToken(
                     loginRequest.getStaffId(),
-                    rolesHeader
+                    rolesList
             );
-
-            List<StaffRoles> roles = staff.getStaffRoles();
-            List<String> rolesList = new ArrayList<>();
-            for (StaffRoles staffRole : roles) {
-                rolesList.add(staffRole.toString());
-            }
 
             return ResponseEntity.ok(
                     new LoginResponse(

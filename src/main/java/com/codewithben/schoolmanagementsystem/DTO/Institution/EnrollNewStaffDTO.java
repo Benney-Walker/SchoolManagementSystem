@@ -16,12 +16,12 @@ public class EnrollNewStaffDTO {
 
     private String phoneNumber;
 
-    private String status;
+    private String role;
 
     private String institutionId;
 
     public EnrollNewStaffDTO(String firstName, String lastName, String gender, String password,
-                             String email, String phoneNumber, String status,
+                             String email, String phoneNumber, String role,
                              String dateOfBirth, String institutionId) {
         this.firstName = firstName;
         this.lastName = lastName;
@@ -29,7 +29,7 @@ public class EnrollNewStaffDTO {
         this.password = password;
         this.email = email;
         this.phoneNumber = phoneNumber;
-        this.status = status;
+        this.role = role;
         this.dateOfBirth = dateOfBirth;
         this.institutionId = institutionId;
     }
@@ -82,8 +82,8 @@ public class EnrollNewStaffDTO {
         this.phoneNumber = phoneNumber;
     }
 
-    public String getStatus() {
-        return status;
+    public String getRole() {
+        return role;
     }
 
     public String getInstitutionId() {
@@ -94,8 +94,8 @@ public class EnrollNewStaffDTO {
         this.institutionId = institutionId;
     }
 
-    public void setStatus(String status) {
-        this.status = status;
+    public void setRole(String role) {
+        this.role = role;
     }
 
     public String getDateOfBirth() {

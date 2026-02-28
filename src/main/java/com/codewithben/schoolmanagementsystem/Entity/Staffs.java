@@ -42,7 +42,7 @@ public class Staffs {
             joinColumns = @JoinColumn(name = "staff_id") // Cleaner join column
     )
     @Enumerated(EnumType.STRING)
-    @Column(name = "role_name") // The column holding the actual role string
+    @Column(name = "role_name", length = 15) // The column holding the actual role string
     private List<StaffRoles> staffRoles = new ArrayList<>();
 
     @Column(nullable = false)

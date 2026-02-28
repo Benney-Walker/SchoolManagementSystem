@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/accountant/")
+@RequestMapping("/api/finance/")
 public class AccountantController {
     private final FeesService feesService;
 

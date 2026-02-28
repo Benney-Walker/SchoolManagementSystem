@@ -5,5 +5,5 @@ public enum StaffRoles {
     ACCOUNTANT,
     TEACHING_STAFF,
     GENERAL_STAFF,
-    SYSTEM_ADMIN
+    ADMINISTRATOR
 }
