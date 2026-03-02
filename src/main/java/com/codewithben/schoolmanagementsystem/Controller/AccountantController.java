@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/finance/")
+@RequestMapping("/api/finance")
 public class AccountantController {
     private final FeesService feesService;
 
@@ -46,7 +46,7 @@ public class AccountantController {
         this.adminService = adminService;
     }
 
-    @PostMapping("v2/add-new-fees")
+    @PostMapping("/v2/add-new-fees")
     public ResponseEntity<?> addNewFees(@RequestParam String gradeId,
                                         @RequestParam String semesterId,
                                         @RequestParam String feesAmount,
@@ -67,7 +67,7 @@ public class AccountantController {
         }
     }
 
-    @PostMapping("v2/add-fees-payment")
+    @PostMapping("/v2/add-fees-payment")
     public ResponseEntity<?> addNewFeePayment(@RequestBody NewFeesPaymentDTO data) {
         String studentId = data.getStudentId();
         Double amountPaid = data.getAmountPaid();
@@ -92,7 +92,7 @@ public class AccountantController {
         }
     }
 
-    @GetMapping("v2/fetch-payment-records")
+    @GetMapping("/v2/fetch-payment-records")
     public ResponseEntity<?> fetchPaymentRecords(@RequestParam String studentId,
                                                  @RequestParam String semesterId,
                                                  @RequestParam String staffId) {
@@ -110,7 +110,7 @@ public class AccountantController {
         }
     }
 
-    @PutMapping("v2/update-payment-details")
+    @PutMapping("/v2/update-payment-details")
     public ResponseEntity<?> updatePaymentRecords(@RequestBody StudentPaymentRecords update) {
         try {
             return ResponseEntity.ok(
@@ -122,7 +122,7 @@ public class AccountantController {
         }
     }
 
-    @DeleteMapping("v2/delete-payment-record/{transactionId}")
+    @DeleteMapping("/v2/delete-payment-record/{transactionId}")
     public ResponseEntity<?> deletePaymentRecord(@PathVariable String transactionId) {
         try {
             return ResponseEntity.ok(
@@ -134,7 +134,7 @@ public class AccountantController {
         }
     }
 
-    @GetMapping("v2/get-student-name/{studentId}")
+    @GetMapping("/v2/get-student-name/{studentId}")
     public ResponseEntity<?> getStudentName(@PathVariable String studentId) {
         try {
             return ResponseEntity.ok(
@@ -146,7 +146,7 @@ public class AccountantController {
         }
     }
 
-    @GetMapping("v2/search-fees-report")
+    @GetMapping("/v2/search-fees-report")
     public ResponseEntity<?> searchStudentFeesReport(@RequestParam String studentId,
                                                      @RequestParam String semesterId,
                                                      @RequestParam String gradeId,
@@ -164,7 +164,7 @@ public class AccountantController {
         }
     }
 
-    @GetMapping("v2/fetch-grade-fees-report/{levelId}/{semesterId}")
+    @GetMapping("/v2/fetch-grade-fees-report/{levelId}/{semesterId}")
     public ResponseEntity<?> fetchGradesFeesReport(@PathVariable String levelId,
                                                    @PathVariable String semesterId) {
         try {
@@ -177,7 +177,7 @@ public class AccountantController {
         }
     }
 
-    @GetMapping("v2/class-summary-fees/{staffId}")
+    @GetMapping("/v2/class-summary-fees/{staffId}")
     public ResponseEntity<?> getClassSummaryFees(@PathVariable String staffId) {
         try {
             return ResponseEntity.ok(
@@ -189,7 +189,7 @@ public class AccountantController {
         }
     }
 
-    @GetMapping("v2/fully-paid-students/{staffId}")
+    @GetMapping("/v2/fully-paid-students/{staffId}")
     public ResponseEntity<?> getFullyPaidStudents(@PathVariable String staffId) {
         try {
             return ResponseEntity.ok(
@@ -201,7 +201,7 @@ public class AccountantController {
         }
     }
 
-    @GetMapping("v2/partially-paid-students/{staffId}")
+    @GetMapping("/v2/partially-paid-students/{staffId}")
     public ResponseEntity<?> getPartiallyPaidStudents(@PathVariable String staffId) {
         try {
             return ResponseEntity.ok(
@@ -213,7 +213,7 @@ public class AccountantController {
         }
     }
 
-    @GetMapping("v2/not-paid-students/{staffId}")
+    @GetMapping("/v2/not-paid-students/{staffId}")
     public ResponseEntity<?> getNotPaidStudents(@PathVariable String staffId) {
         try {
             return ResponseEntity.ok(
@@ -225,7 +225,7 @@ public class AccountantController {
         }
     }
 
-    @GetMapping("v2/total-fees/{staffId}")
+    @GetMapping("/v2/total-fees/{staffId}")
     public ResponseEntity<?> totalSemesterFees(@PathVariable String staffId) {
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staff == null)
@@ -248,7 +248,7 @@ public class AccountantController {
         return ResponseEntity.ok(String.valueOf(totalSemesterFees));
     }
 
-    @GetMapping("v2/fees-paid/{staffId}")
+    @GetMapping("/v2/fees-paid/{staffId}")
     public ResponseEntity<?> totalAmountPaid(@PathVariable String staffId) {
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staff == null)
@@ -269,7 +269,7 @@ public class AccountantController {
         return ResponseEntity.ok(String.valueOf(totalAmountPaid));
     }
 
-    @GetMapping("v2/fetch-fees-details/{semesterId}/{levelId}")
+    @GetMapping("/v2/fetch-fees-details/{semesterId}/{levelId}")
     public ResponseEntity<?> fetchFeesDetails(@PathVariable String semesterId,
                                               @PathVariable String levelId) {
         try {
@@ -282,7 +282,7 @@ public class AccountantController {
         }
     }
 
-    @PutMapping("v2/update-semester-fees")
+    @PutMapping("/v2/update-semester-fees")
     public ResponseEntity<?> updateFeesAmount(@RequestBody FetchFeesDetails fetchFeesDetails) {
         try {
             return ResponseEntity.ok(
@@ -294,7 +294,7 @@ public class AccountantController {
         }
     }
 
-    @GetMapping("v1/recent-fees-transactions/{staffId}")
+    @GetMapping("/v1/recent-fees-transactions/{staffId}")
     public ResponseEntity<?> getRecentPayment(@PathVariable String staffId) {
         try {
             return ResponseEntity.ok().body(feesService.getRecentPayments(staffId));

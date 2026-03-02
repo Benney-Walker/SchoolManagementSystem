@@ -39,7 +39,7 @@ public class SecurityBean {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/finance/**").hasAnyAuthority("ACCOUNTANT", "PRINCIPAL")
-                        .requestMatchers("/api/principal/**").hasAnyAuthority("PRINCIPAL", "ADMINISTRATOR")
+                        .requestMatchers("/api/student/**").hasAnyAuthority("PRINCIPAL", "ADMINISTRATOR", "TEACHING_STAFF")
                         .requestMatchers("/api/staff/**").hasAnyAuthority("ADMINISTRATOR", "TEACHING_STAFF", "PRINCIPAL")
                         .requestMatchers("/api/admin/**").hasAuthority("ADMINISTRATOR")
                         .anyRequest().authenticated()
