@@ -83,7 +83,7 @@ public class AuthenticationController {
         Institution institution = institutiionRepository.findByInstitutionId(institutionID).orElse(null);
         if (institution == null) {
             return ResponseEntity.ok(Map.of(
-                    "role", "failed",
+                    "status", "failed",
                     "message", "Institution not found"
             ));
         }
@@ -93,7 +93,7 @@ public class AuthenticationController {
             String response = staffService.addNewStaff(firstName, lastName, gender, dateOfBirth, institutionID,
                     email, password, phoneNumber, role);
             return ResponseEntity.ok(Map.of(
-                    "role", "success",
+                    "status", "success",
                     "message", response
             ));
         } catch (Exception e) {

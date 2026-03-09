@@ -11,6 +11,7 @@ import com.codewithben.schoolmanagementsystem.DTO.Institution.FindStaffDTO;
 import com.codewithben.schoolmanagementsystem.Entity.Level;
 import com.codewithben.schoolmanagementsystem.Repository.LevelRepository;
 import com.codewithben.schoolmanagementsystem.Service.*;
+import com.codewithben.schoolmanagementsystem.Utility.JwtUtility;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -48,13 +49,14 @@ public class AdminController {
         this.jasperReportService = jasperReportService;
     }
 
-    @PostMapping("/v2/reset-staff-password/{staffId}/{newPassword}")
-    public ResponseEntity<?> recoverStaffPassword(@PathVariable String staffId,
-                                                  @PathVariable String newPassword) {
+    @PostMapping("/v1/reset-staff-password")
+    public ResponseEntity<?> recoverStaffPassword(@RequestParam String staffId,
+                                                  @RequestParam String newPasswordStaffId,
+                                                  @RequestParam String newPassword) {
         try {
 
             return ResponseEntity.ok(
-                    staffService.resetStaffPassword(staffId, newPassword)
+                    staffService.resetStaffPassword(newPasswordStaffId, newPassword)
             );
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -64,27 +66,23 @@ public class AdminController {
 
     @PostMapping("/v1/add-semester")
     public ResponseEntity<?> addNewSemester(@RequestBody AddNewSemester addNewSemester) {
+        String staffId = addNewSemester.getStaffId();
         String semesterName = addNewSemester.getSemesterName();
         LocalDate startDate = LocalDate.parse(addNewSemester.getStartDate());
         LocalDate endDate = LocalDate.parse(addNewSemester.getEndDate());
         String academicYear = addNewSemester.getAcademicYear();
-        String staffId = addNewSemester.getStaffId();
 
         try {
-            String response = levelService.addNewSemester(semesterName, startDate, endDate, academicYear, staffId);
-            return ResponseEntity.ok(Map.of(
-                    "status", "success"
-            ));
+            return ResponseEntity.ok(
+                    levelService.addNewSemester(semesterName, startDate, endDate, academicYear, staffId)
+            );
         } catch (Exception ex) {
             ex.printStackTrace();
-            return ResponseEntity.ok(Map.of(
-                    "status", "failed",
-                    "message", ex.getMessage()
-            ));
+            return ResponseEntity.badRequest().body(ex.getMessage());
         }
     }
 
-    @PostMapping("/v2/set-grades")
+    @PostMapping("/v1/set-grades")
     public ResponseEntity<?> setGradingCriteria(@RequestBody GradingCriteria gradingCriteria) {
         try {
             return ResponseEntity.ok(
@@ -96,12 +94,11 @@ public class AdminController {
         }
     }
 
-    @GetMapping("/v2/find-class-info/{searchParameter}/{staffId}")
-    public ResponseEntity<?> findClassInfo(@PathVariable String searchParameter,
-                                           @PathVariable String staffId) {
+    @GetMapping("/v1/find-class-info/{levelId}")
+    public ResponseEntity<?> findClassInfo(@PathVariable String levelId) {
         try {
             return ResponseEntity.ok(levelService.findClassInfo(
-                    searchParameter, staffId
+                    levelId
             ));
         } catch (Exception ex) {
             System.out.println(ex.getMessage());
@@ -109,19 +106,19 @@ public class AdminController {
         }
     }
 
-    @PutMapping("/v2/update-class-info")
+    @PutMapping("/v1/update-class-info")
     public ResponseEntity<?> updateClassInfo(@RequestBody FindAndUpdateClassInfo updateInfo) {
         try {
             return ResponseEntity.ok(
                     levelService.updateClassInfo(updateInfo)
             );
         } catch (Exception ex) {
-            System.out.println(ex.getMessage());
+            ex.printStackTrace();
             return ResponseEntity.badRequest().body(ex.getMessage());
         }
     }
 
-    @PutMapping("/v2/update-staff-info")
+    @PutMapping("/v1/update-staff-info")
     public ResponseEntity<?> updateStaffInfo(@RequestBody FindStaffDTO info) {
         try {
             return ResponseEntity.ok(
@@ -133,7 +130,7 @@ public class AdminController {
         }
     }
 
-    @GetMapping("/v2/search-semester/{semesterId}")
+    @GetMapping("/v1/search-semester/{semesterId}")
     public ResponseEntity<?> searchSemesterInfo(@PathVariable String semesterId) {
         try {
             return ResponseEntity.ok(
@@ -145,7 +142,7 @@ public class AdminController {
         }
     }
 
-    @PutMapping("/v2/update-semester-info")
+    @PutMapping("/v1/update-semester-info")
     public ResponseEntity<?> updateSemesterInfo(@RequestBody FindSemester updateInfo) {
         try {
             return ResponseEntity.ok(
@@ -157,7 +154,7 @@ public class AdminController {
         }
     }
 
-    @PostMapping("/v2/add-new-grade")
+    @PostMapping("/v1/add-new-class")
     public ResponseEntity<?> addNewGrade(@RequestParam String gradeName,
                                          @RequestParam String instructorId) {
         try {
@@ -170,10 +167,11 @@ public class AdminController {
         }
     }
 
-    @PostMapping("/v2/add-subject")
+    @PostMapping("/v1/add-subject")
     public ResponseEntity<?> saveNewSubject(@RequestBody AddNewSubject addNewSubject) {
         String subjectName = addNewSubject.getSubjectName();
         String levelId = addNewSubject.getGradeId();
+        System.out.println("DEBUG: Hit the Add Subject Endpoint!");
 
         try {
             //Response contains subject Id
@@ -209,15 +207,5 @@ public class AdminController {
         }
     }
 
-    @PutMapping("/v2/update-student-data")
-    public ResponseEntity<?> updateStudentData(@RequestBody UpdateStudentPersonalData updateStudentPersonalData) {
 
-        try {
-            String response = studentService.updateStudentPersonalData(updateStudentPersonalData);
-            return ResponseEntity.ok(response);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            return ResponseEntity.badRequest().body(ex.getMessage());
-        }
-    }
 }

@@ -5,6 +5,7 @@ import com.codewithben.schoolmanagementsystem.Contants.StudentStatus;
 import com.codewithben.schoolmanagementsystem.DTO.Academics.*;
 import com.codewithben.schoolmanagementsystem.DTO.Institution.StudentAttendance;
 import com.codewithben.schoolmanagementsystem.DTO.Institution.StudentListPrint;
+import com.codewithben.schoolmanagementsystem.DTO.Institution.StudentsHolder;
 import com.codewithben.schoolmanagementsystem.Entity.*;
 import com.codewithben.schoolmanagementsystem.Entity.Attendance;
 import com.codewithben.schoolmanagementsystem.Repository.*;
@@ -282,29 +283,11 @@ public class StudentService {
         );
     }
 
-    public FindStudentDTO findStudent(String searchPar1, String searchPar2, String searchPar3) throws Exception {
-        if (searchPar1.startsWith("STD") && searchPar2.equals("empty") && searchPar3.equals("empty")) {
-            Students student = studentsRepository.findByStudentId(searchPar1).orElse(null);
-            if (student == null) {
-                throw new Exception("student not found. Check if student id is correct.");
-            }
-
-            return getStudentData(student);
+    public FindStudentDTO findStudent(String studentId) throws Exception {
+        Students student = studentsRepository.findByStudentId(studentId).orElse(null);
+        if (student == null) {
+            throw new Exception("student not found. Check if student id is correct.");
         }
-
-
-        String firstName;
-        String lastName;
-        if (!searchPar1.isEmpty() && !searchPar2.equals("empty")) {
-            firstName = searchPar1;
-            lastName = searchPar2;
-        } else {
-            firstName = searchPar1;
-            lastName = searchPar2 + " " + searchPar3;
-        }
-        Students student = studentsRepository.findByFirstNameAndLastName(
-                firstName, lastName
-        ).orElseThrow(() -> new Exception("student not found. Enter Student Id instead"));
 
         return getStudentData(student);
     }
@@ -637,5 +620,26 @@ public class StudentService {
                 .orElseThrow(() -> new Exception("Invalid Student Id"));
 
         return student.getFirstName() + " " + student.getLastName();
+    }
+
+    public List<StudentsHolder> getGradeStudents(String levelId) throws Exception {
+        Level level = levelRepository.findByLevelID(levelId)
+                .orElseThrow(() -> new Exception("Grade not found"));
+
+        List<Students> levelStudents = level.getStudents();
+        if (levelStudents == null || levelStudents.isEmpty()) {
+            throw new Exception("Grade has no students");
+        }
+
+        List<StudentsHolder> studentsHolders = new ArrayList<>();
+        for (Students student : levelStudents) {
+            StudentsHolder stu = new StudentsHolder(
+                    student.getStudentId(),
+                    student.getFirstName() + " " + student.getLastName()
+            );
+            studentsHolders.add(stu);
+        }
+
+        return studentsHolders;
     }
 }

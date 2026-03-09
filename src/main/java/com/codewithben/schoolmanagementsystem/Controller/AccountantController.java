@@ -46,23 +46,17 @@ public class AccountantController {
         this.adminService = adminService;
     }
 
-    @PostMapping("/v2/add-new-fees")
+    @PostMapping("/v1/add-new-fees")
     public ResponseEntity<?> addNewFees(@RequestParam String gradeId,
                                         @RequestParam String semesterId,
-                                        @RequestParam String feesAmount,
-                                        @RequestParam String staffId) {
-        Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
+                                        @RequestParam String feesAmount) {
 
         try {
-            adminService.logSystemActivities(LogType.TRANSACTION, LogStatus.SUCCESS,
-                    "Added semester fees for gradeID: " + gradeId, staff);
             return ResponseEntity.ok().body(
                     feesService.addNewSemesterFees(Double.parseDouble(feesAmount), semesterId, gradeId)
             );
         } catch  (Exception e) {
             e.printStackTrace();
-            adminService.logSystemActivities(LogType.TRANSACTION, LogStatus.FAILED,
-                    e.getMessage(), staff);
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -78,8 +72,6 @@ public class AccountantController {
         Staffs staff = staffsRepository.findByStaffId(data.getStaffId()).orElse(null);
 
         try {
-            adminService.logSystemActivities(LogType.TRANSACTION, LogStatus.SUCCESS,
-                    "New payment record for studentID: " + studentId, staff);
 
             return ResponseEntity.ok(
                     feesService.addNewFeePayment(studentId, amountPaid, personWhoPaid, phoneNumber, semesterId)
@@ -92,15 +84,12 @@ public class AccountantController {
         }
     }
 
-    @GetMapping("/v2/fetch-payment-records")
+    @GetMapping("/v1/fetch-payment-records")
     public ResponseEntity<?> fetchPaymentRecords(@RequestParam String studentId,
-                                                 @RequestParam String semesterId,
-                                                 @RequestParam String staffId) {
-        Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
+                                                 @RequestParam String semesterId) {
 
         try {
-            adminService.logSystemActivities(LogType.TRANSACTION, LogStatus.SUCCESS,
-                    "", staff);
+
             return ResponseEntity.ok(
                     feesService.fetchPaymentRecords(studentId, semesterId)
             );
@@ -110,7 +99,7 @@ public class AccountantController {
         }
     }
 
-    @PutMapping("/v2/update-payment-details")
+    @PutMapping("/v1/update-payment-details")
     public ResponseEntity<?> updatePaymentRecords(@RequestBody StudentPaymentRecords update) {
         try {
             return ResponseEntity.ok(
@@ -122,7 +111,7 @@ public class AccountantController {
         }
     }
 
-    @DeleteMapping("/v2/delete-payment-record/{transactionId}")
+    @DeleteMapping("/v1/delete-payment-record/{transactionId}")
     public ResponseEntity<?> deletePaymentRecord(@PathVariable String transactionId) {
         try {
             return ResponseEntity.ok(
@@ -146,12 +135,10 @@ public class AccountantController {
         }
     }
 
-    @GetMapping("/v2/search-fees-report")
+    @GetMapping("/v1/search-fees-report")
     public ResponseEntity<?> searchStudentFeesReport(@RequestParam String studentId,
                                                      @RequestParam String semesterId,
-                                                     @RequestParam String gradeId,
-                                                     @RequestParam String staffId) {
-        Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
+                                                     @RequestParam String gradeId) {
 
         try {
 
@@ -164,7 +151,7 @@ public class AccountantController {
         }
     }
 
-    @GetMapping("/v2/fetch-grade-fees-report/{levelId}/{semesterId}")
+    @GetMapping("/v1/fetch-grade-fees-report/{levelId}/{semesterId}")
     public ResponseEntity<?> fetchGradesFeesReport(@PathVariable String levelId,
                                                    @PathVariable String semesterId) {
         try {
@@ -177,7 +164,7 @@ public class AccountantController {
         }
     }
 
-    @GetMapping("/v2/class-summary-fees/{staffId}")
+    @GetMapping("/v1/class-summary-fees/{staffId}")
     public ResponseEntity<?> getClassSummaryFees(@PathVariable String staffId) {
         try {
             return ResponseEntity.ok(
@@ -189,7 +176,7 @@ public class AccountantController {
         }
     }
 
-    @GetMapping("/v2/fully-paid-students/{staffId}")
+    @GetMapping("/v1/fully-paid-students/{staffId}")
     public ResponseEntity<?> getFullyPaidStudents(@PathVariable String staffId) {
         try {
             return ResponseEntity.ok(
@@ -201,7 +188,7 @@ public class AccountantController {
         }
     }
 
-    @GetMapping("/v2/partially-paid-students/{staffId}")
+    @GetMapping("/v1/partially-paid-students/{staffId}")
     public ResponseEntity<?> getPartiallyPaidStudents(@PathVariable String staffId) {
         try {
             return ResponseEntity.ok(
@@ -213,7 +200,7 @@ public class AccountantController {
         }
     }
 
-    @GetMapping("/v2/not-paid-students/{staffId}")
+    @GetMapping("/v1/not-paid-students/{staffId}")
     public ResponseEntity<?> getNotPaidStudents(@PathVariable String staffId) {
         try {
             return ResponseEntity.ok(
@@ -225,7 +212,7 @@ public class AccountantController {
         }
     }
 
-    @GetMapping("/v2/total-fees/{staffId}")
+    @GetMapping("/v1/total-fees/{staffId}")
     public ResponseEntity<?> totalSemesterFees(@PathVariable String staffId) {
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staff == null)
@@ -248,7 +235,7 @@ public class AccountantController {
         return ResponseEntity.ok(String.valueOf(totalSemesterFees));
     }
 
-    @GetMapping("/v2/fees-paid/{staffId}")
+    @GetMapping("/v1/fees-paid/{staffId}")
     public ResponseEntity<?> totalAmountPaid(@PathVariable String staffId) {
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staff == null)
@@ -269,7 +256,7 @@ public class AccountantController {
         return ResponseEntity.ok(String.valueOf(totalAmountPaid));
     }
 
-    @GetMapping("/v2/fetch-fees-details/{semesterId}/{levelId}")
+    @GetMapping("/v1/fetch-fees-details/{semesterId}/{levelId}")
     public ResponseEntity<?> fetchFeesDetails(@PathVariable String semesterId,
                                               @PathVariable String levelId) {
         try {

@@ -110,7 +110,13 @@ public class StaffService {
         staffData.setDateOfBirth(String.valueOf(staff.getDateOfBirth()));
         staffData.setEmail(staff.getEmail());
         staffData.setPhoneNumber(staff.getPhoneNumber());
-        staffData.setStaffRole(staff.getStaffRoles().toString());
+
+        List<String> roles = new ArrayList<>();
+        for (StaffRoles staffRole : staff.getStaffRoles()) {
+            roles.add(staffRole.name());
+        }
+
+        staffData.setStaffRoles(roles);
         staffData.setStaffStatus(staff.getStaffStatus().toString());
         staffData.setDateOfRegistration(staff.getDateOfRegistration().toString());
 
@@ -128,13 +134,14 @@ public class StaffService {
         staff.setEmail(updateInfo.getEmail());
         staff.setPhoneNumber(updateInfo.getPhoneNumber());
 
-        StaffRoles newRole = StaffRoles.valueOf(updateInfo.getStaffRole());
-        List<StaffRoles> staffRoles = staff.getStaffRoles();
-        if (!staffRoles.contains(newRole)) {
-            staffRoles.add(newRole);
+        List<String> newRoles = updateInfo.getStaffRoles();
+        System.out.println("Message: " + newRoles);
+        List<StaffRoles> staffRoles = new ArrayList<>();
+
+        for (String role : newRoles) {
+            staffRoles.add(StaffRoles.valueOf(role));
         }
         staff.setStaffRoles(staffRoles);
-
         staff.setStaffStatus(StaffStatus.valueOf(updateInfo.getStaffStatus()));
         staffsRepository.save(staff);
 
@@ -221,9 +228,16 @@ public class StaffService {
 
         List<StaffCaching> staffList = new ArrayList<>();
         for (Staffs staffMember : staffs) {
+            List<String> roles = new ArrayList<>();
+            List<StaffRoles> staffRoles = staffMember.getStaffRoles();
+            for (StaffRoles staffRole : staffRoles) {
+                roles.add(staffRole.toString());
+            }
+
             StaffCaching foundStaff = new StaffCaching(
                     staffMember.getFirstName() + " " + staffMember.getLastName(),
-                    staffMember.getStaffId()
+                    staffMember.getStaffId(),
+                    roles
             );
 
             staffList.add(foundStaff);
@@ -245,37 +259,20 @@ public class StaffService {
         List<ViewStaffList> viewStaffLists = new ArrayList<>();
 
         for(Staffs staffMember: staffs){
-            String staff_Id = null;
-            String staff_Name = null;
-            List<String> assigned_Levels = new ArrayList<>();
+            String staff_Id = "";
+            String staff_Name = "";
             List<String> staff_Roles = new ArrayList<>();
 
-            if(staffMember.getLevels() == null) {
-                staff_Id = staffMember.getStaffId();
-                staff_Name = staffMember.getFirstName() + " " + staffMember.getLastName();
+            staff_Id = staffMember.getStaffId();
+            staff_Name = staffMember.getFirstName() + " " + staffMember.getLastName();
 
-                List<StaffRoles> staffRoles = staffMember.getStaffRoles();
+            List<StaffRoles> staffRoles = staffMember.getStaffRoles();
                 for (StaffRoles staffRole : staffRoles) {
-                    staff_Roles.add(staffRole.toString());
+                    staff_Roles.add(staffRole.name());
                 }
-
-            } else {
-                staff_Id = staffMember.getStaffId();
-                staff_Name = staffMember.getFirstName() + " " + staffMember.getLastName();
-
-                List<Level> levels = staffMember.getLevels();
-                for(Level level: levels){
-                    assigned_Levels.add(level.getLevelName());
-                }
-
-                List<StaffRoles> staffRoles = staffMember.getStaffRoles();
-                for (StaffRoles staffRole : staffRoles) {
-                    staff_Roles.add(staffRole.toString());
-                }
-            }
 
             ViewStaffList newStaff =  new ViewStaffList(
-                    staff_Id, staff_Name, assigned_Levels, staff_Roles
+                    staff_Id, staff_Name, staff_Roles
             );
             viewStaffLists.add(newStaff);
         }

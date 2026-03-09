@@ -7,9 +7,12 @@ public class StaffCaching {
 
     private String staffId;
 
-    public StaffCaching(String staffName, String staffId) {
+    private List<String> staffRoles;
+
+    public StaffCaching(String staffName, String staffId, List<String> staffRoles) {
         this.staffName = staffName;
         this.staffId = staffId;
+        this.staffRoles = staffRoles;
     }
 
     public String getStaffName() {
@@ -26,5 +29,13 @@ public class StaffCaching {
 
     public void setStaffId(String staffId) {
         this.staffId = staffId;
+    }
+
+    public List<String> getStaffRoles() {
+        return staffRoles;
+    }
+
+    public void setStaffRoles(List<String> staffRoles) {
+        this.staffRoles = staffRoles;
     }
 }

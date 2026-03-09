@@ -47,7 +47,7 @@ public class StudentController {
     }
 
 
-    @GetMapping("/v2/absent-students/{staffId}")
+    @GetMapping("/v1/absent-students/{staffId}")
     public ResponseEntity<?> getAbsentees(@PathVariable String staffId) {
         try {
             return ResponseEntity.ok().body(studentService.findInstitutionAbsentees(staffId));
@@ -58,7 +58,7 @@ public class StudentController {
 
     }
 
-    @GetMapping("/v2/total-students/{staffId}")
+    @GetMapping("/v1/total-students/{staffId}")
     public ResponseEntity<?> loadTotalStudents(@PathVariable String staffId) {
         try {
             return ResponseEntity.ok(
@@ -70,13 +70,12 @@ public class StudentController {
         }
     }
 
-    @GetMapping("/v2/find-student")
-    public ResponseEntity<?> findStudent(@RequestParam String searchParameter,
-                                         @RequestParam String searchParameter2,
-                                         @RequestParam String searchParameter3) {
+    @GetMapping("/v1/find-student/{studentId}/{staffId}")
+    public ResponseEntity<?> findStudent(@PathVariable String studentId,
+                                         @PathVariable String staffId) {
         try {
             return ResponseEntity.ok(
-                    studentService.findStudent(searchParameter, searchParameter2, searchParameter3)
+                    studentService.findStudent(studentId)
             );
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -84,7 +83,7 @@ public class StudentController {
         }
     }
 
-    @PostMapping("/v2/add-new-student")
+    @PostMapping("/v1/add-new-student")
     public ResponseEntity<?> enrollNewStudent(@RequestBody AddNewStudent addNewStudent) {
         String firstName = addNewStudent.getFirstName();
         String lastName = addNewStudent.getLastName();
@@ -106,7 +105,7 @@ public class StudentController {
         }
     }
 
-    @GetMapping("/v2/search-student-results")
+    @GetMapping("/v1/search-student-results")
     public ResponseEntity<?> getStudentResults(@RequestParam String studentId,
                                                @RequestParam String semesterId,
                                                @RequestParam String classId) {
@@ -120,12 +119,48 @@ public class StudentController {
         }
     }
 
-    @GetMapping("/v2/load-subject-students/{subjectId}")
+    @GetMapping("/v1/load-subject-students/{subjectId}")
     public ResponseEntity<?> getSubjectStudents(@PathVariable String subjectId) {
         try {
             SubjectScores subjectScores = studentService.getSubjectStudents(subjectId);
             return ResponseEntity.ok().body(subjectScores);
         } catch (Exception ex) {
+            ex.printStackTrace();
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
+    }
+
+    @PostMapping("/v1/save-subject-scores")
+    public ResponseEntity<?> saveSubjectScores(@RequestBody SaveStudentScores score) {
+        try {
+            String response = studentService.addStudentSubjectScores(score);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PutMapping("/v1/update-student-data")
+    public ResponseEntity<?> updateStudentData(@RequestBody UpdateStudentPersonalData updateStudentPersonalData) {
+
+        try {
+            String response = studentService.updateStudentPersonalData(updateStudentPersonalData);
+            return ResponseEntity.ok(response);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
+    }
+
+    @GetMapping("/v1/load-students-for-attendance/{levelId}/{date}")
+    public ResponseEntity<?> loadStudentsForAttendance(@PathVariable String levelId,
+                                                       @PathVariable String date) {
+        try {
+            return ResponseEntity.ok(
+                    studentService.loadStudentForAttendance(levelId, date)
+            );
+        }catch (Exception ex) {
             ex.printStackTrace();
             return ResponseEntity.badRequest().body(ex.getMessage());
         }

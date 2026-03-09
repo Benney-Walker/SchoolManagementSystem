@@ -1,5 +1,7 @@
 package com.codewithben.schoolmanagementsystem.DTO.Institution;
 
+import java.util.List;
+
 public class FindStaffDTO {
 
     private String staffId;
@@ -16,7 +18,7 @@ public class FindStaffDTO {
 
     private String phoneNumber;
 
-    private String staffRole;
+    private List<String> staffRoles;
 
     private String staffStatus;
 
@@ -25,7 +27,7 @@ public class FindStaffDTO {
     public FindStaffDTO() {}
 
     public FindStaffDTO(String staffId, String firstName, String surname,
-                        String gender, String dateOfBirth, String email, String phoneNumber, String staffRole,
+                        String gender, String dateOfBirth, String email, String phoneNumber, List<String> staffRoles,
                         String staffStatus, String dateOfRegistration) {
         this.staffId = staffId;
         this.firstName = firstName;
@@ -34,7 +36,7 @@ public class FindStaffDTO {
         this.dateOfBirth = dateOfBirth;
         this.email = email;
         this.phoneNumber = phoneNumber;
-        this.staffRole = staffRole;
+        this.staffRoles = staffRoles;
         this.staffStatus = staffStatus;
         this.dateOfRegistration = dateOfRegistration;
     }
@@ -95,12 +97,12 @@ public class FindStaffDTO {
         this.phoneNumber = phoneNumber;
     }
 
-    public String getStaffRole() {
-        return staffRole;
+    public List<String> getStaffRoles() {
+        return staffRoles;
     }
 
-    public void setStaffRole(String staffRole) {
-        this.staffRole = staffRole;
+    public void setStaffRoles(List<String> staffRoles) {
+        this.staffRoles = staffRoles;
     }
 
     public String getStaffStatus() {

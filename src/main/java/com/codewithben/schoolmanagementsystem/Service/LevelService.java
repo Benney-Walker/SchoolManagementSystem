@@ -2,10 +2,7 @@ package com.codewithben.schoolmanagementsystem.Service;
 
 import com.codewithben.schoolmanagementsystem.DTO.Academics.LevelCaching;
 import com.codewithben.schoolmanagementsystem.DTO.Academics.SemesterCaching;
-import com.codewithben.schoolmanagementsystem.DTO.Institution.FindAndUpdateClassInfo;
-import com.codewithben.schoolmanagementsystem.DTO.Institution.FindSemester;
-import com.codewithben.schoolmanagementsystem.DTO.Institution.GradeInformation;
-import com.codewithben.schoolmanagementsystem.DTO.Institution.StudentRoaster;
+import com.codewithben.schoolmanagementsystem.DTO.Institution.*;
 import com.codewithben.schoolmanagementsystem.Entity.*;
 import com.codewithben.schoolmanagementsystem.Repository.*;
 import com.codewithben.schoolmanagementsystem.Utility.UtilityClass;
@@ -155,7 +152,7 @@ public class LevelService {
         semesters.add(semester);
         institution.setSemester(semesters);
         institutiionRepository.save(institution);
-        return "Success";
+        return "Successfully added semester";
     }
 
     public List<GradeInformation> loadStaffGrades(String staffId) throws Exception {
@@ -200,20 +197,10 @@ public class LevelService {
         return gradesInformation;
     }
 
-    public FindAndUpdateClassInfo findClassInfo(String searchParameter, String staffId) throws Exception {
-        Staffs staff = staffsRepository.findByStaffId(staffId)
-                .orElseThrow(() -> new Exception("Staff not found"));
+    public FindAndUpdateClassInfo findClassInfo(String levelId) throws Exception {
 
-        if (searchParameter.startsWith("LV")) {
-            Level level = levelRepository.findByLevelID(searchParameter)
-                    .orElseThrow(() -> new Exception("Level not found. Verify entered Id"));
-
-            return new FindAndUpdateClassInfo(level.getLevelID(), level.getLevelName(), level.getStaff().getStaffId());
-        }
-
-        Level level  = levelRepository.findByLevelNameAndInstitution_InstitutionId(
-                searchParameter, staff.getInstitution().getInstitutionId()
-        ).orElseThrow(() -> new Exception("Level not found. Verify entered grade name"));
+        Level level = levelRepository.findByLevelID(levelId)
+                .orElseThrow(() -> new Exception("Level not found. Verify entered Id"));
 
         return new FindAndUpdateClassInfo(
                 level.getLevelID(), level.getLevelName(), level.getStaff().getStaffId()
@@ -265,4 +252,26 @@ public class LevelService {
 
         return "Semester information updated";
     }
+
+    public List<SubjectsHolder> getLevelSubjects(String levelId) throws Exception {
+        List<SubjectsHolder> subjectsHolders = new ArrayList<>();
+
+        Level level = levelRepository.findByLevelID(levelId)
+                .orElseThrow(() -> new Exception("Grade not found"));
+
+        List<Subjects> subjects = level.getSubjects();
+        if (subjects == null || subjects.isEmpty()) {
+            throw new Exception("Grade has no subjects");
+        }
+
+        for (Subjects subject: subjects) {
+            SubjectsHolder sub = new SubjectsHolder(
+                    subject.getSubjectId(),
+                    subject.getSubjectName()
+            );
+            subjectsHolders.add(sub);
+        }
+        return subjectsHolders;
+    }
+
 }

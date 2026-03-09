@@ -8,6 +8,7 @@ import com.codewithben.schoolmanagementsystem.DTO.Academics.ViewClassSemesterRep
 import com.codewithben.schoolmanagementsystem.DTO.Academics.ViewStudentsSubjectsResults;
 import com.codewithben.schoolmanagementsystem.Entity.*;
 import com.codewithben.schoolmanagementsystem.Repository.*;
+import com.codewithben.schoolmanagementsystem.Utility.UtilityClass;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -29,15 +30,22 @@ public class ReportService {
 
     private final SubjectScoreRepository subjectScoreRepository;
 
+    private final PromotionCriteriaRepository promoCriRepository;
+
+    private final UtilityClass utilityClass;
+
     public ReportService(StudentsRepository studentsRepository, ResultsRepository resultsRepository,
                          LevelRepository levelRepository, SemesterRepository semesterRepository,
-                         AttendanceRepository attendanceRepository, SubjectScoreRepository subjectScoreRepository) {
+                         AttendanceRepository attendanceRepository, SubjectScoreRepository subjectScoreRepository,
+                         PromotionCriteriaRepository promoCriRepository, UtilityClass utilityClass) {
         this.studentsRepository = studentsRepository;
         this.resultsRepository = resultsRepository;
         this.levelRepository = levelRepository;
         this.semesterRepository = semesterRepository;
         this.attendanceRepository = attendanceRepository;
         this.subjectScoreRepository = subjectScoreRepository;
+        this.promoCriRepository = promoCriRepository;
+        this.utilityClass = utilityClass;
     }
 
     public List<ViewClassSemesterReport> viewClassSemesterReport(String levelId, String semesterId) throws Exception {
@@ -233,27 +241,28 @@ public class ReportService {
         return studentsListForReport;
     }
 
-    public String movePassedStudents(String staffId, String nextLevelId, String semesterId,
-                                     double passedTotalScore) throws Exception{
-        Level level = levelRepository.findByStaff_StaffId(staffId)
-                .orElseThrow(()-> new Exception("Staff is not assigned grade"));
+    public String movePassedStudents(String levelId) throws Exception{
+        Level level = levelRepository.findByLevelID(levelId)
+                .orElseThrow( () -> new Exception("Level Not Found"));
 
-        Level nextLevel = levelRepository.findByLevelID(nextLevelId).
-                orElseThrow(()-> new Exception("Next level not found"));
+        PromotionCriteria criteria = promoCriRepository.findByLevelId(levelId)
+                .orElseThrow(() -> new Exception("Level Not Found"));
 
-        Semester semester = semesterRepository.findBySemesterID(semesterId).
-                orElseThrow(()-> new Exception("Semester not found"));
+        Level nextLevel = levelRepository.findByLevelID(criteria.getLevelId())
+                .orElseThrow(()-> new Exception("Next level not found"));
+
+        String semesterId = utilityClass.getCurrentSemesterId(level.getInstitution().getInstitutionId());
 
         List<Students> students = level.getStudents();
         int count = 0;
         for (Students student: students) {
             Results result = resultsRepository.findByStudent_StudentIdAndSemester_SemesterIDAndLevel_LevelID(
                     student.getStudentId(),
-                    semester.getSemesterID(),
+                    semesterId,
                     level.getLevelID()
             ).orElseThrow(()-> new Exception("Student " + student.getStudentId() + "result not found"));
 
-            if (result.getTotalScore() >= passedTotalScore) {
+            if (result.getTotalScore() >= criteria.getTotalPassScore()) {
                 student.setLevel(nextLevel);
                 studentsRepository.save(student);
                 count++;
