@@ -60,6 +60,19 @@ public class StaffController {
         }
     }
 
+    @GetMapping("/v1/total-teaching-staffs/{staffId}")
+    public ResponseEntity<?> loadTotalTeachingStaffs(@PathVariable String staffId) {
+
+        try {
+            return ResponseEntity.ok().body(
+                    String.valueOf(staffService.countTotalTeachingStaffs(staffId))
+            );
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
+    }
+
     @GetMapping("/v1/staff-list/{staffId}")
     public ResponseEntity<?> loadStaffInfo(@PathVariable String staffId) {
         try {

@@ -165,4 +165,17 @@ public class StudentController {
             return ResponseEntity.badRequest().body(ex.getMessage());
         }
     }
+
+    @GetMapping("/v1/load-students/{levelId}/{staffId}")
+    public ResponseEntity<?> loadGradeStudents(@PathVariable String levelId,
+                                               @PathVariable String staffId) {
+        try {
+            return ResponseEntity.ok(
+                    studentService.getGradeStudents(levelId)
+            );
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
+    }
 }

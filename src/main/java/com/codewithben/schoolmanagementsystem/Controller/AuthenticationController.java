@@ -8,6 +8,7 @@ import com.codewithben.schoolmanagementsystem.DTO.Institution.LoginResponse;
 import com.codewithben.schoolmanagementsystem.Entity.Institution;
 import com.codewithben.schoolmanagementsystem.Entity.Staffs;
 import com.codewithben.schoolmanagementsystem.Repository.InstitutiionRepository;
+import com.codewithben.schoolmanagementsystem.Repository.StaffsRepository;
 import com.codewithben.schoolmanagementsystem.Service.InstitutionService;
 import com.codewithben.schoolmanagementsystem.Service.StaffService;
 import com.codewithben.schoolmanagementsystem.Utility.JwtUtility;
@@ -16,7 +17,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -36,14 +36,17 @@ public class AuthenticationController {
 
     private final String subscriptionCode = "SC1547863";
 
+    private final StaffsRepository staffsRepository;
+
     public AuthenticationController(InstitutionService institutionService, StaffService staffService,
                                     InstitutiionRepository institutiionRepository, AuthenticationManager authenticationManager,
-                                    JwtUtility jwtUtility) {
+                                    JwtUtility jwtUtility, StaffsRepository staffsRepository) {
         this.institutionService = institutionService;
         this.staffService = staffService;
         this.institutiionRepository = institutiionRepository;
         this.authenticationManager = authenticationManager;
         this.jwtUtility = jwtUtility;
+        this.staffsRepository = staffsRepository;
     }
 
     @PostMapping("/v1/school-subscription")
@@ -115,8 +118,8 @@ public class AuthenticationController {
             Staffs staff = staffService.getStaffDetails(loginRequest.getStaffId());
 
             List<String> rolesList = staff.getStaffRoles().stream()
-                    .map(Enum::name)
-                    .toList();
+                    .map(Enum::name).toList();
+
 
             String token = jwtUtility.generateToken(
                     loginRequest.getStaffId(),

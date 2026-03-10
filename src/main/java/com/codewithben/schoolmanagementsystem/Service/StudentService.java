@@ -219,7 +219,7 @@ public class StudentService {
         return "Scores successfully added";
     }
 
-    private void updateResultTotals(Results result, Staffs staff, Subjects subject) {
+    private void updateResultTotals(Results result, Staffs staff, Subjects subject) throws Exception {
         List<SubjectScore> scores = subjectScoreRepository.findByResults_ResultId(result.getResultId());
 
         double total = 0.0;
@@ -239,7 +239,21 @@ public class StudentService {
         result.setUpdatedBy(staff);
         resultsRepository.save(result);
 
-        utilityClass.reArrangePositions(subject, result.getSemester());
+        Level level = subject.getLevel();
+        List<Subjects> subjectsList = level.getSubjects();
+
+        int nullCount = 0;
+        for (Subjects subjects : subjectsList) {
+            SubjectScore subjectScore = subjectScoreRepository.findBySubject_SubjectId(subjects.getSubjectId())
+                    .orElse(null);
+            if (subjectScore == null) {
+                nullCount++;
+            }
+        }
+
+        if (nullCount == 0) {
+            utilityClass.reArrangePositions(subject, result.getSemester());
+        }
     }
 
     public StudentResult findStudentResults(String studentId, String semesterId, String levelId) throws Exception {

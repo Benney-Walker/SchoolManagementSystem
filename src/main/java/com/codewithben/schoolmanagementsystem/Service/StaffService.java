@@ -82,18 +82,18 @@ public class StaffService {
         staff.setPassword(hashedPassword);
         staff.setPhoneNumber(phoneNumber);
         staff.setDateOfRegistration(LocalDate.now());
+        staff.setStaffStatus(StaffStatus.ACTIVE);
 
         List<StaffRoles> staffRoles = staff.getStaffRoles();
-        if (staffRoles == null || staffRoles.isEmpty()) {
+        if (staffRoles == null) {
             staffRoles = new ArrayList<>();
         }
         staffRoles.add(StaffRoles.valueOf(staffRole));
         staff.setStaffRoles(staffRoles);
-
-        staff.setStaffStatus(StaffStatus.ACTIVE);
-
         staff.setInstitution(institution);
         staffsRepository.save(staff);
+
+
 
         return staffID;
     }
@@ -165,8 +165,29 @@ public class StaffService {
         return staffs.size();
     }
 
-    private boolean isBCrypt(String password) {
-        return password != null && password.startsWith("$2");
+    public long countTotalTeachingStaffs(String staffId) throws Exception {
+        Staffs staff = staffsRepository.findByStaffId(staffId)
+                .orElseThrow( () -> new Exception("Staff not found"));
+
+        Institution institution = staff.getInstitution();
+        if (institution == null) {
+            throw new Exception("institution not found");
+        }
+
+        List<Staffs> staffs = institution.getStaff();
+        if (staffs == null || staffs.isEmpty()) {
+            throw new Exception("Institution has no staff");
+        }
+
+        int staffCount = 0;
+        for (Staffs teachingStaff : staffs) {
+            List<StaffRoles> staffRoles = teachingStaff.getStaffRoles();
+            if (staffRoles.stream().anyMatch(staffRole -> staffRole.equals(StaffRoles.TEACHING_STAFF))) {
+                staffCount++;
+            }
+        }
+
+        return staffCount;
     }
 
 

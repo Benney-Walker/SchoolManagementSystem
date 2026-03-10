@@ -36,14 +36,8 @@ public class Staffs {
     @Column(nullable = false)
     private String phoneNumber;
 
-    @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(
-            name = "staff_roles", // Cleaner table name
-            joinColumns = @JoinColumn(name = "staff_id") // Cleaner join column
-    )
     @Enumerated(EnumType.STRING)
-    @Column(name = "role_name", length = 15) // The column holding the actual role string
-    private List<StaffRoles> staffRoles = new ArrayList<>();
+    private List<StaffRoles> staffRoles;
 
     @Column(nullable = false)
     private LocalDate dateOfRegistration;

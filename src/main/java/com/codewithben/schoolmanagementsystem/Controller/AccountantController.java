@@ -77,8 +77,6 @@ public class AccountantController {
                     feesService.addNewFeePayment(studentId, amountPaid, personWhoPaid, phoneNumber, semesterId)
             );
         } catch (Exception e) {
-            adminService.logSystemActivities(LogType.TRANSACTION, LogStatus.FAILED,
-                    e.getMessage(), staff);
             e.printStackTrace();
             return ResponseEntity.badRequest().body(e.getMessage());
         }
@@ -269,7 +267,7 @@ public class AccountantController {
         }
     }
 
-    @PutMapping("/v2/update-semester-fees")
+    @PutMapping("/v1/update-semester-fees")
     public ResponseEntity<?> updateFeesAmount(@RequestBody FetchFeesDetails fetchFeesDetails) {
         try {
             return ResponseEntity.ok(

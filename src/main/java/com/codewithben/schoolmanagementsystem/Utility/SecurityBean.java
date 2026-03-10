@@ -1,6 +1,5 @@
 package com.codewithben.schoolmanagementsystem.Utility;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -39,9 +38,9 @@ public class SecurityBean {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/finance/**").hasAnyAuthority("ACCOUNTANT", "PRINCIPAL")
-                        .requestMatchers("/api/student/**").hasAnyAuthority("PRINCIPAL", "ADMINISTRATOR", "TEACHING_STAFF")
-                        .requestMatchers("/api/staff/**").hasAnyAuthority("ADMINISTRATOR", "TEACHING_STAFF", "PRINCIPAL")
-                        .requestMatchers("/api/admin/**").hasAnyAuthority("ADMINISTRATOR", "PRINCIPAL")
+                        .requestMatchers("/api/student/**").hasAnyAuthority("PRINCIPAL", "ADMINISTRATOR", "ACCOUNTANT")
+                        .requestMatchers("/api/staff/**").hasAnyAuthority("ADMINISTRATOR", "TEACHING_STAFF", "PRINCIPAL", "ACCOUNTANT")
+                        .requestMatchers("/api/admin/**").hasAnyAuthority("ADMINISTRATOR", "PRINCIPAL", "ACCOUNTANT", "TEACHING_STAFF")
                         .anyRequest().authenticated()
                 ).sessionManagement( session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
