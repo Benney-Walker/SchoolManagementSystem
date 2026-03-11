@@ -123,8 +123,15 @@ public class StaffService {
         staffData.setPhoneNumber(staff.getPhoneNumber());
 
         List<String> roles = new ArrayList<>();
-        for (StaffRolesEntity staffRole : staff.getStaffRoles()) {
-            roles.add(staffRole.getStaffRole().name());
+        List<StaffRolesEntity> existingRoles = staff.getStaffRoles();
+
+        if (existingRoles != null && !existingRoles.isEmpty()) {
+            for (StaffRolesEntity staffRole : existingRoles) {
+                roles.add(staffRole.getStaffRole().name());
+            }
+
+        } else {
+            roles = Collections.emptyList();
         }
 
         staffData.setStaffRoles(roles);
