@@ -187,7 +187,7 @@ public class AdminController {
             value = "/v2/generate-class-report",
             produces = MediaType.APPLICATION_PDF_VALUE
     )
-    public ResponseEntity<?> generateStudentReports(@RequestParam String StaffId,
+    public ResponseEntity<?> generateStudentReports(@RequestParam String staffId,
                                                     @RequestParam String levelId,
                                                     @RequestParam String semesterId,
                                                     @RequestParam String promotionGradeId,
