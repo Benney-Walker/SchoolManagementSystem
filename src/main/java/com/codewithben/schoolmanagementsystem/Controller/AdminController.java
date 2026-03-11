@@ -184,12 +184,14 @@ public class AdminController {
     }
 
     @GetMapping(
-            value = "/v2/generate-class-report/{levelId}/{semesterId}/{promotionGradeId}",
+            value = "/v2/generate-class-report",
             produces = MediaType.APPLICATION_PDF_VALUE
     )
-    public ResponseEntity<?> generateStudentReports(@PathVariable String levelId,
-                                                    @PathVariable String semesterId,
-                                                    @PathVariable String promotionGradeId) {
+    public ResponseEntity<?> generateStudentReports(@RequestParam String StaffId,
+                                                    @RequestParam String levelId,
+                                                    @RequestParam String semesterId,
+                                                    @RequestParam String promotionGradeId,
+                                                    @RequestParam String passScore) {
         Level level = levelRepository.findByLevelID(levelId).orElse(null);
         if (level == null) {
             return ResponseEntity.badRequest().body("Level not found");

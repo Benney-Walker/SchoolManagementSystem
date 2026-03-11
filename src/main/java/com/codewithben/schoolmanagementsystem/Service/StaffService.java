@@ -149,12 +149,7 @@ public class StaffService {
         staff.setPhoneNumber(updateInfo.getPhoneNumber());
 
         List<String> newRoles = updateInfo.getStaffRoles();
-        System.out.println("Message: " + newRoles);
-        List<StaffRoles> staffRoles = new ArrayList<>();
 
-        for (String role : newRoles) {
-            staffRoles.add(StaffRoles.valueOf(role));
-        }
         staff.setRoles(updateStaffRoles(staff, newRoles));
         staff.setStaffStatus(StaffStatus.valueOf(updateInfo.getStaffStatus()));
         staffsRepository.save(staff);
