@@ -124,8 +124,10 @@ public class StaffService {
 
         List<String> roles = new ArrayList<>();
 
-        for (StaffRolesEntity staffRole : staff.getRoles()) {
-            roles.add(staffRole.getStaffRole().name());
+        if (staff.getRoles() != null && !staff.getRoles().isEmpty()) {
+            for (StaffRolesEntity staffRole : staff.getRoles()) {
+                roles.add(staffRole.getStaffRole().name());
+            }
         }
 
         staffData.setStaffRoles(roles);
