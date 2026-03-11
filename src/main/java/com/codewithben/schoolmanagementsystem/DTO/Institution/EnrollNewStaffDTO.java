@@ -1,5 +1,7 @@
 package com.codewithben.schoolmanagementsystem.DTO.Institution;
 
+import java.util.List;
+
 public class EnrollNewStaffDTO {
 
     private String firstName;
@@ -16,12 +18,12 @@ public class EnrollNewStaffDTO {
 
     private String phoneNumber;
 
-    private String role;
+    private List<String> roles;
 
     private String institutionId;
 
     public EnrollNewStaffDTO(String firstName, String lastName, String gender, String password,
-                             String email, String phoneNumber, String role,
+                             String email, String phoneNumber, List<String> roles,
                              String dateOfBirth, String institutionId) {
         this.firstName = firstName;
         this.lastName = lastName;
@@ -29,7 +31,7 @@ public class EnrollNewStaffDTO {
         this.password = password;
         this.email = email;
         this.phoneNumber = phoneNumber;
-        this.role = role;
+        this.roles = roles;
         this.dateOfBirth = dateOfBirth;
         this.institutionId = institutionId;
     }
@@ -82,8 +84,8 @@ public class EnrollNewStaffDTO {
         this.phoneNumber = phoneNumber;
     }
 
-    public String getRole() {
-        return role;
+    public List<String> getRoles() {
+        return roles;
     }
 
     public String getInstitutionId() {
@@ -94,8 +96,8 @@ public class EnrollNewStaffDTO {
         this.institutionId = institutionId;
     }
 
-    public void setRole(String role) {
-        this.role = role;
+    public void setRoles(List<String> roles) {
+        this.roles = roles;
     }
 
     public String getDateOfBirth() {

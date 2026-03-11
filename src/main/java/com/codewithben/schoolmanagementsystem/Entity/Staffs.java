@@ -36,8 +36,8 @@ public class Staffs {
     @Column(nullable = false)
     private String phoneNumber;
 
-    @Enumerated(EnumType.STRING)
-    private List<StaffRoles> staffRoles;
+    @OneToMany(mappedBy = "staff")
+    private List<StaffRolesEntity> staffRoles;
 
     @Column(nullable = false)
     private LocalDate dateOfRegistration;
@@ -58,7 +58,7 @@ public class Staffs {
 
     public Staffs(String staffId, String firstName, String lastName, String gender,
                   LocalDate dateOfBirth, String password, String email, String phoneNumber,
-                  List<StaffRoles> staffRoles, LocalDate dateOfRegistration, String status, Institution institution, List<Level> level, StaffStatus staffStatus) {
+                  List<StaffRolesEntity> staffRoles, LocalDate dateOfRegistration, String status, Institution institution, List<Level> level, StaffStatus staffStatus) {
         this.staffId = staffId;
         this.firstName = firstName;
         this.lastName = lastName;
@@ -139,11 +139,11 @@ public class Staffs {
         this.phoneNumber = phoneNumber;
     }
 
-    public List<StaffRoles> getStaffRoles() {
+    public List<StaffRolesEntity> getStaffRoles() {
         return staffRoles;
     }
 
-    public void setStaffRoles(List<StaffRoles> staffRoles) {
+    public void setStaffRoles(List<StaffRolesEntity> staffRoles) {
         this.staffRoles = staffRoles;
     }
 

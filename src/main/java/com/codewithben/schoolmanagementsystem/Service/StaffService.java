@@ -39,9 +39,11 @@ public class StaffService {
 
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
+    private final StaffRolesEntityRepo staffRolesEntityRepo;
+
     public StaffService(StaffsRepository staffsRepository, StudentsRepository studentsRepository, ResultsRepository resultsRepository,
                         SubjectsRepository subjectsRepository, SubjectScoreRepository subjectScoreRepository, SemesterRepository semesterRepository,
-                        LevelRepository levelRepository, UtilityClass utilityClass,
+                        LevelRepository levelRepository, UtilityClass utilityClass, StaffRolesEntityRepo staffRolesEntityRepo,
                         InstitutiionRepository institutionRepository,  BCryptPasswordEncoder bCryptPasswordEncoder) {
         this.staffsRepository = staffsRepository;
         this.studentsRepository = studentsRepository;
@@ -53,11 +55,12 @@ public class StaffService {
         this.utilityClass = utilityClass;
         this.institutionRepository = institutionRepository;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
+        this.staffRolesEntityRepo = staffRolesEntityRepo;
     }
 
     public String addNewStaff(String firstName, String surName, String gender, String dateOfBirth,
                               String institutionId, String email, String password, String phoneNumber,
-                              String staffRole) throws Exception {
+                              List<String> staffRoles) throws Exception {
 
         Institution institution = institutionRepository.findByInstitutionId(institutionId).orElse(null);
         if (institution == null) {
@@ -83,19 +86,27 @@ public class StaffService {
         staff.setPhoneNumber(phoneNumber);
         staff.setDateOfRegistration(LocalDate.now());
         staff.setStaffStatus(StaffStatus.ACTIVE);
-
-        List<StaffRoles> staffRoles = staff.getStaffRoles();
-        if (staffRoles == null) {
-            staffRoles = new ArrayList<>();
-        }
-        staffRoles.add(StaffRoles.valueOf(staffRole));
-        staff.setStaffRoles(staffRoles);
         staff.setInstitution(institution);
         staffsRepository.save(staff);
 
-
+        staff.setStaffRoles(saveStaffRoles(staff, staffRoles));
+        staffsRepository.save(staff);
 
         return staffID;
+    }
+
+    private List<StaffRolesEntity> saveStaffRoles(Staffs staff, List<String> staffRoles) throws Exception {
+
+        List<StaffRolesEntity> roles = new ArrayList<>();
+        for (String staffRole : staffRoles) {
+            StaffRolesEntity findStaff = new StaffRolesEntity();
+            findStaff.setStaff(staff);
+            findStaff.setStaffRole(StaffRoles.valueOf(staffRole));
+            staffRolesEntityRepo.save(findStaff);
+            roles.add(findStaff);
+        }
+
+        return roles;
     }
 
     public FindStaffDTO findStaffById(String id) throws Exception {
@@ -112,8 +123,8 @@ public class StaffService {
         staffData.setPhoneNumber(staff.getPhoneNumber());
 
         List<String> roles = new ArrayList<>();
-        for (StaffRoles staffRole : staff.getStaffRoles()) {
-            roles.add(staffRole.name());
+        for (StaffRolesEntity staffRole : staff.getStaffRoles()) {
+            roles.add(staffRole.getStaffRole().name());
         }
 
         staffData.setStaffRoles(roles);
@@ -141,11 +152,30 @@ public class StaffService {
         for (String role : newRoles) {
             staffRoles.add(StaffRoles.valueOf(role));
         }
-        staff.setStaffRoles(staffRoles);
+        staff.setStaffRoles(updateStaffRoles(staff, newRoles));
         staff.setStaffStatus(StaffStatus.valueOf(updateInfo.getStaffStatus()));
         staffsRepository.save(staff);
 
         return "Staff Info Updated Successfully";
+    }
+
+    private List<StaffRolesEntity> updateStaffRoles(Staffs staff, List<String> staffRoles) {
+        List<StaffRolesEntity> existingRoles = staffRolesEntityRepo.findByStaff_StaffId(staff.getStaffId());
+        if (existingRoles != null && !existingRoles.isEmpty()) {
+            staffRolesEntityRepo.deleteAll(existingRoles);
+        }
+
+        List<StaffRolesEntity> newRoles = new ArrayList<>();
+        for (String staffRole : staffRoles) {
+            StaffRolesEntity findStaff = new StaffRolesEntity();
+            findStaff.setStaff(staff);
+            findStaff.setStaffRole(StaffRoles.valueOf(staffRole));
+            staffRolesEntityRepo.save(findStaff);
+
+            newRoles.add(findStaff);
+        }
+
+        return newRoles;
     }
 
     public long countTotalStaffs(String staffId) throws Exception {
@@ -181,8 +211,8 @@ public class StaffService {
 
         int staffCount = 0;
         for (Staffs teachingStaff : staffs) {
-            List<StaffRoles> staffRoles = teachingStaff.getStaffRoles();
-            if (staffRoles.stream().anyMatch(staffRole -> staffRole.equals(StaffRoles.TEACHING_STAFF))) {
+            List<StaffRolesEntity> staffRoles = teachingStaff.getStaffRoles();
+            if (staffRoles.stream().anyMatch(staffRole -> staffRole.getStaffRole().equals(StaffRoles.TEACHING_STAFF))) {
                 staffCount++;
             }
         }
@@ -250,9 +280,9 @@ public class StaffService {
         List<StaffCaching> staffList = new ArrayList<>();
         for (Staffs staffMember : staffs) {
             List<String> roles = new ArrayList<>();
-            List<StaffRoles> staffRoles = staffMember.getStaffRoles();
-            for (StaffRoles staffRole : staffRoles) {
-                roles.add(staffRole.toString());
+            List<StaffRolesEntity> staffRoles = staffMember.getStaffRoles();
+            for (StaffRolesEntity staffRole : staffRoles) {
+                roles.add(staffRole.getStaffRole().name());
             }
 
             StaffCaching foundStaff = new StaffCaching(
@@ -287,9 +317,9 @@ public class StaffService {
             staff_Id = staffMember.getStaffId();
             staff_Name = staffMember.getFirstName() + " " + staffMember.getLastName();
 
-            List<StaffRoles> staffRoles = staffMember.getStaffRoles();
-                for (StaffRoles staffRole : staffRoles) {
-                    staff_Roles.add(staffRole.name());
+            List<StaffRolesEntity> staffRoles = staffMember.getStaffRoles();
+                for (StaffRolesEntity staffRole : staffRoles) {
+                    staff_Roles.add(staffRole.getStaffRole().name());
                 }
 
             ViewStaffList newStaff =  new ViewStaffList(

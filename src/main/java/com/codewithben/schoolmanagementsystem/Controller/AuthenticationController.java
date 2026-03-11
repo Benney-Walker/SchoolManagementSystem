@@ -1,6 +1,5 @@
 package com.codewithben.schoolmanagementsystem.Controller;
 
-import com.codewithben.schoolmanagementsystem.Contants.StaffRoles;
 import com.codewithben.schoolmanagementsystem.DTO.Institution.InstitutionRegistrationDTO;
 import com.codewithben.schoolmanagementsystem.DTO.Institution.EnrollNewStaffDTO;
 import com.codewithben.schoolmanagementsystem.DTO.Institution.LoginRequest;
@@ -19,7 +18,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -80,7 +78,7 @@ public class AuthenticationController {
         String email = enrollNewStaffDTO.getEmail();
         String password = enrollNewStaffDTO.getPassword();
         String phoneNumber = enrollNewStaffDTO.getPhoneNumber();
-        String role = enrollNewStaffDTO.getRole();
+        List<String> role = enrollNewStaffDTO.getRoles();
         String institutionID = enrollNewStaffDTO.getInstitutionId();
 
         Institution institution = institutiionRepository.findByInstitutionId(institutionID).orElse(null);
@@ -117,8 +115,8 @@ public class AuthenticationController {
 
             Staffs staff = staffService.getStaffDetails(loginRequest.getStaffId());
 
-            List<String> rolesList = staff.getStaffRoles().stream()
-                    .map(Enum::name).toList();
+            List<String> rolesList = staff.getStaffRoles().stream().map(
+                    role -> role.getStaffRole().name()).toList();
 
 
             String token = jwtUtility.generateToken(
