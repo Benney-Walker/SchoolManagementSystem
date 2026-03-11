@@ -1,6 +1,6 @@
 # ---- STAGE 1: Build the app ----
 # Start with a JDK image that has Maven available
-FROM eclipse-temurin:24-jdk-jammy AS build
+FROM eclipse-temurin:24-jdk-noble AS build
 
 # Set the working directory inside the container
 WORKDIR /app
@@ -16,7 +16,7 @@ RUN mvn clean package -DskipTests
 
 # ---- STAGE 2: Run the app ----
 # Use a smaller JRE-only image (no need for full JDK at runtime)
-FROM eclipse-temurin:24-jre-jammy
+FROM eclipse-temurin:24-jre-noble
 
 WORKDIR /app
 
