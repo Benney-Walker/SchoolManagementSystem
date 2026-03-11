@@ -115,7 +115,7 @@ public class AuthenticationController {
 
             Staffs staff = staffService.getStaffDetails(loginRequest.getStaffId());
 
-            List<String> rolesList = staff.getStaffRoles().stream().map(
+            List<String> rolesList = staff.getRoles().stream().map(
                     role -> role.getStaffRole().name()).toList();
 
 

@@ -24,7 +24,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         Staffs staff = staffsRepository.findByStaffId(staffId)
                 .orElseThrow(() -> new UsernameNotFoundException("Staff not found"));
 
-        List<SimpleGrantedAuthority> authorities = staff.getStaffRoles().stream()
+        List<SimpleGrantedAuthority> authorities = staff.getRoles().stream()
                 .map(role -> new SimpleGrantedAuthority(role.toString()))
                 .toList();
         return new User(staff.getStaffId(),

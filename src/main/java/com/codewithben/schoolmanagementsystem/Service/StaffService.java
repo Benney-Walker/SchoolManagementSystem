@@ -89,7 +89,7 @@ public class StaffService {
         staff.setInstitution(institution);
         staffsRepository.save(staff);
 
-        staff.setStaffRoles(saveStaffRoles(staff, staffRoles));
+        staff.setRoles(saveStaffRoles(staff, staffRoles));
         staffsRepository.save(staff);
 
         return staffID;
@@ -124,7 +124,7 @@ public class StaffService {
 
         List<String> roles = new ArrayList<>();
 
-        for (StaffRolesEntity staffRole : staff.getStaffRoles()) {
+        for (StaffRolesEntity staffRole : staff.getRoles()) {
             roles.add(staffRole.getStaffRole().name());
         }
 
@@ -153,7 +153,7 @@ public class StaffService {
         for (String role : newRoles) {
             staffRoles.add(StaffRoles.valueOf(role));
         }
-        staff.setStaffRoles(updateStaffRoles(staff, newRoles));
+        staff.setRoles(updateStaffRoles(staff, newRoles));
         staff.setStaffStatus(StaffStatus.valueOf(updateInfo.getStaffStatus()));
         staffsRepository.save(staff);
 
@@ -212,7 +212,7 @@ public class StaffService {
 
         int staffCount = 0;
         for (Staffs teachingStaff : staffs) {
-            List<StaffRolesEntity> staffRoles = teachingStaff.getStaffRoles();
+            List<StaffRolesEntity> staffRoles = teachingStaff.getRoles();
             if (staffRoles.stream().anyMatch(staffRole -> staffRole.getStaffRole().equals(StaffRoles.TEACHING_STAFF))) {
                 staffCount++;
             }
@@ -281,7 +281,7 @@ public class StaffService {
         List<StaffCaching> staffList = new ArrayList<>();
         for (Staffs staffMember : staffs) {
             List<String> roles = new ArrayList<>();
-            List<StaffRolesEntity> staffRoles = staffMember.getStaffRoles();
+            List<StaffRolesEntity> staffRoles = staffMember.getRoles();
             for (StaffRolesEntity staffRole : staffRoles) {
                 roles.add(staffRole.getStaffRole().name());
             }
@@ -318,7 +318,7 @@ public class StaffService {
             staff_Id = staffMember.getStaffId();
             staff_Name = staffMember.getFirstName() + " " + staffMember.getLastName();
 
-            List<StaffRolesEntity> staffRoles = staffMember.getStaffRoles();
+            List<StaffRolesEntity> staffRoles = staffMember.getRoles();
                 for (StaffRolesEntity staffRole : staffRoles) {
                     staff_Roles.add(staffRole.getStaffRole().name());
                 }

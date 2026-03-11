@@ -1,11 +1,9 @@
 package com.codewithben.schoolmanagementsystem.Entity;
 
-import com.codewithben.schoolmanagementsystem.Contants.StaffRoles;
 import com.codewithben.schoolmanagementsystem.Contants.StaffStatus;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -37,7 +35,7 @@ public class Staffs {
     private String phoneNumber;
 
     @OneToMany(mappedBy = "staff")
-    private List<StaffRolesEntity> staffRoles;
+    private List<StaffRolesEntity> roles;
 
     @Column(nullable = false)
     private LocalDate dateOfRegistration;
@@ -58,7 +56,7 @@ public class Staffs {
 
     public Staffs(String staffId, String firstName, String lastName, String gender,
                   LocalDate dateOfBirth, String password, String email, String phoneNumber,
-                  List<StaffRolesEntity> staffRoles, LocalDate dateOfRegistration, String status, Institution institution, List<Level> level, StaffStatus staffStatus) {
+                  List<StaffRolesEntity> roles, LocalDate dateOfRegistration, String status, Institution institution, List<Level> level, StaffStatus staffStatus) {
         this.staffId = staffId;
         this.firstName = firstName;
         this.lastName = lastName;
@@ -67,7 +65,7 @@ public class Staffs {
         this.password = password;
         this.email = email;
         this.phoneNumber = phoneNumber;
-        this.staffRoles = staffRoles;
+        this.roles = roles;
         this.dateOfRegistration = dateOfRegistration;
         this.status = status;
         this.institution = institution;
@@ -139,12 +137,12 @@ public class Staffs {
         this.phoneNumber = phoneNumber;
     }
 
-    public List<StaffRolesEntity> getStaffRoles() {
-        return staffRoles;
+    public List<StaffRolesEntity> getRoles() {
+        return roles;
     }
 
-    public void setStaffRoles(List<StaffRolesEntity> staffRoles) {
-        this.staffRoles = staffRoles;
+    public void setRoles(List<StaffRolesEntity> staffRoles) {
+        this.roles = staffRoles;
     }
 
     public LocalDate getDateOfRegistration() {
