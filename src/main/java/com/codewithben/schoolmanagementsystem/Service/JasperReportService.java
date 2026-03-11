@@ -3,6 +3,7 @@ package com.codewithben.schoolmanagementsystem.Service;
 import com.codewithben.schoolmanagementsystem.DTO.Academics.GenerateStudentReport;
 import net.sf.jasperreports.engine.*;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
+import net.sf.jasperreports.engine.util.JRLoader;
 import org.springframework.stereotype.Service;
 
 import java.io.FileNotFoundException;
@@ -44,11 +45,11 @@ public class JasperReportService {
     private JasperReport getCompiledReport() throws JRException, IOException {
         if (cachedReport == null) {
             InputStream template = getClass()
-                    .getResourceAsStream("/reports/class_results_report.jrxml");
+                    .getResourceAsStream("/reports/class_results_report.jasper");
             if (template == null) {
-                throw new FileNotFoundException("Jasper template not found");
+                throw new FileNotFoundException("Report template not found");
             }
-            cachedReport = JasperCompileManager.compileReport(template);
+            cachedReport = (JasperReport)  JRLoader.loadObject(template);
         }
         return cachedReport;
     }
