@@ -125,17 +125,12 @@ public class StaffService {
         List<String> roles = new ArrayList<>();
         List<StaffRolesEntity> existingRoles = staff.getStaffRoles();
 
-        if (existingRoles != null && !existingRoles.isEmpty()) {
-            for (StaffRolesEntity staffRole : existingRoles) {
-                roles.add(staffRole.getStaffRole().name());
-            }
-
-        } else {
-            roles = Collections.emptyList();
+        for (StaffRolesEntity staffRole : existingRoles) {
+            roles.add(staffRole.getStaffRole().name());
         }
-
+        
         staffData.setStaffRoles(roles);
-        staffData.setStaffStatus(staff.getStaffStatus().toString());
+        staffData.setStaffStatus(staff.getStaffStatus().name());
         staffData.setDateOfRegistration(staff.getDateOfRegistration().toString());
 
         return staffData;
