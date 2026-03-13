@@ -241,17 +241,28 @@ public class StudentService {
 
         Level level = subject.getLevel();
         List<Subjects> subjectsList = level.getSubjects();
+        List<Students> studentsList = level.getStudents();
 
-        int nullCount = 0;
-        for (Subjects subjects : subjectsList) {
-            SubjectScore subjectScore = subjectScoreRepository.findBySubject_SubjectId(subjects.getSubjectId())
-                    .orElse(null);
-            if (subjectScore == null) {
-                nullCount++;
+        List<Students> activeStudents =  new ArrayList<>();
+        for (Students student : studentsList) {
+            if (student.getStudentStatus().equals(StudentStatus.ACTIVE)) {
+                activeStudents.add(student);
             }
         }
 
-        if (nullCount == 0) {
+        int completeResultsCount = 0;
+        for (Students student : activeStudents) {
+            Results studentResult = resultsRepository.findByStudent_StudentIdAndSemester_SemesterIDAndLevel_LevelID(
+                    student.getStudentId(),
+                    result.getSemester().getSemesterID(),
+                    level.getLevelID()
+            ).orElse(null);
+            if (studentResult != null && studentResult.getSubjectScores().size() == subjectsList.size()) {
+                completeResultsCount++;
+            }
+        }
+
+        if (completeResultsCount == activeStudents.size()) {
             utilityClass.reArrangePositions(subject, result.getSemester());
         }
     }
