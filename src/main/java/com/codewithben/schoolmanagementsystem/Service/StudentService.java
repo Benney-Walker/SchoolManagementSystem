@@ -178,40 +178,29 @@ public class StudentService {
                         student.getStudentId(),
                         subject.getSubjectId(),
                         result.getResultId()
-                ).orElse(null);
+                ).orElse(new SubjectScore());
 
         double classScore = Double.parseDouble(scores.getClassScore());
         double calculatedExamScore = Double.parseDouble(scores.getCalculatedExamScore());
         double totalScore =  classScore + calculatedExamScore;
 
-        if (subjectScore == null) {
-            subjectScore = new SubjectScore();
-            subjectScore.setSubject(subject);
-            subjectScore.setStudent(student);
-            subjectScore.setResults(result);
-            subjectScore.setExercise1Score(Double.parseDouble(scores.getExercise1Score()));
-            subjectScore.setClassTestScore(Double.parseDouble(scores.getClassTestScore()));
-            subjectScore.setExercise2Score(Double.parseDouble(scores.getExercise2Score()));
-            subjectScore.setProjectScore(Double.parseDouble(scores.getProjectScore()));
-            subjectScore.setClassScore(classScore);
-            subjectScore.setExamScore(Double.parseDouble(scores.getExamScore()));
-            subjectScore.setCalculatedExamScore(calculatedExamScore);
-            subjectScore.setGrade(utilityClass.extractGrade(totalScore));
-            subjectScore.setRemarks(utilityClass.extractDescription(totalScore));
-            subjectScore.setTotalScore(totalScore);
-
-        } else {
-
-            subjectScore.setExercise1Score(Double.parseDouble(scores.getExercise1Score()));
-            subjectScore.setClassTestScore(Double.parseDouble(scores.getClassTestScore()));
-            subjectScore.setExercise2Score(Double.parseDouble(scores.getExercise2Score()));
-            subjectScore.setProjectScore(Double.parseDouble(scores.getProjectScore()));
-            subjectScore.setClassScore(classScore);
-            subjectScore.setExamScore(Double.parseDouble(scores.getExamScore()));
-            subjectScore.setCalculatedExamScore(calculatedExamScore);
-            subjectScore.setTotalScore(totalScore);
-
-        }
+        subjectScore.setSubject(subject);
+        subjectScore.setStudent(student);
+        subjectScore.setResults(result);
+        subjectScore.setExercise1Score(Double.parseDouble(scores.getExercise1Score()));
+        subjectScore.setClassTestScore(Double.parseDouble(scores.getClassTestScore()));
+        subjectScore.setExercise2Score(Double.parseDouble(scores.getExercise2Score()));
+        subjectScore.setProjectScore(Double.parseDouble(scores.getProjectScore()));
+        subjectScore.setClassScore(classScore);
+        subjectScore.setExamScore(Double.parseDouble(scores.getExamScore()));
+        subjectScore.setCalculatedExamScore(calculatedExamScore);
+        subjectScore.setGrade(
+                utilityClass.extractGrade(totalScore, institution.getInstitutionId())
+        );
+        subjectScore.setRemarks(
+                utilityClass.extractDescription(totalScore, institution.getInstitutionId())
+        );
+        subjectScore.setTotalScore(totalScore);
 
         subjectScoreRepository.save(subjectScore);
         updateResultTotals(result, staff, subject);
