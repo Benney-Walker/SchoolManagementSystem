@@ -102,18 +102,18 @@ public class UtilityClass {
     }
 
     //Load (Cached) list ordered by LowerRange
-    private List<GradeSystem> getOrderedCacheList() {
+    private List<GradeSystem> getOrderedCacheList(String institutionId) {
         List<GradeSystem> list = cache.get();
         if (list == null) {
-            list = gradeSystemRepository.findAllByInstitution_InstitutionId();
+            list = gradeSystemRepository.findAllByInstitution_InstitutionId(institutionId);
             cache.set(list);
         }
         return list;
     }
 
     //Returns subject grade and its description based on the score
-    public String getGradeAndDescription(Double totalScore) {
-        List<GradeSystem> list = getOrderedCacheList();
+    public String getGradeAndDescription(Double totalScore, String institutionId) {
+        List<GradeSystem> list = getOrderedCacheList(institutionId);
 
         //Find matching range
         for (GradeSystem grade : list) {
@@ -126,7 +126,7 @@ public class UtilityClass {
 
     //Extract grade
     public String extractGrade(Double totalScore, String institutionId) {
-        String[] gradeAndDescription = getGradeAndDescription(totalScore).split("_");
+        String[] gradeAndDescription = getGradeAndDescription(totalScore, institutionId).split("_");
 
         if (gradeAndDescription.length == 2) {
             return gradeAndDescription[0];
@@ -136,7 +136,7 @@ public class UtilityClass {
 
     //Extract grade Description
     public String extractDescription(Double totalScore, String institutionId) {
-        String[] gradeAndDescription = getGradeAndDescription(totalScore).split("_");
+        String[] gradeAndDescription = getGradeAndDescription(totalScore, institutionId).split("_");
 
         if (gradeAndDescription.length == 2) {
             return gradeAndDescription[1];
