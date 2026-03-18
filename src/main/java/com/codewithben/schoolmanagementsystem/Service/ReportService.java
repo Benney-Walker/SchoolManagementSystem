@@ -65,14 +65,15 @@ public class ReportService {
             //Check if the results is complete else stop the whole operation and throw an exception "Class results not complete"
             Results results = resultsRepository
                     .findByStudentAndSemester(student, semester)
-                    .orElseThrow(()-> new Exception("Class results not complete"));
+                    .orElseThrow(()-> new Exception(
+                            student.getFirstName() + "'s result not created"));
 
             //Check if all subjects scores are uploaded else throw an exception and cancel the whole operation
             List<Subjects> levelSubjects = level.getSubjects();
             List<SubjectScore> expectedSubjectsScores = subjectScoreRepository
                     .findByResults_ResultId(results.getResultId());
             if (expectedSubjectsScores.size() != levelSubjects.size()) {
-                throw new Exception("Class results not complete");
+                throw new Exception("Not all subject scores are added");
             }
 
             //Get results parameters
