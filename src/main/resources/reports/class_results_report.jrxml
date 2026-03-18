@@ -186,317 +186,85 @@
                     </column>
                 </component>
             </element>
-            <element kind="staticText" uuid="3d4db84b-ebde-4f74-bf95-1fb373010790" positionType="Float" x="10" y="360" width="150" height="15" bold="true">
+            <element kind="staticText" uuid="3d4db84b-ebde-4f74-bf95-1fb373010790" positionType="Float" x="10" y="210" width="150" height="15" bold="true">
                 <text><![CDATA[GRADING SYSTEM]]></text>
             </element>
-            <element kind="staticText" uuid="20bb7080-cf43-4b43-a09a-7000fd054ff5" positionType="Float" x="10" y="375" width="535" height="15" fontSize="10.0" bold="true">
+            <element kind="staticText" uuid="20bb7080-cf43-4b43-a09a-7000fd054ff5" positionType="Float" x="10" y="225" width="535" height="15" fontSize="10.0" bold="true">
                 <text><![CDATA[80-100 (Proficiency) | 70-79 (Proficiency) | 60-69 (Proficiency) | 50-59 (Developing) | 49-0 (Emerging)]]></text>
             </element>
-            <element kind="staticText" uuid="bb5a4313-6a7c-490b-bdc0-d41c40160bce" positionType="Float" mode="Opaque" x="10" y="405" width="135" height="15" backcolor="#E8E8E8" bold="true">
+
+            <element kind="staticText" uuid="bb5a4313-6a7c-490b-bdc0-d41c40160bce" positionType="Float" mode="Opaque" x="10" y="250" width="135" height="15" backcolor="#E8E8E8" bold="true">
                 <text><![CDATA[ CONDUCT]]></text>
-                <box>
-                    <pen lineWidth="0.5"/>
-                </box>
+                <box><pen lineWidth="0.5"/></box>
             </element>
-            <element kind="staticText" uuid="2682d7e5-4055-4a57-b949-3fedc9a19cdf" positionType="Float" mode="Opaque" x="145" y="405" width="80" height="15" backcolor="#E8E8E8" bold="true" hTextAlign="Center">
+            <element kind="staticText" uuid="2682d7e5-4055-4a57-b949-3fedc9a19cdf" positionType="Float" mode="Opaque" x="145" y="250" width="80" height="15" backcolor="#E8E8E8" bold="true" hTextAlign="Center">
                 <text><![CDATA[EXCELLENT]]></text>
-                <box>
-                    <pen lineWidth="0.5"/>
-                </box>
+                <box><pen lineWidth="0.5"/></box>
             </element>
-            <element kind="staticText" uuid="3d4b49bc-334e-4978-9c6b-526770b7b381" positionType="Float" mode="Opaque" x="225" y="405" width="80" height="15" backcolor="#E8E8E8" bold="true" hTextAlign="Center">
+            <element kind="staticText" uuid="3d4b49bc-334e-4978-9c6b-526770b7b381" positionType="Float" mode="Opaque" x="225" y="250" width="80" height="15" backcolor="#E8E8E8" bold="true" hTextAlign="Center">
                 <text><![CDATA[VERY GOOD]]></text>
-                <box>
-                    <pen lineWidth="0.5"/>
-                </box>
+                <box><pen lineWidth="0.5"/></box>
             </element>
-            <element kind="staticText" uuid="d549e34c-73dd-40d9-905c-886c5ea7346a" positionType="Float" mode="Opaque" x="305" y="405" width="80" height="15" backcolor="#E8E8E8" bold="true" hTextAlign="Center">
+            <element kind="staticText" uuid="d549e34c-73dd-40d9-905c-886c5ea7346a" positionType="Float" mode="Opaque" x="305" y="250" width="80" height="15" backcolor="#E8E8E8" bold="true" hTextAlign="Center">
                 <text><![CDATA[GOOD]]></text>
-                <box>
-                    <pen lineWidth="0.5"/>
-                </box>
+                <box><pen lineWidth="0.5"/></box>
             </element>
-            <element kind="staticText" uuid="5d83be86-b812-42f7-993d-0f74e18e32a4" positionType="Float" mode="Opaque" x="385" y="405" width="80" height="15" backcolor="#E8E8E8" bold="true" hTextAlign="Center">
+            <element kind="staticText" uuid="5d83be86-b812-42f7-993d-0f74e18e32a4" positionType="Float" mode="Opaque" x="385" y="250" width="80" height="15" backcolor="#E8E8E8" bold="true" hTextAlign="Center">
                 <text><![CDATA[FAIR]]></text>
-                <box>
-                    <pen lineWidth="0.5"/>
-                </box>
+                <box><pen lineWidth="0.5"/></box>
             </element>
-            <element kind="staticText" uuid="fa0f0a47-9dab-49cd-a499-5b97f2270dfe" positionType="Float" mode="Opaque" x="465" y="405" width="80" height="15" backcolor="#E8E8E8" bold="true" hTextAlign="Center">
+            <element kind="staticText" uuid="fa0f0a47-9dab-49cd-a499-5b97f2270dfe" positionType="Float" mode="Opaque" x="465" y="250" width="80" height="15" backcolor="#E8E8E8" bold="true" hTextAlign="Center">
                 <text><![CDATA[NOT EXPECT.]]></text>
-                <box>
-                    <pen lineWidth="0.5"/>
-                </box>
+                <box><pen lineWidth="0.5"/></box>
             </element>
-            <element kind="staticText" uuid="67756978-dbce-4ed0-bc1e-d4f54a7e6042" positionType="Float" x="10" y="420" width="135" height="15">
+
+            <element kind="staticText" uuid="67756978-dbce-4ed0-bc1e-d4f54a7e6042" positionType="Float" x="10" y="265" width="135" height="15">
                 <text><![CDATA[ REGULAR]]></text>
-                <box>
-                    <pen lineWidth="0.5"/>
-                </box>
+                <box><pen lineWidth="0.5"/></box>
             </element>
-            <element kind="staticText" uuid="f0c469d3-8cb0-461e-9cf5-cd2473beb172" positionType="Float" x="145" y="420" width="80" height="15">
+            <element kind="staticText" uuid="f0c469d3-8cb0-461e-9cf5-cd2473beb172" positionType="Float" x="145" y="265" width="80" height="15">
                 <text><![CDATA[]]></text>
-                <box>
-                    <pen lineWidth="0.5"/>
-                </box>
+                <box><pen lineWidth="0.5"/></box>
             </element>
-            <element kind="staticText" uuid="d8688331-186c-4255-88f9-c593146a8f78" positionType="Float" x="225" y="420" width="80" height="15">
-                <text><![CDATA[]]></text>
-                <box>
-                    <pen lineWidth="0.5"/>
-                </box>
-            </element>
-            <element kind="staticText" uuid="d7399432-3e60-47fb-8126-b60aeaa11da2" positionType="Float" x="305" y="420" width="80" height="15">
-                <text><![CDATA[]]></text>
-                <box>
-                    <pen lineWidth="0.5"/>
-                </box>
-            </element>
-            <element kind="staticText" uuid="56dbe770-e1be-4a53-87e1-42bf1c38e379" positionType="Float" x="385" y="420" width="80" height="15">
-                <text><![CDATA[]]></text>
-                <box>
-                    <pen lineWidth="0.5"/>
-                </box>
-            </element>
-            <element kind="staticText" uuid="17e66c59-88f6-409d-bdc7-67a51ef73db2" positionType="Float" x="465" y="420" width="80" height="15">
-                <text><![CDATA[]]></text>
-                <box>
-                    <pen lineWidth="0.5"/>
-                </box>
-            </element>
-            <element kind="staticText" uuid="db7eda57-0155-4ada-93cb-10d79b4e2859" positionType="Float" x="10" y="435" width="135" height="15">
-                <text><![CDATA[ PUNCTUAL]]></text>
-                <box>
-                    <pen lineWidth="0.5"/>
-                </box>
-            </element>
-            <element kind="staticText" uuid="50b75faf-e255-4b37-a80d-1b89c9d5c8ce" positionType="Float" x="145" y="435" width="80" height="15">
-                <text><![CDATA[]]></text>
-                <box>
-                    <pen lineWidth="0.5"/>
-                </box>
-            </element>
-            <element kind="staticText" uuid="9818b263-27c8-40bd-a359-70a9c34ad01c" positionType="Float" x="225" y="435" width="80" height="15">
-                <text><![CDATA[]]></text>
-                <box>
-                    <pen lineWidth="0.5"/>
-                </box>
-            </element>
-            <element kind="staticText" uuid="1ff8e0f4-caad-4101-9ab5-ae495b63d783" positionType="Float" x="305" y="435" width="80" height="15">
-                <text><![CDATA[]]></text>
-                <box>
-                    <pen lineWidth="0.5"/>
-                </box>
-            </element>
-            <element kind="staticText" uuid="a763f20e-ddba-4bae-ac37-871425e6a448" positionType="Float" x="385" y="435" width="80" height="15">
-                <text><![CDATA[]]></text>
-                <box>
-                    <pen lineWidth="0.5"/>
-                </box>
-            </element>
-            <element kind="staticText" uuid="182398fb-89a3-4090-b3a5-9bc89eaeba6b" positionType="Float" x="465" y="435" width="80" height="15">
-                <text><![CDATA[]]></text>
-                <box>
-                    <pen lineWidth="0.5"/>
-                </box>
-            </element>
-            <element kind="staticText" uuid="54ae15a1-8424-4329-8ba4-27ad5d4b1f9d" positionType="Float" x="10" y="450" width="135" height="15">
-                <text><![CDATA[ PHYSICAL APPEARANCE]]></text>
-                <box>
-                    <pen lineWidth="0.5"/>
-                </box>
-            </element>
-            <element kind="staticText" uuid="444707ae-e121-4ae2-832a-9e4e4ef27a7c" positionType="Float" x="145" y="450" width="80" height="15">
-                <text><![CDATA[]]></text>
-                <box>
-                    <pen lineWidth="0.5"/>
-                </box>
-            </element>
-            <element kind="staticText" uuid="9e61cc2b-855a-4192-9ec1-12d4765ee3a7" positionType="Float" x="225" y="450" width="80" height="15">
-                <text><![CDATA[]]></text>
-                <box>
-                    <pen lineWidth="0.5"/>
-                </box>
-            </element>
-            <element kind="staticText" uuid="3de4e2d4-9ca1-4224-b012-abea0270aa55" positionType="Float" x="305" y="450" width="80" height="15">
-                <text><![CDATA[]]></text>
-                <box>
-                    <pen lineWidth="0.5"/>
-                </box>
-            </element>
-            <element kind="staticText" uuid="a86d2ac0-f6e5-48fe-a9fb-c49a33c4fbbb" positionType="Float" x="385" y="450" width="80" height="15">
-                <text><![CDATA[]]></text>
-                <box>
-                    <pen lineWidth="0.5"/>
-                </box>
-            </element>
-            <element kind="staticText" uuid="81a53912-16e8-4170-9b59-1ddf43a907fb" positionType="Float" x="465" y="450" width="80" height="15">
-                <text><![CDATA[]]></text>
-                <box>
-                    <pen lineWidth="0.5"/>
-                </box>
-            </element>
-            <element kind="staticText" uuid="466409f8-12ad-44ca-84d1-5a258580006d" positionType="Float" x="10" y="465" width="135" height="15">
-                <text><![CDATA[ SOCIAL]]></text>
-                <box>
-                    <pen lineWidth="0.5"/>
-                </box>
-            </element>
-            <element kind="staticText" uuid="200d6882-5e89-4251-a626-c97a3c2fd7a8" positionType="Float" x="145" y="465" width="80" height="15">
-                <text><![CDATA[]]></text>
-                <box>
-                    <pen lineWidth="0.5"/>
-                </box>
-            </element>
-            <element kind="staticText" uuid="a0786c0f-757f-4f17-9b77-9f1afc0f260b" positionType="Float" x="225" y="465" width="80" height="15">
-                <text><![CDATA[]]></text>
-                <box>
-                    <pen lineWidth="0.5"/>
-                </box>
-            </element>
-            <element kind="staticText" uuid="3180e2d3-393a-411a-b419-759d53bef596" positionType="Float" x="305" y="465" width="80" height="15">
-                <text><![CDATA[]]></text>
-                <box>
-                    <pen lineWidth="0.5"/>
-                </box>
-            </element>
-            <element kind="staticText" uuid="67c845b8-3ea1-4f9f-88a5-7a344092a76c" positionType="Float" x="385" y="465" width="80" height="15">
-                <text><![CDATA[]]></text>
-                <box>
-                    <pen lineWidth="0.5"/>
-                </box>
-            </element>
-            <element kind="staticText" uuid="b311f59f-a428-486f-9516-84130bf5782f" positionType="Float" x="465" y="465" width="80" height="15">
-                <text><![CDATA[]]></text>
-                <box>
-                    <pen lineWidth="0.5"/>
-                </box>
-            </element>
-            <element kind="staticText" uuid="65c12094-dd60-41c9-be80-32e25d61a80e" positionType="Float" x="10" y="480" width="135" height="15">
-                <text><![CDATA[ EMOTIONAL]]></text>
-                <box>
-                    <pen lineWidth="0.5"/>
-                </box>
-            </element>
-            <element kind="staticText" uuid="800a5ca2-428d-4e5f-863a-5428a7b8ccba" positionType="Float" x="145" y="480" width="80" height="15">
-                <text><![CDATA[]]></text>
-                <box>
-                    <pen lineWidth="0.5"/>
-                </box>
-            </element>
-            <element kind="staticText" uuid="de7350bf-f460-42e4-b122-b6c0cfc35ea3" positionType="Float" x="225" y="480" width="80" height="15">
-                <text><![CDATA[]]></text>
-                <box>
-                    <pen lineWidth="0.5"/>
-                </box>
-            </element>
-            <element kind="staticText" uuid="3247999e-55af-48fb-8459-b934e5715b8a" positionType="Float" x="305" y="480" width="80" height="15">
-                <text><![CDATA[]]></text>
-                <box>
-                    <pen lineWidth="0.5"/>
-                </box>
-            </element>
-            <element kind="staticText" uuid="89bf241e-1585-42ff-97d3-aa8fcd686438" positionType="Float" x="385" y="480" width="80" height="15">
-                <text><![CDATA[]]></text>
-                <box>
-                    <pen lineWidth="0.5"/>
-                </box>
-            </element>
-            <element kind="staticText" uuid="2581f7f9-83ef-4ae2-b304-a52f232c03b2" positionType="Float" x="465" y="480" width="80" height="15">
-                <text><![CDATA[]]></text>
-                <box>
-                    <pen lineWidth="0.5"/>
-                </box>
-            </element>
-            <element kind="staticText" uuid="e1780a86-b0ef-4b6b-a5b5-8742d76b3234" positionType="Float" x="10" y="495" width="135" height="15">
-                <text><![CDATA[ COGNITIVE SKILLS]]></text>
-                <box>
-                    <pen lineWidth="0.5"/>
-                </box>
-            </element>
-            <element kind="staticText" uuid="f156f361-0b03-46df-9fbc-f50c2377d230" positionType="Float" x="145" y="495" width="80" height="15">
-                <text><![CDATA[]]></text>
-                <box>
-                    <pen lineWidth="0.5"/>
-                </box>
-            </element>
-            <element kind="staticText" uuid="9166b45d-4ee0-4c44-85e0-e6df850af725" positionType="Float" x="225" y="495" width="80" height="15">
-                <text><![CDATA[]]></text>
-                <box>
-                    <pen lineWidth="0.5"/>
-                </box>
-            </element>
-            <element kind="staticText" uuid="1dd27b28-956b-4cb9-82d2-c15afb24f9fb" positionType="Float" x="305" y="495" width="80" height="15">
-                <text><![CDATA[]]></text>
-                <box>
-                    <pen lineWidth="0.5"/>
-                </box>
-            </element>
-            <element kind="staticText" uuid="d82fd8ab-8c3e-4a57-a352-bf1506ce45de" positionType="Float" x="385" y="495" width="80" height="15">
-                <text><![CDATA[]]></text>
-                <box>
-                    <pen lineWidth="0.5"/>
-                </box>
-            </element>
-            <element kind="staticText" uuid="0823634a-0179-44a2-9be5-4060c2c05e66" positionType="Float" x="465" y="495" width="80" height="15">
-                <text><![CDATA[]]></text>
-                <box>
-                    <pen lineWidth="0.5"/>
-                </box>
-            </element>
-            <element kind="staticText" uuid="bdb108fd-38f7-4cf4-9136-900d95ebd41a" positionType="Float" x="10" y="550" width="80" height="15" bold="true">
+            <element kind="staticText" uuid="bdb108fd-38f7-4cf4-9136-900d95ebd41a" positionType="Float" x="10" y="370" width="80" height="15" bold="true">
                 <text><![CDATA[ATTENDANCE:]]></text>
             </element>
-            <element kind="textField" uuid="46552784-394b-4a4a-a455-671e9299f1d4" positionType="Float" x="90" y="550" width="50" height="15">
+            <element kind="textField" uuid="46552784-394b-4a4a-a455-671e9299f1d4" positionType="Float" x="90" y="370" width="50" height="15">
                 <expression><![CDATA[$F{attendanceMarked}]]></expression>
             </element>
-            <element kind="staticText" uuid="630b3f1d-5ca4-4b18-88dd-9c43028742ce" positionType="Float" x="150" y="550" width="60" height="15" bold="true">
+            <element kind="staticText" uuid="630b3f1d-5ca4-4b18-88dd-9c43028742ce" positionType="Float" x="150" y="370" width="60" height="15" bold="true">
                 <text><![CDATA[OUT OF:]]></text>
             </element>
-            <element kind="textField" uuid="f6b1c8bc-bcea-42bb-bd7d-5508c6741260" positionType="Float" x="210" y="550" width="50" height="15">
+            <element kind="textField" uuid="f6b1c8bc-bcea-42bb-bd7d-5508c6741260" positionType="Float" x="210" y="370" width="50" height="15">
                 <expression><![CDATA[$F{totalAttendance}]]></expression>
             </element>
-            <element kind="staticText" uuid="8b3aa91e-c1cb-465f-9474-0ed740b1b043" positionType="Float" x="300" y="550" width="90" height="15" bold="true">
-                <text><![CDATA[PROMOTED TO:]]></text>
-            </element>
-            <element kind="textField" uuid="15e61427-b882-48ad-8baf-1e17696db801" positionType="Float" x="390" y="550" width="120" height="15">
-                <expression><![CDATA[$F{promotedTo}]]></expression>
-            </element>
-            <element kind="staticText" uuid="2c308b7f-c4b4-40a2-8a4f-758bb548be26" positionType="Float" x="10" y="575" width="110" height="15" bold="true">
+
+            <element kind="staticText" uuid="2c308b7f-c4b4-40a2-8a4f-758bb548be26" positionType="Float" x="10" y="400" width="110" height="15" bold="true">
                 <text><![CDATA[PECULIAR ISSUE:]]></text>
             </element>
-            <element kind="line" uuid="a1b2c3d4-e5f6-7890-abcd-ef1234567890" positionType="Float" x="120" y="588" width="425" height="1">
+            <element kind="line" uuid="a1b2c3d4-e5f6-7890-abcd-ef1234567890" positionType="Float" x="120" y="413" width="425" height="1">
                 <pen lineWidth="1.0" lineStyle="Dotted"/>
             </element>
-            <element kind="staticText" uuid="a7965c7a-a939-49b1-94ae-eafa61b24ac3" positionType="Float" x="10" y="605" width="140" height="15" bold="true">
+
+            <element kind="staticText" uuid="a7965c7a-a939-49b1-94ae-eafa61b24ac3" positionType="Float" x="10" y="430" width="140" height="15" bold="true">
                 <text><![CDATA[FACILITATOR REMARKS:]]></text>
             </element>
-            <element kind="line" uuid="b2c3d4e5-f6a7-890b-cdef-01234567890a" positionType="Float" x="150" y="618" width="395" height="1">
+            <element kind="line" uuid="b2c3d4e5-f6a7-890b-cdef-01234567890a" positionType="Float" x="150" y="443" width="395" height="1">
                 <pen lineWidth="1.0" lineStyle="Dotted"/>
             </element>
-            <element kind="staticText" uuid="b8e5d16f-f27e-465d-b33c-bd04f20223cb" positionType="Float" x="10" y="635" width="130" height="15" bold="true">
+
+            <element kind="staticText" uuid="b8e5d16f-f27e-465d-b33c-bd04f20223cb" positionType="Float" x="10" y="460" width="130" height="15" bold="true">
                 <text><![CDATA[FACILITATOR SIGN:]]></text>
             </element>
-            <element kind="line" uuid="c3d4e5f6-a7b8-90cd-ef01-234567890abc" positionType="Float" x="120" y="648" width="150" height="1">
+            <element kind="line" uuid="c3d4e5f6-a7b8-90cd-ef01-234567890abc" positionType="Float" x="120" y="473" width="150" height="1">
                 <pen lineWidth="1.0" lineStyle="Dotted"/>
             </element>
-            <element kind="staticText" uuid="d4e5f6a7-b8c9-0def-0123-456789abcdef" positionType="Float" x="280" y="635" width="50" height="15" bold="true">
-                <text><![CDATA[NAME:]]></text>
-            </element>
-            <element kind="textField" uuid="08c2c894-9aa9-4ef5-af86-b6d43b18c369" positionType="Float" x="330" y="635" width="215" height="15">
-                <expression><![CDATA[$F{instructorName}]]></expression>
-            </element>
-            <element kind="staticText" uuid="b386964c-229d-479b-90c8-29c4132f3c9e" positionType="Float" x="10" y="665" width="150" height="15" bold="true">
+
+            <element kind="staticText" uuid="b386964c-229d-479b-90c8-29c4132f3c9e" positionType="Float" x="10" y="490" width="150" height="15" bold="true">
                 <text><![CDATA[HEAD FACILITATOR'S SIGN:]]></text>
             </element>
-            <element kind="line" uuid="e5f6a7b8-c9d0-12ef-3456-7890abcdef01" positionType="Float" x="165" y="678" width="170" height="1">
+            <element kind="line" uuid="e5f6a7b8-c9d0-12ef-3456-7890abcdef01" positionType="Float" x="165" y="503" width="170" height="1">
                 <pen lineWidth="1.0" lineStyle="Dotted"/>
-            </element>
-            <element kind="staticText" uuid="34f8cf38-85e5-4f53-b50e-71b632e0f9d4" positionType="Float" x="350" y="665" width="40" height="15" bold="true">
-                <text><![CDATA[DATE:]]></text>
-            </element>
-            <element kind="textField" uuid="442f5a97-9afa-4f15-81e5-ecbe38de4748" positionType="Float" x="395" y="665" width="100" height="15">
-                <expression><![CDATA[$F{currentDate}]]></expression>
             </element>
             <element kind="break" uuid="23d09728-b2f6-4c49-83fc-69ccc838b3c5" positionType="Float" x="0" y="790" width="555" height="1"/>
         </band>
