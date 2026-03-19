@@ -478,19 +478,19 @@
             <element kind="staticText" uuid="b8e5d16f-f27e-465d-b33c-bd04f20223cb" positionType="Float" x="10" y="460" width="140" height="15" bold="true">
                 <text><![CDATA[FACILITATOR'S SIGN:]]></text>
             </element>
-            <element kind="line" uuid="c3d4e5f6-a7b8-90cd-ef01-234567890abc" positionType="Float" x="165" y="475" width="140" height="1">
+            <element kind="line" uuid="c3d4e5f6-a7b8-90cd-ef01-234567890abc" positionType="Float" x="165" y="475" width="180" height="1">
                 <pen lineWidth="1.0" lineStyle="Dotted"/>
             </element>
-            <element kind="staticText" uuid="d4e5f6a7-b8c9-0def-0123-456789abcdef" positionType="Float" x="320" y="460" width="50" height="15" bold="true">
+            <element kind="staticText" uuid="d4e5f6a7-b8c9-0def-0123-456789abcdef" positionType="Float" x="354" y="460" width="50" height="15" bold="true">
                 <text><![CDATA[NAME:]]></text>
             </element>
-            <element kind="textField" uuid="08c2c894-9aa9-4ef5-af86-b6d43b18c369" positionType="Float" x="370" y="460" width="175" height="15">
+            <element kind="textField" uuid="08c2c894-9aa9-4ef5-af86-b6d43b18c369" positionType="Float" x="404" y="460" width="150" height="15">
                 <expression><![CDATA[$F{instructorName}]]></expression>
             </element>
-            <element kind="staticText" uuid="b386964c-229d-479b-90c8-29c4132f3c9e" positionType="Float" x="10" y="490" width="150" height="15" bold="true">
+            <element kind="staticText" uuid="b386964c-229d-479b-90c8-29c4132f3c9e" positionType="Float" x="10" y="490" width="175" height="15" bold="true">
                 <text><![CDATA[HEAD FACILITATOR'S SIGN:]]></text>
             </element>
-            <element kind="line" uuid="e5f6a7b8-c9d0-12ef-3456-7890abcdef01" positionType="Float" x="175" y="503" width="170" height="1">
+            <element kind="line" uuid="e5f6a7b8-c9d0-12ef-3456-7890abcdef01" positionType="Float" x="210" y="504" width="135" height="1">
                 <pen lineWidth="1.0" lineStyle="Dotted"/>
             </element>
             <element kind="staticText" uuid="34f8cf38-85e5-4f53-b50e-71b632e0f9d4" positionType="Float" x="360" y="490" width="40" height="15" bold="true">
