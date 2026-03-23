@@ -324,6 +324,9 @@ public class StaffService {
         for (Staffs staffMember : staffs) {
             List<String> roles = new ArrayList<>();
             List<StaffRolesEntity> staffRoles = staffMember.getRoles();
+            if (staffRoles.stream().anyMatch(role -> role.equals(StaffRoles.GENERAL_STAFF))) {
+                continue;
+            }
             for (StaffRolesEntity staffRole : staffRoles) {
                 roles.add(staffRole.getStaffRole().name());
             }
