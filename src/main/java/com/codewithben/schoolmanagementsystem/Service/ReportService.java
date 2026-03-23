@@ -155,17 +155,17 @@ public class ReportService {
                 throw new Exception("Not all subject scores are added");
             }
 
-            //Getting total attendance
+            //Getting totalAttendance attendance
             List<Attendance> attendance = attendanceRepository.findByStudent_StudentIdAndSemester_SemesterID(
                     student.getStudentId(), semesterId
             );
-            String total = String.valueOf(attendance.size());
+            String totalAttendance = "-"; //String.valueOf(attendance.size());
             int totalMarked = 0;
-            for (Attendance attendance1 : attendance) {
+            /*for (Attendance attendance1 : attendance) {
                 if (attendance1.getStatus() == AttendanceStatus.PRESENT) {
                     totalMarked++;
                 }
-            }
+            }*/
 
             String studentId = results.getStudent().getStudentId();
             String studentName = results.getStudent().getFirstName() + " " + results.getStudent().getLastName();
@@ -202,7 +202,7 @@ public class ReportService {
                     averageScore, subjectReportDTOs,
                     academicYear, classSize, vacationDate,
                     resumingDate, attendanceMarked,
-                    total, instructorName, currentDate,
+                    totalAttendance, instructorName, currentDate,
                     nextGrade
             );
 

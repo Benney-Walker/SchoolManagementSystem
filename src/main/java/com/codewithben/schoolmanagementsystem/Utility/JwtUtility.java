@@ -13,7 +13,7 @@ import java.util.List;
 @Component
 public class JwtUtility {
     private String jwtSecret =
-            "Hi_Sis_Justina_I_wish_time_travel_exit";
+            "Hi_Sis_Justina_I_just_wish_time_travel_exit";
 
     private int jwtExpirationInMs = 86400000;
 
