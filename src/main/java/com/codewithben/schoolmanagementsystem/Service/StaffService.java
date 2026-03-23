@@ -3,12 +3,15 @@ package com.codewithben.schoolmanagementsystem.Service;
 import com.codewithben.schoolmanagementsystem.Contants.StaffRoles;
 import com.codewithben.schoolmanagementsystem.Contants.StaffStatus;
 import com.codewithben.schoolmanagementsystem.DTO.Academics.PrintLevelSubjects;
+import com.codewithben.schoolmanagementsystem.DTO.Academics.SubjectDTO;
 import com.codewithben.schoolmanagementsystem.DTO.Institution.FindStaffDTO;
 import com.codewithben.schoolmanagementsystem.DTO.Institution.ViewStaffList;
 import com.codewithben.schoolmanagementsystem.DTO.Institution.StaffCaching;
 import com.codewithben.schoolmanagementsystem.Entity.*;
 import com.codewithben.schoolmanagementsystem.Repository.*;
 import com.codewithben.schoolmanagementsystem.Utility.UtilityClass;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -248,6 +251,38 @@ public class StaffService {
             levelRepository.save(level);
 
             return subjectId;
+    }
+
+    /*public ResponseEntity<?> loadSubjectData(String subjectId) {
+        Subjects subject = subjectsRepository.findBySubjectId(subjectId).orElse(null);
+        if (subject == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Subject not found");
+        }
+
+        return ResponseEntity.ok(
+                new SubjectDTO(
+                        subject.getSubjectId(),
+                        subject.getSubjectName(),
+                        subject.getLevel().getLevelID()
+                )
+        );
+    }*/
+
+    public ResponseEntity<?> updateSubjectData(SubjectDTO subjectDTO) {
+        Subjects subject = subjectsRepository.findBySubjectId(subjectDTO.getSubjectId()).orElse(null);
+        if (subject == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Subject not found");
+        }
+
+        Level level = levelRepository.findByLevelID(subjectDTO.getLevelId()).orElse(null);
+        if (level == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Grade not found");
+        }
+
+        subject.setSubjectName(subjectDTO.getSubjectName());
+        subject.setLevel(level);
+        subjectsRepository.save(subject);
+        return ResponseEntity.ok().build();
     }
 
     public String resetStaffPassword(String staffId, String newPassword) throws Exception {

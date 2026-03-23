@@ -1,9 +1,6 @@
 package com.codewithben.schoolmanagementsystem.Controller;
 
-import com.codewithben.schoolmanagementsystem.DTO.Academics.AddNewSubject;
-import com.codewithben.schoolmanagementsystem.DTO.Academics.GenerateStudentReport;
-import com.codewithben.schoolmanagementsystem.DTO.Academics.GradingCriteria;
-import com.codewithben.schoolmanagementsystem.DTO.Academics.UpdateStudentPersonalData;
+import com.codewithben.schoolmanagementsystem.DTO.Academics.*;
 import com.codewithben.schoolmanagementsystem.DTO.Institution.AddNewSemester;
 import com.codewithben.schoolmanagementsystem.DTO.Institution.FindAndUpdateClassInfo;
 import com.codewithben.schoolmanagementsystem.DTO.Institution.FindSemester;
@@ -182,6 +179,17 @@ public class AdminController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
+    @GetMapping("/v1/load-subject-data/{staffId}/{subjectId}")
+    public ResponseEntity<?> loadSubjectData(@PathVariable String staffId,
+                                             @PathVariable String subjectId) {
+        return staffService.loadSubjectData(subjectId);
+    }
+
+    /*@PutMapping("/v1/update-subject-details")
+    public ResponseEntity<?> updateSubjectData(@RequestBody SubjectDTO subjectDTO) {
+        return staffService.updateSubjectData(subjectDTO);
+    }*/
 
     @GetMapping(
             value = "/v2/generate-class-report",
