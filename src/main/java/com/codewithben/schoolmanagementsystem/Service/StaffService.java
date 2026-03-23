@@ -282,7 +282,7 @@ public class StaffService {
         subject.setSubjectName(subjectDTO.getSubjectName());
         subject.setLevel(level);
         subjectsRepository.save(subject);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok("Subject updated successfully");
     }
 
     public String resetStaffPassword(String staffId, String newPassword) throws Exception {
