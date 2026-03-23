@@ -324,9 +324,6 @@ public class StaffService {
         for (Staffs staffMember : staffs) {
             List<String> roles = new ArrayList<>();
             List<StaffRolesEntity> staffRoles = staffMember.getRoles();
-            if (staffRoles.stream().anyMatch(role -> role.equals(StaffRoles.GENERAL_STAFF))) {
-                continue;
-            }
             for (StaffRolesEntity staffRole : staffRoles) {
                 roles.add(staffRole.getStaffRole().name());
             }
@@ -340,7 +337,21 @@ public class StaffService {
             staffList.add(foundStaff);
         }
 
-        return staffList;
+        return getFinalStaffList(staffList);
+    }
+
+    private List<StaffCaching> getFinalStaffList(List<StaffCaching> staffList) {
+        List<StaffCaching> finalStaffList = new ArrayList<>();
+        if (staffList == null || staffList.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        for (StaffCaching staffCaching : staffList) {
+            if (!staffCaching.getStaffRoles().contains("GENERAL_STAFF")) {
+                finalStaffList.add(staffCaching);
+            }
+        }
+        return finalStaffList;
     }
 
     public List<ViewStaffList> loadAllStaffList(String staffId) throws Exception {
