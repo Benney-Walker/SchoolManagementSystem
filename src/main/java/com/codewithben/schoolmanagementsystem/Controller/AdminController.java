@@ -191,6 +191,13 @@ public class AdminController {
         return staffService.updateSubjectData(subjectDTO);
     }
 
+    @DeleteMapping("/v1/delete-subject/{staffId}/{subjectId}")
+    public ResponseEntity<?> deleteSubjectData(@PathVariable String staffId,
+                                               @PathVariable String subjectId) {
+
+        return staffService.deleteSubjectData(subjectId);
+    }
+
     @GetMapping(
             value = "/v2/generate-class-report",
             produces = MediaType.APPLICATION_PDF_VALUE

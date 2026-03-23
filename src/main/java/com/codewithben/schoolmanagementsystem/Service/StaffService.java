@@ -285,6 +285,16 @@ public class StaffService {
         return ResponseEntity.ok("Subject updated successfully");
     }
 
+    public ResponseEntity<?> deleteSubjectData(String subjectId) {
+        Subjects subject = subjectsRepository.findBySubjectId(subjectId).orElse(null);
+        if (subject == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Subject not found");
+        }
+
+        subjectsRepository.delete(subject);
+        return ResponseEntity.ok("Subject deleted successfully");
+    }
+
     public String resetStaffPassword(String staffId, String newPassword) throws Exception {
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staff == null)
