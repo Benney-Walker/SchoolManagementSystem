@@ -186,10 +186,10 @@ public class AdminController {
         return staffService.loadSubjectData(subjectId);
     }
 
-    /*@PutMapping("/v1/update-subject-details")
+    @PutMapping("/v1/update-subject-details")
     public ResponseEntity<?> updateSubjectData(@RequestBody SubjectDTO subjectDTO) {
         return staffService.updateSubjectData(subjectDTO);
-    }*/
+    }
 
     @GetMapping(
             value = "/v2/generate-class-report",

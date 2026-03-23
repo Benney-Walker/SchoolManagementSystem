@@ -253,7 +253,7 @@ public class StaffService {
             return subjectId;
     }
 
-    /*public ResponseEntity<?> loadSubjectData(String subjectId) {
+    public ResponseEntity<?> loadSubjectData(String subjectId) {
         Subjects subject = subjectsRepository.findBySubjectId(subjectId).orElse(null);
         if (subject == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Subject not found");
@@ -266,7 +266,7 @@ public class StaffService {
                         subject.getLevel().getLevelID()
                 )
         );
-    }*/
+    }
 
     public ResponseEntity<?> updateSubjectData(SubjectDTO subjectDTO) {
         Subjects subject = subjectsRepository.findBySubjectId(subjectDTO.getSubjectId()).orElse(null);
