@@ -210,6 +210,7 @@ public class StudentService {
             resultsScores = new ArrayList<>();
         }
         resultsScores.add(subjectScore);
+        result.setSubjectScores(resultsScores);
         resultsRepository.save(result);
 
         updateResultTotals(result, staff, subject);
