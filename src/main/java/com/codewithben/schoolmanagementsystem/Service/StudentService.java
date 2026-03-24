@@ -169,7 +169,7 @@ public class StudentService {
             result.setTotalScore(0.0);
             result.setAverageScore(0.0);
             result.setUpdatedBy(staff);
-            result = resultsRepository.save(result);
+            resultsRepository.save(result);
         }
 
         // Check if score already exists
@@ -203,6 +203,15 @@ public class StudentService {
         subjectScore.setTotalScore(totalScore);
 
         subjectScoreRepository.save(subjectScore);
+
+        //Add scores to results
+        List<SubjectScore> resultsScores = result.getSubjectScores();
+        if (resultsScores == null || resultsScores.isEmpty()) {
+            resultsScores = new ArrayList<>();
+        }
+        resultsScores.add(subjectScore);
+        resultsRepository.save(result);
+
         updateResultTotals(result, staff, subject);
 
         return "Scores successfully added";
