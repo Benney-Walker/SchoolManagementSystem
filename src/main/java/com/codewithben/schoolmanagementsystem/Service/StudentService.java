@@ -169,7 +169,6 @@ public class StudentService {
             result.setTotalScore(0.0);
             result.setAverageScore(0.0);
             result.setUpdatedBy(staff);
-            resultsRepository.save(result);
         }
 
         // Check if score already exists
@@ -466,7 +465,7 @@ public class StudentService {
             subjectStudents.add(scoresTable);
         }
 
-        return new SubjectScores(subjectId, subjectName, subjectStudents);
+        return new SubjectScores(subjectName, subjectId, subjectStudents);
     }
 
     public List<StudentListPrint> getLevelStudents(String levelId) throws Exception {
