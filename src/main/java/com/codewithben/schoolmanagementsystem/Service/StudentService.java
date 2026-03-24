@@ -255,9 +255,10 @@ public class StudentService {
                     result.getSemester().getSemesterID(),
                     level.getLevelID()
             ).orElse(null);
-            if (studentResult != null && studentResult.getSubjectScores().size() == subjectsList.size()) {
-                completeResultsCount++;
+            if (studentResult == null || studentResult.getSubjectScores().size() != subjectsList.size()) {
+                continue;
             }
+            completeResultsCount++;
         }
 
         if (completeResultsCount == activeStudents.size()) {
