@@ -176,7 +176,7 @@ public class ReportService {
             String position = results.getPosition();
             String academicYear = results.getSemester().getAcademicYear();
             String vacationDate = results.getSemester().getSemesterEndDate().toString();
-            String attendanceMarked = String.valueOf(totalMarked);
+            String attendanceMarked =  "-"; //String.valueOf(totalMarked);
             String instructorName = level.getStaff().getFirstName() + " " + level.getStaff().getLastName();
             String currentDate = LocalDate.now().toString();
 

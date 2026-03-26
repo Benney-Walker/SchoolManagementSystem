@@ -8,14 +8,12 @@ import com.codewithben.schoolmanagementsystem.DTO.Institution.FindStaffDTO;
 import com.codewithben.schoolmanagementsystem.Entity.Level;
 import com.codewithben.schoolmanagementsystem.Repository.LevelRepository;
 import com.codewithben.schoolmanagementsystem.Service.*;
-import com.codewithben.schoolmanagementsystem.Utility.JwtUtility;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/admin")
