@@ -190,7 +190,7 @@ public class UtilityClass {
         for (int i = 0; i < resultsList.size(); i++) {
             Results currentResult = resultsList.get(i);
             double score = currentResult.getTotalScore();
-            System.out.println(score);
+            System.out.println("PRINT OUT OF TOTAL SCORE" + score);
 
 
             if (score != lastScore) {
