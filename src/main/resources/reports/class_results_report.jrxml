@@ -22,6 +22,9 @@
     <parameter name="logoPath" class="java.lang.String">
         <defaultValueExpression><![CDATA["D:/BUSINESS/SchoolManagementSystem/src/main/resources/reports/daffodils Logo.png"]]></defaultValueExpression>
     </parameter>
+    <parameter name="signaturePath" class="java.lang.String">
+        <defaultValueExpression><![CDATA["D:/BUSINESS/SchoolManagementSystem/src/main/resources/reports/Signature.png"]]></defaultValueExpression>
+    </parameter>
     <field name="studentId" class="java.lang.String"/>
     <field name="studentName" class="java.lang.String"/>
     <field name="className" class="java.lang.String"/>
@@ -190,8 +193,8 @@
             <element kind="staticText" uuid="3d4db84b-ebde-4f74-bf95-1fb373010790" positionType="Float" x="10" y="210" width="150" height="15" bold="true">
                 <text><![CDATA[GRADING SYSTEM]]></text>
             </element>
-            <element kind="staticText" uuid="20bb7080-cf43-4b43-a09a-7000fd054ff5" positionType="Float" x="10" y="225" width="535" height="15" fontSize="10.0" bold="true">
-                <text><![CDATA[80-100 (Proficiency) | 70-79 (Proficiency) | 60-69 (Proficiency) | 50-59 (Developing) | 49-0 (Emerging)]]></text>
+            <element kind="staticText" uuid="20bb7080-cf43-4b43-a09a-7000fd054ff5" positionType="Float" x="10" y="225" width="535" height="15" fontSize="8.0" bold="true">
+                <text><![CDATA[80-100 (Highly Proficiency) | 70-79 (Proficiency) | 60-69 (Approaching Proficiency) | 50-59 (Developing) | 49-0 (Beginning)]]></text>
             </element>
             <element kind="staticText" uuid="bb5a4313-6a7c-490b-bdc0-d41c40160bce" positionType="Float" mode="Opaque" x="10" y="250" width="135" height="15" backcolor="#E8E8E8" bold="true">
                 <text><![CDATA[ CONDUCT]]></text>
@@ -490,8 +493,8 @@
             <element kind="staticText" uuid="b386964c-229d-479b-90c8-29c4132f3c9e" positionType="Float" x="10" y="490" width="175" height="15" bold="true">
                 <text><![CDATA[HEAD FACILITATOR'S SIGN:]]></text>
             </element>
-            <element kind="line" uuid="e5f6a7b8-c9d0-12ef-3456-7890abcdef01" positionType="Float" x="210" y="504" width="135" height="1">
-                <pen lineWidth="1.0" lineStyle="Dotted"/>
+            <element kind="image" uuid="6e0c2b12-aa7d-4fca-b63a-f321fdceb73e" positionType="Float" x="210" y="480" width="70" height="40" scaleImage="RetainShape">
+                <expression><![CDATA[$P{signaturePath}]]></expression>
             </element>
             <element kind="staticText" uuid="34f8cf38-85e5-4f53-b50e-71b632e0f9d4" positionType="Float" x="360" y="490" width="40" height="15" bold="true">
                 <text><![CDATA[DATE:]]></text>

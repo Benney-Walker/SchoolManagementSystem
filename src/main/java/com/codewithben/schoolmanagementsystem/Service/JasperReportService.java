@@ -34,6 +34,7 @@ public class JasperReportService {
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("schoolName", schoolName);
         parameters.put("logoPath", "reports/daffodils Logo.png");
+        parameters.put("signaturePath", "reports/Signature.png");
 
         JasperPrint print =
                 JasperFillManager.fillReport(jasperReport, parameters, dataSource);
