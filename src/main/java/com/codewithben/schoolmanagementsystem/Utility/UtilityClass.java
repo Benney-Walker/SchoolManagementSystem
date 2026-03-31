@@ -197,8 +197,6 @@ public class UtilityClass {
                 lastScore = score;
             }
 
-            currentRank = i + 1;
-
             currentResult.setPosition(ordinal(currentRank));
             resultsRepository.save(currentResult);
         }

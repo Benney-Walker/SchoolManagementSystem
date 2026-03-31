@@ -8,5 +8,5 @@ import java.util.Optional;
 
 @Repository
 public interface EntityID_generationRepository extends JpaRepository<EntityID_generation,Long> {
-    public Optional<EntityID_generation> findByEntityName(String entityName);
+    Optional<EntityID_generation> findByEntityName(String entityName);
 }
