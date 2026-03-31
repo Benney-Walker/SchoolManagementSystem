@@ -1,4 +1,4 @@
-package com.codewithben.schoolmanagementsystem;
+/*package com.codewithben.schoolmanagementsystem;
 
 import net.sf.jasperreports.engine.JasperCompileManager;
 
@@ -10,4 +10,4 @@ public class CompileReport {
         );
         System.out.println("Done! .jasper file created.");
     }
-}
+}*/
