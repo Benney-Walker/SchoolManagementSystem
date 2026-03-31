@@ -229,6 +229,8 @@ public class StudentService {
             for(SubjectScore score : scores) {
                 total += score.getTotalScore();
             }
+
+            System.out.println("TOTAL SCORE:" + total);
             result.setTotalScore(total);
             result.setAverageScore(total / scores.size());
         }
@@ -237,33 +239,8 @@ public class StudentService {
         result.setUpdatedBy(staff);
         resultsRepository.save(result);
 
-        Level level = subject.getLevel();
-        List<Subjects> subjectsList = level.getSubjects();
-        List<Students> studentsList = level.getStudents();
-
-        List<Students> activeStudents =  new ArrayList<>();
-        for (Students student : studentsList) {
-            if (student.getStudentStatus().equals(StudentStatus.ACTIVE)) {
-                activeStudents.add(student);
-            }
-        }
-
-        int completeResultsCount = 0;
-        for (Students student : activeStudents) {
-            Results studentResult = resultsRepository.findByStudent_StudentIdAndSemester_SemesterIDAndLevel_LevelID(
-                    student.getStudentId(),
-                    result.getSemester().getSemesterID(),
-                    level.getLevelID()
-            ).orElse(null);
-            if (studentResult == null || studentResult.getSubjectScores().size() != subjectsList.size()) {
-                continue;
-            }
-            completeResultsCount++;
-        }
-
-        if (completeResultsCount == activeStudents.size()) {
-            utilityClass.reArrangePositions(subject, result.getSemester());
-        }
+        System.out.println("Updated Results Successfully");
+        utilityClass.reArrangePositions(subject, result.getSemester());
     }
 
     public StudentResult findStudentResults(String studentId, String semesterId, String levelId) throws Exception {
