@@ -5,6 +5,7 @@ import com.codewithben.schoolmanagementsystem.Contants.LogType;
 import com.codewithben.schoolmanagementsystem.Entity.Logs;
 import com.codewithben.schoolmanagementsystem.Entity.Staffs;
 import com.codewithben.schoolmanagementsystem.Repository.LogsRepository;
+import com.codewithben.schoolmanagementsystem.Repository.StaffsRepository;
 import com.codewithben.schoolmanagementsystem.Utility.UtilityClass;
 import org.springframework.stereotype.Service;
 
@@ -17,12 +18,17 @@ public class LoggingService {
 
     private final UtilityClass utilityClass;
 
-    public LoggingService(LogsRepository logsRepository, UtilityClass utilityClass) {
+    private final StaffsRepository staffsRepository;
+
+    public LoggingService(LogsRepository logsRepository, UtilityClass utilityClass, StaffsRepository staffsRepository) {
         this.logsRepository = logsRepository;
         this.utilityClass = utilityClass;
+        this.staffsRepository = staffsRepository;
     }
 
-    public void logActivity(String actionType, String actionData, Staffs staff, String status) {
+    public void logActivity(String actionType, String actionData, String staffId, String status) {
+
+        Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
 
         Logs logs = new Logs(
                 utilityClass.generateEntityId("LOG"),

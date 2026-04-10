@@ -4,5 +4,6 @@ public enum LogType {
     ATTENDANCE,
     TRANSACTION,
     SCORES,
-    RESULTS
+    RESULTS,
+    AUTHENTICATION
 }
