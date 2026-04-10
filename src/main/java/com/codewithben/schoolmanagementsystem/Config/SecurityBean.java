@@ -1,5 +1,8 @@
-package com.codewithben.schoolmanagementsystem.Utility;
+package com.codewithben.schoolmanagementsystem.Config;
 
+import com.codewithben.schoolmanagementsystem.Utility.CustomAccessDeniedHandler;
+import com.codewithben.schoolmanagementsystem.Utility.CustomAuthenticationEntryPoint;
+import com.codewithben.schoolmanagementsystem.Utility.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -17,8 +20,16 @@ public class SecurityBean {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    public SecurityBean(JwtAuthenticationFilter jwtAuthenticationFilter) {
+    private final CustomAccessDeniedHandler customAccessDeniedHandler;
+
+    private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+
+    public SecurityBean(JwtAuthenticationFilter jwtAuthenticationFilter,
+                        CustomAccessDeniedHandler customAccessDeniedHandler,
+                        CustomAuthenticationEntryPoint customAuthenticationEntryPoint) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.customAccessDeniedHandler = customAccessDeniedHandler;
+        this.customAuthenticationEntryPoint = customAuthenticationEntryPoint;
     }
 
     @Bean
@@ -47,6 +58,9 @@ public class SecurityBean {
                 ).addFilterBefore(
                         jwtAuthenticationFilter,
                         UsernamePasswordAuthenticationFilter.class
+                ).exceptionHandling(ex -> ex
+                        .accessDeniedHandler(customAccessDeniedHandler)
+                        .authenticationEntryPoint(customAuthenticationEntryPoint)
                 );
 
         return http.build();
