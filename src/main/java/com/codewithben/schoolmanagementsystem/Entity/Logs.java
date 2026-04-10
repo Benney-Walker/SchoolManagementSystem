@@ -5,7 +5,7 @@ import com.codewithben.schoolmanagementsystem.Contants.LogType;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
-import java.time.LocalTime;
+import java.time.LocalDateTime;
 
 @Entity
 public class Logs {
@@ -13,9 +13,7 @@ public class Logs {
     @Id
     private String actionId;
 
-    private LocalDate actionDate;
-
-    private LocalTime actionTime;
+    private LocalDateTime actionTime;
 
     @Enumerated(EnumType.STRING)
     private LogType actionType;
@@ -32,10 +30,9 @@ public class Logs {
 
     public Logs() {}
 
-    public Logs (String actionId, LocalDate actionDate, LocalTime actionTime, LogType actionType,
+    public Logs (String actionId, LocalDateTime actionTime, LogType actionType,
                  LogStatus status, String actionData) {
         this.actionId = actionId;
-        this.actionDate = actionDate;
         this.actionTime = actionTime;
         this.actionType = actionType;
         this.status = status;
@@ -50,19 +47,11 @@ public class Logs {
         this.actionId = actionId;
     }
 
-    public LocalDate getActionDate() {
-        return actionDate;
-    }
-
-    public void setActionDate(LocalDate actionDate) {
-        this.actionDate = actionDate;
-    }
-
-    public LocalTime getActionTime() {
+    public LocalDateTime getActionTime() {
         return actionTime;
     }
 
-    public void setActionTime(LocalTime actionTime) {
+    public void setActionTime(LocalDateTime actionTime) {
         this.actionTime = actionTime;
     }
 

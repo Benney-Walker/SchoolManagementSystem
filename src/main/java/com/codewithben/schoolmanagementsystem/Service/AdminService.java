@@ -10,7 +10,7 @@ import com.codewithben.schoolmanagementsystem.Utility.UtilityClass;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.time.LocalTime;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,7 +30,7 @@ public class AdminService {
             Logs logs = new Logs();
             logs.setActionId(utilityClass.generateEntityId("LOG"));
             logs.setActionDate(LocalDate.now());
-            logs.setActionTime(LocalTime.now());
+            logs.setActionTime(LocalDateTime.now());
             logs.setActionType(logType);
             logs.setActionData(message);
             logs.setCreatedBy(createdBy);
