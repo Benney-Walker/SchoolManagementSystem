@@ -31,11 +31,12 @@ public class Logs {
     public Logs() {}
 
     public Logs (String actionId, LocalDateTime actionTime, LogType actionType,
-                 LogStatus status, String actionData) {
+                 LogStatus status, Staffs createdBy, String actionData) {
         this.actionId = actionId;
         this.actionTime = actionTime;
         this.actionType = actionType;
         this.status = status;
+        this.createdBy = createdBy;
         this.actionData = actionData;
     }
 
@@ -43,47 +44,23 @@ public class Logs {
         return actionId;
     }
 
-    public void setActionId(String actionId) {
-        this.actionId = actionId;
-    }
-
     public LocalDateTime getActionTime() {
         return actionTime;
-    }
-
-    public void setActionTime(LocalDateTime actionTime) {
-        this.actionTime = actionTime;
     }
 
     public LogType getActionType() {
         return actionType;
     }
 
-    public void setActionType(LogType actionType) {
-        this.actionType = actionType;
-    }
-
     public LogStatus getStatus() {
         return status;
-    }
-
-    public void setStatus(LogStatus status) {
-        this.status = status;
     }
 
     public Staffs getCreatedBy() {
         return createdBy;
     }
 
-    public void setCreatedBy(Staffs createdBy) {
-        this.createdBy = createdBy;
-    }
-
     public String getActionData() {
         return actionData;
-    }
-
-    public void setActionData(String message) {
-        this.actionData = message;
     }
 }
