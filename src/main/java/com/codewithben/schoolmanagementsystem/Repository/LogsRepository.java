@@ -9,5 +9,5 @@ import java.util.List;
 
 @Repository
 public interface LogsRepository extends JpaRepository<Logs, Long> {
-    List<Logs> findByActionDate(LocalDate date);
+
 }
