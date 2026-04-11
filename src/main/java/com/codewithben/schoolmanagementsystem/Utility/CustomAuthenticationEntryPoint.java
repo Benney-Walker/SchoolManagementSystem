@@ -1,5 +1,6 @@
 package com.codewithben.schoolmanagementsystem.Utility;
 
+import com.codewithben.schoolmanagementsystem.Service.LoggingService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.core.AuthenticationException;
@@ -13,11 +14,7 @@ import java.time.LocalDateTime;
 public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
     @Override
-    public void commence(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            AuthenticationException authException
-    ) throws IOException {
+    public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException {
 
         response.setContentType("application/json");
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -27,11 +24,12 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
                   "timestamp": "%s",
                   "status": 401,
                   "error": "Unauthorized",
-                  "message": "Authentication required or token invalid",
+                  "message": "%s",
                   "path": "%s"
                 }
                 """.formatted(
                 LocalDateTime.now(),
+                authException.getMessage(),
                 request.getRequestURI()
         );
 

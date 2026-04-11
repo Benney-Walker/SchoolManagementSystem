@@ -2,8 +2,11 @@ package com.codewithben.schoolmanagementsystem.Contants;
 
 public enum LogType {
     ATTENDANCE,
-    TRANSACTION,
-    SCORES,
-    RESULTS,
+    NEW_FEES,
+    PAYMENT,
+    SAVE_SCORES,
+    FETCH_RECORDS,
+    UPDATE_RECORD,
+    DELETE_RECORD,
     AUTHENTICATION
 }
