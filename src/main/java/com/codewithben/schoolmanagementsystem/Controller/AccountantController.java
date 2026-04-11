@@ -28,120 +28,68 @@ public class AccountantController {
 
     private final StudentService studentService;
 
-    private final AdminService adminService;
-
     public AccountantController(FeesService feesService, UtilityClass utilityClass, InstitutiionRepository institutiionRepository,
-                                StaffsRepository staffsRepository, StudentService studentService, AdminService adminService) {
+                                StaffsRepository staffsRepository, StudentService studentService) {
 
         this.feesService = feesService;
         this.utilityClass = utilityClass;
         this.institutiionRepository = institutiionRepository;
         this.staffsRepository = staffsRepository;
         this.studentService = studentService;
-        this.adminService = adminService;
     }
 
     @PostMapping("/v1/add-new-fees")
-    public ResponseEntity<?> addNewFees(@RequestParam String gradeId,
+    public ResponseEntity<?> addNewFees(@RequestHeader("staffId") String staffId,
+                                        @RequestParam String gradeId,
                                         @RequestParam String semesterId,
                                         @RequestParam String feesAmount) {
 
-        try {
-            return ResponseEntity.ok().body(
-                    feesService.addNewSemesterFees(Double.parseDouble(feesAmount), semesterId, gradeId)
-            );
-        } catch  (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+        return feesService.addNewSemesterFees(Double.parseDouble(feesAmount), semesterId, gradeId, staffId);
     }
 
     @PostMapping("/v2/add-fees-payment")
-    public ResponseEntity<?> addNewFeePayment(@RequestBody NewFeesPaymentDTO data) {
+    public ResponseEntity<?> addNewFeePayment(@RequestHeader("staffId") String staffId,
+                                              @RequestBody NewFeesPaymentDTO data) {
         String studentId = data.getStudentId();
         Double amountPaid = data.getAmountPaid();
         String personWhoPaid = data.getPayerName();
         String phoneNumber = data.getPayerPhone();
+        String levelId = data.getLevelId();
         String semesterId = data.getSemesterId();
 
-        Staffs staff = staffsRepository.findByStaffId(data.getStaffId()).orElse(null);
-
-        try {
-
-            return ResponseEntity.ok(
-                    feesService.addNewFeePayment(studentId, amountPaid, personWhoPaid, phoneNumber, semesterId)
-            );
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+        return feesService.addNewFeePayment(studentId, amountPaid, personWhoPaid, phoneNumber, levelId, semesterId, staffId);
     }
 
     @GetMapping("/v1/fetch-payment-records")
-    public ResponseEntity<?> fetchPaymentRecords(@RequestParam String studentId,
+    public ResponseEntity<?> fetchPaymentRecords(@RequestHeader("StaffId") String staffId,
+                                                 @RequestParam String studentId,
+                                                 @RequestParam String levelId,
                                                  @RequestParam String semesterId) {
 
-        try {
-
-            return ResponseEntity.ok(
-                    feesService.fetchPaymentRecords(studentId, semesterId)
-            );
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            return ResponseEntity.badRequest().body(ex.getMessage());
-        }
+        return feesService.fetchPaymentRecords(studentId, levelId, semesterId, staffId);
     }
 
     @PutMapping("/v1/update-payment-details")
-    public ResponseEntity<?> updatePaymentRecords(@RequestBody StudentPaymentRecords update) {
-        try {
-            return ResponseEntity.ok(
-                    feesService.updatePaymentRecords(update)
-            );
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            return ResponseEntity.badRequest().body(ex.getMessage());
-        }
+    public ResponseEntity<?> updatePaymentRecords(@RequestHeader("staffId") String staffId,
+                                                  @RequestBody StudentPaymentRecords update) {
+
+        return feesService.updatePaymentRecords(update, staffId);
     }
 
     @DeleteMapping("/v1/delete-payment-record/{transactionId}")
-    public ResponseEntity<?> deletePaymentRecord(@PathVariable String transactionId) {
-        try {
-            return ResponseEntity.ok(
-                    feesService.deletePaymentRecord(transactionId)
-            );
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            return ResponseEntity.badRequest().body(ex.getMessage());
-        }
-    }
+    public ResponseEntity<?> deletePaymentRecord(@RequestHeader("staffId") String staffId,
+                                                 @PathVariable String transactionId) {
 
-    @GetMapping("/v2/get-student-name/{studentId}")
-    public ResponseEntity<?> getStudentName(@PathVariable String studentId) {
-        try {
-            return ResponseEntity.ok(
-                    studentService.getStudentName(studentId)
-            );
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            return ResponseEntity.badRequest().body(ex.getMessage());
-        }
+        return feesService.deletePaymentRecord(transactionId, staffId);
     }
 
     @GetMapping("/v1/search-fees-report")
-    public ResponseEntity<?> searchStudentFeesReport(@RequestParam String studentId,
+    public ResponseEntity<?> searchStudentFeesReport(@RequestHeader("staffId") String staffId,
+                                                     @RequestParam String studentId,
                                                      @RequestParam String semesterId,
                                                      @RequestParam String gradeId) {
 
-        try {
-
-            return ResponseEntity.ok(
-                    feesService.findStudentFeesPaymentDetails(studentId, semesterId, gradeId)
-            );
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+        return feesService.findStudentFeesPaymentDetails(studentId, semesterId, gradeId, staffId);
     }
 
     @GetMapping("/v1/fetch-grade-fees-report/{levelId}/{semesterId}")
