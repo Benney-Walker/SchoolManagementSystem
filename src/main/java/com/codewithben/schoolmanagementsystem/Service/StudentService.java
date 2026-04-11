@@ -616,13 +616,6 @@ public class StudentService {
         return "success";
     }
 
-    public String getStudentName(String studentId) throws Exception {
-        Students student = studentsRepository.findByStudentId(studentId)
-                .orElseThrow(() -> new Exception("Invalid Student Id"));
-
-        return student.getFirstName() + " " + student.getLastName();
-    }
-
     public List<StudentsHolder> getGradeStudents(String levelId) throws Exception {
         Level level = levelRepository.findByLevelID(levelId)
                 .orElseThrow(() -> new Exception("Grade not found"));

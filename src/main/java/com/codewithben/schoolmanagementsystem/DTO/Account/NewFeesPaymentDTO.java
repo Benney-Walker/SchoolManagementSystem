@@ -9,18 +9,18 @@ public class NewFeesPaymentDTO {
 
     private String payerPhone;
 
+    private String levelId;
+
     private String semesterId;
 
-    private String staffId;
-
-    public NewFeesPaymentDTO(String studentId, Double amountPaid, String payerName, String payerPhone,
-                             String semesterId, String staffId) {
+    public NewFeesPaymentDTO(String studentId, Double amountPaid, String payerName, String payerPhone, String levelId,
+                             String semesterId) {
         this.studentId = studentId;
         this.amountPaid = amountPaid;
         this.payerName = payerName;
         this.payerPhone = payerPhone;
+        this.levelId = levelId;
         this.semesterId = semesterId;
-        this.staffId = staffId;
     }
 
     public String getStudentId() {
@@ -55,19 +55,19 @@ public class NewFeesPaymentDTO {
         this.payerPhone = payerPhone;
     }
 
+    public String getLevelId() {
+        return levelId;
+    }
+
+    public void setLevelId(String levelId) {
+        this.levelId = levelId;
+    }
+
     public String getSemesterId() {
         return semesterId;
     }
 
     public void setSemesterId(String semesterId) {
         this.semesterId = semesterId;
-    }
-
-    public String getStaffId() {
-        return staffId;
-    }
-
-    public void setStaffId(String staffId) {
-        this.staffId = staffId;
     }
 }

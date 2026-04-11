@@ -15,5 +15,5 @@ public interface StudentsRepository extends JpaRepository<Students, Long> {
 
     Optional<Students> findByFirstNameAndLastName(String firstName, String lastName);
 
-    List<Students> findByRegistrationDateBetween(LocalDate startDate, LocalDate endDate);
+    boolean existsByStudentId(String studentId);
 }

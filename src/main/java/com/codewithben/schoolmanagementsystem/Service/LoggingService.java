@@ -30,15 +30,15 @@ public class LoggingService {
 
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
 
-        Logs logs = new Logs(
-                utilityClass.generateEntityId("LOG"),
-                LocalDateTime.now(),
-                LogType.valueOf(actionType),
-                LogStatus.valueOf(status),
-                staff,
-                actionData
-        );
+        Logs log = new Logs();
 
-        logsRepository.save(logs);
+        log.setActionId(utilityClass.generateEntityId("LOG"));
+        log.setActionTime(LocalDateTime.now());
+        log.setActionType(LogType.valueOf(actionType));
+        log.setActionData(actionData);
+        log.setCreatedBy(staff);
+        log.setStatus(LogStatus.valueOf(status));
+
+        logsRepository.save(log);
     }
 }

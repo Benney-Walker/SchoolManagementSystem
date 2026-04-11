@@ -9,6 +9,8 @@ import com.codewithben.schoolmanagementsystem.Entity.*;
 import com.codewithben.schoolmanagementsystem.Repository.*;
 import com.codewithben.schoolmanagementsystem.Utility.UtilityClass;
 import jakarta.transaction.Transactional;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -34,9 +36,11 @@ public class FeesService {
 
     private final InstitutiionRepository institutionRepository;
 
+    private final LoggingService loggingService;
+
     public FeesService(FeesRepository feesRepository, StudentsRepository studentsRepository, FeesReportRepository feesReportRepository,
                        SemesterRepository semesterRepository, LevelRepository levelRepository,  StaffsRepository staffsRepository, UtilityClass utilityClass,
-                       InstitutiionRepository institutionRepository) {
+                       InstitutiionRepository institutionRepository, LoggingService loggingService) {
         this.feesRepository = feesRepository;
         this.studentsRepository = studentsRepository;
         this.feesReportRepository = feesReportRepository;
@@ -45,26 +49,31 @@ public class FeesService {
         this.staffsRepository = staffsRepository;
         this.utilityClass = utilityClass;
         this.institutionRepository = institutionRepository;
+        this.loggingService = loggingService;
     }
 
     // Displays student Fees
-    public StudentFeesPaymentDisplay findStudentFeesPaymentDetails(String studentId, String semesterId, String levelId) throws Exception {
-        
+    public ResponseEntity<?> findStudentFeesPaymentDetails(String studentId, String semesterId, String levelId, String staffId) {
+        String logData = "Student Id: " + studentId + ", Semester Id: " + semesterId + ", Level Id: " + levelId;
+
         Students student = studentsRepository.findByStudentId(studentId).orElse(null);
         if (student == null) {
-            throw new Exception("Invalid student id");
+            loggingService.logActivity("FETCH_RECORDS", logData, staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Student not found");
         }
 
         Fees fees = feesRepository.findBySemester_SemesterIDAndLevel_LevelID(
                 semesterId, levelId
         ).orElse(null);
         if (fees == null) {
-            throw new Exception("Semester fee not added");
+            loggingService.logActivity("FETCH_RECORDS", logData, staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Fees not found");
         }
 
-        List<FeesReport> feesReports = fees.getFeesReport();
+        List<FeesReport> feesReports = feesReportRepository.findByStudent_StudentIdAndFees_FeesId(studentId, fees.getFeesId());
         if (feesReports == null || feesReports.isEmpty()) {
-            throw new Exception("No Records found");
+            loggingService.logActivity("FETCH_RECORDS", logData, staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No records found");
         }
 
 
@@ -73,22 +82,16 @@ public class FeesService {
         double totalAmountPaid = 0.0;
 
         for (FeesReport feesReport : feesReports) {
-            if (feesReport.getStudent().getStudentId().equals(student.getStudentId())) {
-                totalAmountPaid += feesReport.getAmountPaid();
+            totalAmountPaid += feesReport.getAmountPaid();
 
-                PaymentHistory paymentHistory = new PaymentHistory(
-                        feesReport.getDateOfPayment().toString(),
-                        String.valueOf(feesReport.getAmountPaid()),
-                        String.valueOf(feesReport.getFeesBalance()),
-                        feesReport.getPersonWhoPaid(),
-                        feesReport.getPhoneNumber()
-                );
-                paymentHistoryList.add(paymentHistory);
-            }
-        }
-
-        if (paymentHistoryList.isEmpty()) {
-            throw new Exception("No Records found");
+            PaymentHistory paymentHistory = new PaymentHistory(
+                    feesReport.getDateOfPayment().toString(),
+                    String.valueOf(feesReport.getAmountPaid()),
+                    String.valueOf(feesReport.getFeesBalance()),
+                    feesReport.getPersonWhoPaid(),
+                    feesReport.getPhoneNumber()
+            );
+            paymentHistoryList.add(paymentHistory);
         }
 
         //Build Student Info
@@ -100,7 +103,7 @@ public class FeesService {
         String totalFeesPaid = String.valueOf(totalAmountPaid);
         String feesBalance = String.valueOf(fees.getAmountToBePayed() - totalAmountPaid);
 
-        return new StudentFeesPaymentDisplay(
+        return ResponseEntity.ok(new StudentFeesPaymentDisplay(
                 studentIdLoadInfo,
                 studentFullName,
                 semesterName,
@@ -109,26 +112,36 @@ public class FeesService {
                 totalFeesPaid,
                 feesBalance,
                 paymentHistoryList
-        );
+        ));
 
     }
 
-    public List<StudentPaymentRecords> fetchPaymentRecords(String studentId, String semesterId) throws Exception {
+    public ResponseEntity<?> fetchPaymentRecords(String studentId, String levelId, String semesterId, String staffId) {
+        String logData = "studentId: " + studentId + ", semesterId: " + semesterId;
         Students student = studentsRepository.findByStudentId(studentId).orElse(null);
         if (student == null) {
-            throw new Exception("Invalid student id");
+            loggingService.logActivity("FETCH_RECORDS", logData, staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Student not found");
+        }
+
+        Level level = levelRepository.findByLevelID(levelId).orElse(null);
+        if (level == null) {
+            loggingService.logActivity("FETCH_RECORDS", logData, staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Level not found");
         }
 
         Fees fees = feesRepository.findBySemester_SemesterIDAndLevel_LevelID(
-                semesterId, student.getLevel().getLevelID()
+                semesterId, levelId
         ).orElse(null);
         if (fees == null) {
-            throw new Exception("Fees Not Found");
+            loggingService.logActivity("FETCH_RECORDS", logData, staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Fees not found");
         }
 
         List<FeesReport> feesReports = fees.getFeesReport();
         if (feesReports == null || feesReports.isEmpty()) {
-            throw new Exception("No records found");
+            loggingService.logActivity("FETCH_RECORDS", logData, staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No records found");
         }
 
         List<StudentPaymentRecords> studentPaymentRecordsList = new ArrayList<>();
@@ -147,12 +160,17 @@ public class FeesService {
             }
         }
 
-        return studentPaymentRecordsList;
+        return ResponseEntity.status(HttpStatus.OK).body(studentPaymentRecordsList);
     }
 
-    public String updatePaymentRecords(StudentPaymentRecords update) throws Exception {
-        FeesReport feesReport = feesReportRepository.findByFeesReportId(update.getPaymentId())
-                .orElseThrow(() -> new Exception("Record Not Found"));
+    public ResponseEntity<?> updatePaymentRecords(StudentPaymentRecords update, String staffId) {
+        String logData = update.toString();
+
+        FeesReport feesReport = feesReportRepository.findByFeesReportId(update.getPaymentId()).orElse(null);
+        if (feesReport == null) {
+            loggingService.logActivity("UPDATE_RECORD", logData, staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Payment record not found");
+        }
 
         feesReport.setAmountPaid(Double.parseDouble(update.getAmount()));
         feesReport.setPhoneNumber(update.getPayerContact());
@@ -169,16 +187,21 @@ public class FeesService {
         feesReport.setFeesBalance(feesBalance);
         feesReportRepository.save(feesReport);
 
-        return "Fees Records updated successfully";
+        loggingService.logActivity("FETCH_RECORDS", logData, staffId, "SUCCESS");
+        return ResponseEntity.status(HttpStatus.OK).body("Payment record updated successfully");
     }
 
-    public String deletePaymentRecord(String transactionId) throws Exception {
-        FeesReport paymentRecord = feesReportRepository.findByFeesReportId(transactionId)
-                .orElseThrow(() -> new Exception("Record Not Found"));
+    public ResponseEntity<?> deletePaymentRecord(String transactionId, String staffId) {
+        String logData = "Record Id: " + transactionId;
+        FeesReport paymentRecord = feesReportRepository.findByFeesReportId(transactionId).orElse(null);
+        if (paymentRecord == null) {
+            loggingService.logActivity("DELETE_RECORD", logData, staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Payment record not found");
+        }
 
         feesReportRepository.delete(paymentRecord);
 
-        return "Payment Record deleted successfully";
+        return ResponseEntity.status(HttpStatus.OK).body("Payment record deleted successfully");
     }
 
     public List<ClassFeesSummary> loadClassFeesSummary(String staffId) throws Exception {
@@ -288,20 +311,26 @@ public class FeesService {
 
 
 
-    public String addNewSemesterFees(Double feesAmount, String semesterId, String levelID) throws Exception {
+    public ResponseEntity<?> addNewSemesterFees(Double feesAmount, String semesterId, String levelID, String staffId) {
+        String logData = "Amount: " + feesAmount + " Semester: " + semesterId + " grade: " + levelID;
+
         Semester semester = semesterRepository.findBySemesterID(semesterId).orElse(null);
         if (semester == null) {
-            throw new Exception("Semester not found");
+            loggingService.logActivity("NEW_FEES", logData, staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Semester Not Found");
         }
 
         Level level = levelRepository.findByLevelID(levelID).orElse(null);
         if (level == null) {
-            throw new Exception("Level not found");
+            loggingService.logActivity("NEW_FEES", logData, staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Level Not Found");
         }
 
         Fees fees = feesRepository.findBySemester_SemesterIDAndLevel_LevelID(semesterId, levelID).orElse(null);
-        if (fees != null)
-            throw new Exception("Fees already exists");
+        if (fees != null) {
+            loggingService.logActivity("NEW_FEES", logData, staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("Fees already added");
+        }
 
         Institution institution = level.getInstitution();
 
@@ -325,7 +354,8 @@ public class FeesService {
         }
         institutionFees.add(fees);
         institutionRepository.save(institution);
-        return "Fees added successfully";
+        loggingService.logActivity("NEW_FEES", logData, staffId, "SUCCESS");
+        return ResponseEntity.status(HttpStatus.CREATED).body("Fees added successfully");
     }
 
     public FetchFeesDetails fetchFeesDetails(String semesterId, String levelId) throws Exception {
@@ -351,17 +381,30 @@ public class FeesService {
     }
 
     @Transactional
-    public String addNewFeePayment(String studentId, Double amountPaid, String personWhoPaid, String phoneNumber,
-                                   String semesterId) throws Exception {
-        Students student = studentsRepository.findByStudentId(studentId)
-                .orElseThrow(() -> new Exception("Student not found"));
+    public ResponseEntity<?> addNewFeePayment(String studentId, Double amountPaid, String personWhoPaid, String phoneNumber, String levelId,
+                                   String semesterId, String staffId) {
+        String logData = "studentId: " + studentId + " amountPaid: " + amountPaid + " personWhoPaid: " +
+                personWhoPaid + " phoneNumber: " + phoneNumber + " levelId: " + levelId + " semesterId: " + semesterId;
 
-        String levelId = student.getLevel().getLevelID();
+        Students student = studentsRepository.findByStudentId(studentId).orElse(null);
+        if (student == null) {
+            loggingService.logActivity("PAYMENT", logData, staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Student Not Found");
+        }
+
+        Level level = levelRepository.findByLevelID(levelId).orElse(null);
+        if (level == null) {
+            loggingService.logActivity("PAYMENT", logData, staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Level Not Found");
+        }
 
         Institution institution = student.getInstitution();
 
-        Fees fees = feesRepository.findBySemester_SemesterIDAndLevel_LevelID(semesterId, levelId)
-                .orElseThrow(() -> new Exception("Fees for the expected class not added to system"));
+        Fees fees = feesRepository.findBySemester_SemesterIDAndLevel_LevelID(semesterId, levelId).orElse(null);
+        if (fees == null) {
+            loggingService.logActivity("PAYMENT", logData, staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Grade or semester fee not found");
+        }
 
         // Calculate total already paid by this student for this fee
         double totalPreviouslyPaid = feesReportRepository
@@ -400,7 +443,8 @@ public class FeesService {
         institutionFeesReports.add(feesReport);
         institutionRepository.save(institution);
 
-        return "Payment added successfully";
+        loggingService.logActivity("PAYMENT", logData, staffId, "SUCCESS");
+        return ResponseEntity.status(HttpStatus.CREATED).body("Fees added successfully");
     }
 
     public double getTotalLevelFees(String levelId, String semesterId, int numberOfStudents) {
