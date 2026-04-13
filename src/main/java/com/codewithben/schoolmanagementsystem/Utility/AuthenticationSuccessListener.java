@@ -20,7 +20,7 @@ public class AuthenticationSuccessListener implements ApplicationListener<Authen
         Authentication auth = event.getAuthentication();
 
         loggingService.logActivity(
-                "AUTHENTICATION",
+                "LOGIN",
                 "N/A",
                 auth.getName(),
                 "SUCCESS"

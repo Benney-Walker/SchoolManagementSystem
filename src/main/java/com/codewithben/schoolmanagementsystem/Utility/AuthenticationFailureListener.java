@@ -19,7 +19,7 @@ public class AuthenticationFailureListener implements ApplicationListener<Abstra
         String username = (String) event.getAuthentication().getPrincipal();
 
         loggingService.logActivity(
-                "AUTHENTICATION",
+                "LOGIN",
                 "N/A",
                 username,
                 "FAILED"
