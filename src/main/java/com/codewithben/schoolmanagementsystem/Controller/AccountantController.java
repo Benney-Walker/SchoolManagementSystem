@@ -8,8 +8,10 @@ import com.codewithben.schoolmanagementsystem.Entity.Staffs;
 import com.codewithben.schoolmanagementsystem.Repository.InstitutiionRepository;
 import com.codewithben.schoolmanagementsystem.Repository.StaffsRepository;
 import com.codewithben.schoolmanagementsystem.Service.FeesService;
+import com.codewithben.schoolmanagementsystem.Service.LoggingService;
 import com.codewithben.schoolmanagementsystem.Service.StudentService;
 import com.codewithben.schoolmanagementsystem.Utility.UtilityClass;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,14 +30,17 @@ public class AccountantController {
 
     private final StudentService studentService;
 
+    private final LoggingService loggingService;
+
     public AccountantController(FeesService feesService, UtilityClass utilityClass, InstitutiionRepository institutiionRepository,
-                                StaffsRepository staffsRepository, StudentService studentService) {
+                                StaffsRepository staffsRepository, StudentService studentService, LoggingService loggingService) {
 
         this.feesService = feesService;
         this.utilityClass = utilityClass;
         this.institutiionRepository = institutiionRepository;
         this.staffsRepository = staffsRepository;
         this.studentService = studentService;
+        this.loggingService = loggingService;
     }
 
     @PostMapping("/v1/add-new-fees")
@@ -66,7 +71,7 @@ public class AccountantController {
                                                  @RequestParam String levelId,
                                                  @RequestParam String semesterId) {
 
-        return feesService.fetchPaymentRecords(studentId, levelId, semesterId, staffId);
+        return feesService.fetchIndividualPaymentRecords(studentId, levelId, semesterId, staffId);
     }
 
     @PutMapping("/v1/update-payment-details")
@@ -93,87 +98,56 @@ public class AccountantController {
     }
 
     @GetMapping("/v1/fetch-grade-fees-report/{levelId}/{semesterId}")
-    public ResponseEntity<?> fetchGradesFeesReport(@PathVariable String levelId,
+    public ResponseEntity<?> fetchGradesFeesReport(@RequestHeader("staffId") String staffId,
+                                                   @PathVariable String levelId,
                                                    @PathVariable String semesterId) {
-        try {
-            return ResponseEntity.ok(
-                    feesService.fetchGradeFeesReport(levelId, semesterId)
-            );
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            return ResponseEntity.badRequest().body(ex.getMessage());
-        }
+        return feesService.fetchGradeFeesReport(levelId, semesterId, staffId);
     }
 
     @GetMapping("/v1/class-summary-fees/{staffId}")
     public ResponseEntity<?> getClassSummaryFees(@PathVariable String staffId) {
-        try {
-            return ResponseEntity.ok(
-                    feesService.loadClassFeesSummary(staffId)
-            );
-        } catch (Exception ex) {
-            System.out.println("Error: " + ex.getMessage());
-            return ResponseEntity.badRequest().body(ex.getMessage());
-        }
+
+        return feesService.loadClassFeesSummary(staffId);
     }
 
     @GetMapping("/v1/fully-paid-students/{staffId}")
     public ResponseEntity<?> getFullyPaidStudents(@PathVariable String staffId) {
-        try {
-            return ResponseEntity.ok(
-                    feesService.getFullyPaidStudents(staffId)
-            );
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            return ResponseEntity.badRequest().body(ex.getMessage());
+        Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
+        if (staff == null) {
+            loggingService.logActivity("FETCH_PAYMENTS_REPORT", "N/A", staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid staffId");
         }
+        return feesService.getFullyPaidStudents(staffId, staff.getInstitution());
     }
 
     @GetMapping("/v1/partially-paid-students/{staffId}")
     public ResponseEntity<?> getPartiallyPaidStudents(@PathVariable String staffId) {
-        try {
-            return ResponseEntity.ok(
-                    feesService.getPartiallyPaidStudents(staffId)
-            );
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            return ResponseEntity.badRequest().body(ex.getMessage());
+        Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
+        if (staff == null) {
+            loggingService.logActivity("FETCH_PAYMENTS_REPORT", "N/A", staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid staffId");
         }
+        return feesService.getPartiallyPaidStudents(staffId, staff.getInstitution());
     }
 
     @GetMapping("/v1/not-paid-students/{staffId}")
     public ResponseEntity<?> getNotPaidStudents(@PathVariable String staffId) {
-        try {
-            return ResponseEntity.ok(
-                    feesService.getNotPaidStudents(staffId)
-            );
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            return ResponseEntity.badRequest().body(ex.getMessage());
+        Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
+        if (staff == null) {
+            loggingService.logActivity("FETCH_PAYMENTS_REPORT", "N/A", staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid staffId");
         }
+        return feesService.getNotPaidStudents(staffId, staff.getInstitution());
     }
 
     @GetMapping("/v1/total-fees/{staffId}")
     public ResponseEntity<?> totalSemesterFees(@PathVariable String staffId) {
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
-        if (staff == null)
-            return ResponseEntity.badRequest().body("Staff not found");
-
-        Institution institution = staff.getInstitution();
-        if (institution == null)
-            return ResponseEntity.badRequest().body("Institution not found");
-
-        String semesterId = utilityClass.getCurrentSemesterId(institution.getInstitutionId());
-
-        List<Level> levels = institution.getLevel();
-        double totalSemesterFees = 0;
-        for (Level level : levels) {
-            double levelFees = feesService.getTotalLevelFees(
-                    level.getLevelID(), semesterId, level.getStudents().size()
-            );
-            totalSemesterFees += levelFees;
+        if (staff == null) {
+            loggingService.logActivity("FETCH_PAYMENTS_REPORT", "N/A", staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid staffId");
         }
-        return ResponseEntity.ok(String.valueOf(totalSemesterFees));
+        return feesService.getTotalSemesterFees(staffId, staff.getInstitution());
     }
 
     @GetMapping("/v1/fees-paid/{staffId}")
@@ -187,11 +161,10 @@ public class AccountantController {
             return ResponseEntity.badRequest().body("Institution not found");
 
         String semesterId = utilityClass.getCurrentSemesterId(institution.getInstitutionId());
-        List<Level> levels = institution.getLevel();
+        List<Level> levels = institution.getLevels();
         double totalAmountPaid = 0;
         for (Level level : levels) {
             double levelFeesPaid = feesService.getTotalLevelFeesPaid(semesterId, level.getLevelID());
-            System.out.println("levelFeesPaid: " + levelFeesPaid);
             totalAmountPaid += levelFeesPaid;
         }
         return ResponseEntity.ok(String.valueOf(totalAmountPaid));

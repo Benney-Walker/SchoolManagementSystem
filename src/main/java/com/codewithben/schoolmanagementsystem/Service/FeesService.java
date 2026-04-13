@@ -1,7 +1,5 @@
 package com.codewithben.schoolmanagementsystem.Service;
 
-import com.codewithben.schoolmanagementsystem.Contants.LogStatus;
-import com.codewithben.schoolmanagementsystem.Contants.LogType;
 import com.codewithben.schoolmanagementsystem.Contants.StudentStatus;
 import com.codewithben.schoolmanagementsystem.DTO.Account.*;
 import com.codewithben.schoolmanagementsystem.DTO.Institution.FetchFeesDetails;
@@ -15,7 +13,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -58,7 +55,7 @@ public class FeesService {
 
         Students student = studentsRepository.findByStudentId(studentId).orElse(null);
         if (student == null) {
-            loggingService.logActivity("FETCH_RECORDS", logData, staffId, "FAILED");
+            loggingService.logActivity("FETCH_PAYMENT", logData, staffId, "FAILED");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Student not found");
         }
 
@@ -66,13 +63,13 @@ public class FeesService {
                 semesterId, levelId
         ).orElse(null);
         if (fees == null) {
-            loggingService.logActivity("FETCH_RECORDS", logData, staffId, "FAILED");
+            loggingService.logActivity("FETCH_PAYMENT", logData, staffId, "FAILED");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Fees not found");
         }
 
         List<FeesReport> feesReports = feesReportRepository.findByStudent_StudentIdAndFees_FeesId(studentId, fees.getFeesId());
         if (feesReports == null || feesReports.isEmpty()) {
-            loggingService.logActivity("FETCH_RECORDS", logData, staffId, "FAILED");
+            loggingService.logActivity("FETCH_PAYMENT", logData, staffId, "FAILED");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No records found");
         }
 
@@ -116,8 +113,9 @@ public class FeesService {
 
     }
 
-    public ResponseEntity<?> fetchPaymentRecords(String studentId, String levelId, String semesterId, String staffId) {
-        String logData = "studentId: " + studentId + ", semesterId: " + semesterId;
+    //Fetches individual payment records according to grade and semester
+    public ResponseEntity<?> fetchIndividualPaymentRecords(String studentId, String levelId, String semesterId, String staffId) {
+        String logData = "studentId: " + studentId + ", semesterId: " + semesterId + ", levelId: " + levelId;
         Students student = studentsRepository.findByStudentId(studentId).orElse(null);
         if (student == null) {
             loggingService.logActivity("FETCH_RECORDS", logData, staffId, "FAILED");
@@ -138,15 +136,21 @@ public class FeesService {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Fees not found");
         }
 
-        List<FeesReport> feesReports = fees.getFeesReport();
+        List<FeesReport> feesReports = feesReportRepository.findByStudent_StudentIdAndFees_FeesId(studentId, fees.getFeesId());
         if (feesReports == null || feesReports.isEmpty()) {
             loggingService.logActivity("FETCH_RECORDS", logData, staffId, "FAILED");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No records found");
         }
 
+        List<StudentPaymentRecords> studentPaymentRecordsList = getStudentPaymentRecords(feesReports);
+
+        loggingService.logActivity("FETCH_RECORDS", logData, staffId, "FAILED");
+        return ResponseEntity.ok(studentPaymentRecordsList);
+    }
+
+    private List<StudentPaymentRecords> getStudentPaymentRecords(List<FeesReport> feesReports) {
         List<StudentPaymentRecords> studentPaymentRecordsList = new ArrayList<>();
         for (FeesReport feesReport : feesReports) {
-            if (feesReport.getStudent().getStudentId().equals(student.getStudentId())) {
                 StudentPaymentRecords records = new StudentPaymentRecords();
                 records.setPaymentId(feesReport.getFeesReportId());
                 records.setStudentId(feesReport.getStudent().getStudentId());
@@ -157,10 +161,8 @@ public class FeesService {
                 records.setPayerName(feesReport.getPersonWhoPaid());
                 records.setPayerContact(feesReport.getPhoneNumber());
                 studentPaymentRecordsList.add(records);
-            }
         }
-
-        return ResponseEntity.status(HttpStatus.OK).body(studentPaymentRecordsList);
+        return studentPaymentRecordsList;
     }
 
     public ResponseEntity<?> updatePaymentRecords(StudentPaymentRecords update, String staffId) {
@@ -201,24 +203,28 @@ public class FeesService {
 
         feesReportRepository.delete(paymentRecord);
 
+        loggingService.logActivity("DELETE_RECORD", logData, staffId, "SUCCESS");
         return ResponseEntity.status(HttpStatus.OK).body("Payment record deleted successfully");
     }
 
-    public List<ClassFeesSummary> loadClassFeesSummary(String staffId) throws Exception {
+    public ResponseEntity<?> loadClassFeesSummary(String staffId) {
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staff == null) {
-            throw new Exception("Staff Not Found");
+            loggingService.logActivity("FETCH_PAYMENTS_REPORT", "N/A", staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid staff id");
         }
         //Get institution from staff
         Institution institution = staff.getInstitution();
         if (institution == null) {
-            throw new Exception("Institution Not Found");
+            loggingService.logActivity("FETCH_PAYMENTS_REPORT", "N/A", staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Unknown institution");
         }
 
         //Retrieve all classes
-        List<Level> levels = institution.getLevel();
+        List<Level> levels = institution.getLevels();
         if (levels == null || levels.isEmpty()) {
-            return Collections.emptyList();
+            loggingService.logActivity("FETCH_PAYMENTS_REPORT", "N/A", staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Institution has no grades");
         }
 
         List<ClassFeesSummary> classFeesSummaryList = new ArrayList<>();
@@ -233,16 +239,32 @@ public class FeesService {
             );
             classFeesSummaryList.add(classFeesSummary);
         }
-        return classFeesSummaryList;
+
+        loggingService.logActivity("FETCH_PAYMENTS_REPORT", "N/A", staffId, "SUCCESS");
+        return ResponseEntity.ok(classFeesSummaryList);
     }
 
-    public List<GradeFeesReport> fetchGradeFeesReport(String levelId, String semesterId) throws Exception {
+    public ResponseEntity<?> fetchGradeFeesReport(String levelId, String semesterId, String staffId) {
+        String logData = "levelId: " + levelId + ", semesterId: " + semesterId;
         Fees fee = feesRepository.findBySemester_SemesterIDAndLevel_LevelID(
                 semesterId, levelId
-        ).orElseThrow(() -> new Exception("Semester Fee not Added for the selected class"));
+        ).orElse(null);
+        if (fee == null) {
+            loggingService.logActivity("FETCH_PAYMENTS_REPORT", logData, staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Semester fees not added");
+        }
 
         List<FeesReport> records = fee.getFeesReport();
+        if (records == null || records.isEmpty()) {
+            loggingService.logActivity("FETCH_PAYMENT", logData, staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No records found");
+        }
+
         List<Students> levelStudents = fee.getLevel().getStudents();
+        if (levelStudents == null || levelStudents.isEmpty()) {
+            loggingService.logActivity("FETCH_PAYMENT", logData, staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No students found for selected grade");
+        }
 
         List<GradeFeesReport> gradeFeesReportList = new ArrayList<>();
         for (Students student : levelStudents) {
@@ -271,7 +293,8 @@ public class FeesService {
             gradeFeesReportList.add(paymentRecord);
         }
 
-        return gradeFeesReportList;
+        loggingService.logActivity("FETCH_PAYMENT", logData, staffId, "SUCCESS");
+        return ResponseEntity.ok(gradeFeesReportList);
     }
 
     private Double getExpectedLevelFees(String levelId) {
@@ -447,7 +470,7 @@ public class FeesService {
         return ResponseEntity.status(HttpStatus.CREATED).body("Fees added successfully");
     }
 
-    public double getTotalLevelFees(String levelId, String semesterId, int numberOfStudents) {
+    private double getTotalLevelFees(String levelId, String semesterId, int numberOfStudents) {
         Fees fees = feesRepository.findBySemester_SemesterIDAndLevel_LevelID(semesterId, levelId).orElse(null);
         if (fees == null) {
             return 0;
@@ -475,44 +498,42 @@ public class FeesService {
                 .sum();
     }
 
-    public List<FeesSummaryTable> getFullyPaidStudents(String staffId) throws Exception {
-        Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
-        if (staff == null) {
-            throw new Exception("Staff not found");
-        }
-
-        Institution institution = staff.getInstitution();
-
-        List<Students> students = institution.getStudents();
-        List<FeesSummaryTable> feesSummaryTables = new ArrayList<>();
+    public ResponseEntity<?> getFullyPaidStudents(String staffId, Institution institution) {
 
         //Get current Semester
-        String currentSemester = utilityClass.getCurrentSemesterId(institution.getInstitutionId());
-        if (currentSemester == null || currentSemester.isEmpty()) {
-            throw new Exception("Semester not found");
+        String currentSemesterId = utilityClass.getCurrentSemesterId(institution.getInstitutionId());
+        if (currentSemesterId == null) {
+            loggingService.logActivity("FETCH_PAYMENTS_REPORT", "N/A", staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Current semester not found. Contact admin");
         }
 
+        List<Students> students = institution.getStudents();
+        if (students == null || students.isEmpty()) {
+            loggingService.logActivity("FETCH_PAYMENTS_REPORT", "N/A", staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Institution has no students");
+        }
+
+        List<FeesSummaryTable> feesSummaryTables = new ArrayList<>();
         for (Students student: students) {
             String levelId = student.getLevel().getLevelID();
 
-            Fees fee = feesRepository.findBySemester_SemesterIDAndLevel_LevelID(currentSemester, levelId).orElse(null);
+            Fees fee = feesRepository.findBySemester_SemesterIDAndLevel_LevelID(currentSemesterId, levelId).orElse(null);
             if (fee == null) {
-                throw new Exception("Not all semester fees added");
+                loggingService.logActivity("FETCH_PAYMENTS_REPORT", "N/A", staffId, "FAILED");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(student.getLevel().getLevelName() + " semester fee not added to the system");
             }
+
             double feeAmount = fee.getAmountToBePayed();
 
-
             //Get feesReport List
-            List<FeesReport> feesReports = fee.getFeesReport();
+            List<FeesReport> feesReports = feesReportRepository.findByStudent_StudentIdAndFees_FeesId(student.getStudentId(), fee.getFeesId());
             if (feesReports == null || feesReports.isEmpty()) {
-                throw new Exception("No records found");
+                continue;
             }
 
             double amountPaid = 0.0;
             for (FeesReport feesReport: feesReports) {
-                if (feesReport.getStudent().getStudentId().equals(student.getStudentId())) {
-                    amountPaid += feesReport.getAmountPaid();
-                }
+                amountPaid += feesReport.getAmountPaid();
             }
 
             if (Math.abs(feeAmount - amountPaid) < 0.01) {
@@ -529,52 +550,46 @@ public class FeesService {
         }
 
         if (feesSummaryTables.isEmpty()) {
-            throw new Exception("No records found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("None of the students has fully paid");
         }
-        return feesSummaryTables;
+        return ResponseEntity.ok(feesSummaryTables);
     }
 
-    public List<FeesSummaryTable> getPartiallyPaidStudents(String staffId) throws Exception {
-        Staffs staff = staffsRepository.findByStaffId(staffId)
-                .orElseThrow(() -> new Exception("Staff not found"));
-
-        Institution institution = staff.getInstitution();
-        if (institution == null) {
-            throw new Exception("Institution not found");
-        }
+    public ResponseEntity<?> getPartiallyPaidStudents(String staffId, Institution institution) {
 
         List<Students> students = institution.getStudents();
         if (students == null || students.isEmpty()) {
-            throw new Exception("Institution has no students");
+            loggingService.logActivity("FETCH_PAYMENTS_REPORT", "N/A", staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Institution has no students");
+        }
+
+        String currentSemester = utilityClass.getCurrentSemesterId(institution.getInstitutionId());
+        if (currentSemester == null) {
+            loggingService.logActivity("FETCH_PAYMENTS_REPORT", "N/A", staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Current semester not added. Contact admin");
         }
 
         List<FeesSummaryTable> feesSummaryTables = new ArrayList<>();
-
-        String currentSemester = utilityClass.getCurrentSemesterId(institution.getInstitutionId());
-        if (currentSemester == null || currentSemester.isEmpty()) {
-            throw new Exception("Semester not found");
-        }
-
         for (Students student : students) {
 
-            String levelId = student.getLevel().getLevelID();
+            Fees fee = feesRepository.findBySemester_SemesterIDAndLevel_LevelID(
+                    currentSemester, student.getLevel().getLevelID()
+                    ).orElse(null);
+            if (fee == null) {
+                loggingService.logActivity("FETCH_PAYMENTS_REPORT", "N/A", staffId, "FAILED");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(student.getLevel().getLevelName() + " semester fee not added to the system");
+            }
 
-            Fees fee = feesRepository.findBySemester_SemesterIDAndLevel_LevelID(currentSemester, levelId)
-                    .orElseThrow(() -> new Exception("Not all semester fees added"));
-
-            double feeAmount = fee.getAmountToBePayed() != null ? fee.getAmountToBePayed() : 0.0;
+            double feeAmount = fee.getAmountToBePayed();
             double amountPaid = 0.0;
 
-            List<FeesReport> feesReports = fee.getFeesReport();
+            List<FeesReport> feesReports = feesReportRepository.findByStudent_StudentIdAndFees_FeesId(student.getStudentId(), fee.getFeesId());
             if (feesReports == null || feesReports.isEmpty()) {
-                throw new Exception("No records found");
+                continue;
             }
 
             for (FeesReport feesReport : feesReports) {
-                if (feesReport.getStudent() != null &&
-                        feesReport.getStudent().getStudentId().equals(student.getStudentId())) {
-                    amountPaid += feesReport.getAmountPaid() != null ? feesReport.getAmountPaid() : 0.0;
-                }
+                amountPaid += feesReport.getAmountPaid();
             }
 
 
@@ -593,67 +608,88 @@ public class FeesService {
         }
 
         if (feesSummaryTables.isEmpty()) {
-            throw new Exception("No records found");
+            loggingService.logActivity("FETCH_PAYMENTS_REPORT", "N/A", staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No partially paid students found");
         }
-        return feesSummaryTables;
+        return ResponseEntity.ok(feesSummaryTables);
     }
 
-    public List<FeesSummaryTable> getNotPaidStudents(String staffId) throws Exception {
-        Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
-        if (staff == null) {
-            throw new Exception("Staff not found");
-        }
-
-        Institution institution = staff.getInstitution();
-
-        List<Students> students = institution.getStudents();
-        List<FeesSummaryTable> feesSummaryTables = new ArrayList<>();
-
+    public ResponseEntity<?> getNotPaidStudents(String staffId, Institution institution) {
         //Get current Semester
         String currentSemester = utilityClass.getCurrentSemesterId(institution.getInstitutionId());
         if (currentSemester == null || currentSemester.isEmpty()) {
-            throw new Exception("Semester not found");
+            loggingService.logActivity("FETCH_PAYMENTS_REPORT", "N/A", staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Current semester not added. Contact admin");
         }
 
+        List<Students> students = institution.getStudents();
+        if (students == null || students.isEmpty()) {
+            loggingService.logActivity("FETCH_PAYMENTS_REPORT", "N/A", staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Institution has no students");
+        }
+
+        List<FeesSummaryTable> feesSummaryTables = new ArrayList<>();
         for (Students student: students) {
             String levelId = student.getLevel().getLevelID();
 
             Fees fee = feesRepository.findBySemester_SemesterIDAndLevel_LevelID(currentSemester, levelId).orElse(null);
             if (fee == null) {
-                throw new Exception("Not all semester fees added");
+                loggingService.logActivity("FETCH_PAYMENTS_REPORT", "N/A", staffId, "FAILED");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(student.getLevel().getLevelName() + " semester fee not added to the system");
             }
 
             double feeAmount = fee.getAmountToBePayed();
 
             //Get feesReport List
-            List<FeesReport> feesReports = fee.getFeesReport();
+            List<FeesReport> feesReports = feesReportRepository.findByStudent_StudentIdAndFees_FeesId(student.getStudentId(), fee.getFeesId());
             if (feesReports == null || feesReports.isEmpty()) {
-                throw new Exception("No records found");
-            }
-            double amountPaid = 0.0;
-            for (FeesReport feesReport: feesReports) {
-                if (feesReport.getStudent().getStudentId().equals(student.getStudentId())) {
-                    amountPaid += feesReport.getAmountPaid();
-                }
-            }
-
-            if (amountPaid < 0.01) {
                 FeesSummaryTable feesSummaryTable = new FeesSummaryTable(
                         student.getStudentId(),
                         student.getFirstName() + " " + student.getLastName(),
                         student.getLevel().getLevelName(),
                         String.valueOf(feeAmount),
-                        String.valueOf(amountPaid),
-                        String.valueOf(feeAmount - amountPaid)
+                        String.valueOf(0.0),
+                        String.valueOf(feeAmount - 0.0)
                 );
                 feesSummaryTables.add(feesSummaryTable);
             }
         }
 
         if (feesSummaryTables.isEmpty()) {
-            throw new Exception("No records found");
+            loggingService.logActivity("FETCH_PAYMENTS_REPORT", "N/A", staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No records found for this filter");
         }
-        return feesSummaryTables;
+        return ResponseEntity.ok(feesSummaryTables);
+    }
+
+    public ResponseEntity<?> getTotalSemesterFees(String staffId, Institution institution) {
+
+        Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
+        if (staff == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid staff id");
+        }
+
+        //Get current Semester
+        String currentSemesterId = utilityClass.getCurrentSemesterId(institution.getInstitutionId());
+        if (currentSemesterId == null || currentSemesterId.isEmpty()) {
+            loggingService.logActivity("FETCH_TOTAL_FEES", "N/A", staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Current semester not added. Contact admin");
+        }
+
+        List<Level> levels = institution.getLevels();
+        if (levels == null || levels.isEmpty()) {
+            loggingService.logActivity("FETCH_TOTAL_FEES", "N/A", staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Institution has no grades yet");
+        }
+        double totalSemesterFees = 0;
+        for (Level level : levels) {
+            double levelFees = getTotalLevelFees(
+                    level.getLevelID(), currentSemesterId, level.getStudents().size()
+            );
+            totalSemesterFees += levelFees;
+        }
+
+        return ResponseEntity.ok(totalSemesterFees);
     }
 
     public List<RecentPaymentTable> getRecentPayments(String staffId) throws Exception {

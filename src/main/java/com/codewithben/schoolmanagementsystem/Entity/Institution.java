@@ -63,7 +63,7 @@ public class Institution {
         this.students = students;
     }
 
-    public List<Level> getLevel() {
+    public List<Level> getLevels() {
         return level;
     }
 
