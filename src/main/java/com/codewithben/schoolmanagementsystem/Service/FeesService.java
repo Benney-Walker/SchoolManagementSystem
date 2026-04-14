@@ -381,26 +381,42 @@ public class FeesService {
         return ResponseEntity.status(HttpStatus.CREATED).body("Fees added successfully");
     }
 
-    public FetchFeesDetails fetchFeesDetails(String semesterId, String levelId) throws Exception {
+    public ResponseEntity<?> fetchFeesDetails(String semesterId, String levelId, String staffId) {
+        String logData = "Semester: " + semesterId + " Level: " + levelId;
+
         Fees fee = feesRepository.findBySemester_SemesterIDAndLevel_LevelID(
                 semesterId, levelId
-        ).orElseThrow( () -> new Exception("Fees not Added to system"));
+        ).orElse(null);
+        if (fee == null) {
+            loggingService.logActivity("FETCH_FEES_DETAILS", logData, staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Fees for selected class not added for the selected semester");
+        }
 
-        return new FetchFeesDetails(
+        loggingService.logActivity("FETCH_FEES_DETAILS", logData, staffId, "SUCCESS");
+        return ResponseEntity.ok(
+                new FetchFeesDetails(
                 String.valueOf(fee.getAmountToBePayed()),
                 fee.getSemester().getSemesterID(),
                 fee.getLevel().getLevelID()
-        );
+        ));
     }
 
-    public String updateSemesterFees(FetchFeesDetails update) throws Exception {
+    public ResponseEntity<?> updateSemesterFees(FetchFeesDetails update, String staffId) {
+        String logData =
+                "Amount: " + update.getAmount() + " SemesterId: " + update.getSemesterId() + " LevelId: " + update.getLevelId();
         Fees fees = feesRepository.findBySemester_SemesterIDAndLevel_LevelID(
                 update.getSemesterId(), update.getLevelId()
-        ).orElseThrow( () -> new Exception("Fees not Found"));
+        ).orElse(null);
+        if (fees == null) {
+            loggingService.logActivity("UPDATE_FEES", logData, staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Fees not found in the system");
+        }
 
         fees.setAmountToBePayed(Double.parseDouble(update.getAmount()));
         feesRepository.save(fees);
-        return "Fees Updated Successfully";
+
+        loggingService.logActivity("UPDATE_FEES", logData, staffId, "SUCCESS");
+        return ResponseEntity.ok("Fees Updated Successfully");
     }
 
     @Transactional
@@ -481,7 +497,7 @@ public class FeesService {
         return feeAmount * numberOfStudents;
     }
 
-    public double getTotalLevelFeesPaid(String semesterId, String levelId) {
+    private double getTotalLevelFeesPaid(String semesterId, String levelId) {
         System.out.println("getTotalLevelFeesPaid: " + semesterId + " " + levelId);
         Fees fees = feesRepository.findBySemester_SemesterIDAndLevel_LevelID(semesterId, levelId)
                 .orElse(null);
@@ -689,26 +705,59 @@ public class FeesService {
             totalSemesterFees += levelFees;
         }
 
+        loggingService.logActivity("FETCH_TOTAL_FEES", "N/A", staffId, "SUCCESS");
         return ResponseEntity.ok(totalSemesterFees);
     }
 
-    public List<RecentPaymentTable> getRecentPayments(String staffId) throws Exception {
+    public ResponseEntity<?> getTotalFeesPaid(String staffId, Institution institution) {
+
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staff == null) {
-            throw new Exception("Staff not found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid staff id");
         }
 
-        String institutionId = staff.getInstitution().getInstitutionId();
+        //Get current Semester
+        String currentSemesterId = utilityClass.getCurrentSemesterId(institution.getInstitutionId());
+        if (currentSemesterId == null || currentSemesterId.isEmpty()) {
+            loggingService.logActivity("FETCH_TOTAL_FEES", "N/A", staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Current semester not added. Contact admin");
+        }
 
-        String currentSemester = utilityClass.getCurrentSemesterId(institutionId);
+        List<Level> levels = institution.getLevels();
+        if (levels == null || levels.isEmpty()) {
+            loggingService.logActivity("FETCH_TOTAL_FEES", "N/A", staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Institution has no grades yet");
+        }
+
+        double totalAmountPaid = 0;
+        for (Level level : levels) {
+            double levelFeesPaid = getTotalLevelFeesPaid(currentSemesterId, level.getLevelID());
+            totalAmountPaid += levelFeesPaid;
+        }
+
+        loggingService.logActivity("FETCH_TOTAL_FEES", "N/A", staffId, "SUCCESS");
+        return ResponseEntity.ok(totalAmountPaid);
+    }
+
+    public ResponseEntity<?> getRecentPayments(String staffId, Institution institution) {
+
+        String currentSemesterId = utilityClass.getCurrentSemesterId(institution.getInstitutionId());
+        if (currentSemesterId == null || currentSemesterId.isEmpty()) {
+            loggingService.logActivity("FETCH_PAYMENT_REPORTS", "N/A", staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Current semester not added. Contact admin");
+        }
 
         List<FeesReport> feesReports = feesReportRepository
-                .findByInstitution_InstitutionIdOrderByDateOfPaymentDesc(institutionId);
+                .findByInstitution_InstitutionIdOrderByDateOfPaymentDesc(institution.getInstitutionId());
+        if (feesReports == null || feesReports.isEmpty()) {
+            loggingService.logActivity("FETCH_PAYMENT_REPORTS", "N/A", staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Institution has no payment records yet");
+        }
 
         List<RecentPaymentTable> recentPaymentTables = new ArrayList<>();
         int counter = 0;
         for (FeesReport feesReport: feesReports) {
-            if (feesReport.getFees().getSemester().getSemesterID().equals(currentSemester)) {
+            if (feesReport.getFees().getSemester().getSemesterID().equals(currentSemesterId)) {
                 RecentPaymentTable recentPaymentTable = new RecentPaymentTable(
                         feesReport.getDateOfPayment().toString(),
                         feesReport.getStudent().getStudentId(),
@@ -724,7 +773,9 @@ public class FeesService {
                 break;
             }
         }
-        return recentPaymentTables;
+
+        loggingService.logActivity("FETCH_PAYMENT_REPORTS", "N/A", staffId, "SUCCESS");
+        return ResponseEntity.ok(recentPaymentTables);
     }
 
 }

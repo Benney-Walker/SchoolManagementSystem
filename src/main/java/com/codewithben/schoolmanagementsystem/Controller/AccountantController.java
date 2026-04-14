@@ -22,24 +22,14 @@ import java.util.List;
 public class AccountantController {
     private final FeesService feesService;
 
-    private final UtilityClass utilityClass;
-
-    private final InstitutiionRepository institutiionRepository;
-
     private final StaffsRepository staffsRepository;
-
-    private final StudentService studentService;
 
     private final LoggingService loggingService;
 
-    public AccountantController(FeesService feesService, UtilityClass utilityClass, InstitutiionRepository institutiionRepository,
-                                StaffsRepository staffsRepository, StudentService studentService, LoggingService loggingService) {
+    public AccountantController(FeesService feesService, StaffsRepository staffsRepository, LoggingService loggingService) {
 
         this.feesService = feesService;
-        this.utilityClass = utilityClass;
-        this.institutiionRepository = institutiionRepository;
         this.staffsRepository = staffsRepository;
-        this.studentService = studentService;
         this.loggingService = loggingService;
     }
 
@@ -112,96 +102,61 @@ public class AccountantController {
 
     @GetMapping("/v1/fully-paid-students/{staffId}")
     public ResponseEntity<?> getFullyPaidStudents(@PathVariable String staffId) {
-        Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
-        if (staff == null) {
-            loggingService.logActivity("FETCH_PAYMENTS_REPORT", "N/A", staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid staffId");
-        }
+        Staffs staff = getValidatedStaff(staffId);
         return feesService.getFullyPaidStudents(staffId, staff.getInstitution());
     }
 
     @GetMapping("/v1/partially-paid-students/{staffId}")
     public ResponseEntity<?> getPartiallyPaidStudents(@PathVariable String staffId) {
-        Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
-        if (staff == null) {
-            loggingService.logActivity("FETCH_PAYMENTS_REPORT", "N/A", staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid staffId");
-        }
+        Staffs staff = getValidatedStaff(staffId);
         return feesService.getPartiallyPaidStudents(staffId, staff.getInstitution());
     }
 
     @GetMapping("/v1/not-paid-students/{staffId}")
     public ResponseEntity<?> getNotPaidStudents(@PathVariable String staffId) {
-        Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
-        if (staff == null) {
-            loggingService.logActivity("FETCH_PAYMENTS_REPORT", "N/A", staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid staffId");
-        }
+        Staffs staff = getValidatedStaff(staffId);
         return feesService.getNotPaidStudents(staffId, staff.getInstitution());
     }
 
     @GetMapping("/v1/total-fees/{staffId}")
     public ResponseEntity<?> totalSemesterFees(@PathVariable String staffId) {
-        Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
-        if (staff == null) {
-            loggingService.logActivity("FETCH_PAYMENTS_REPORT", "N/A", staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid staffId");
-        }
+        Staffs staff = getValidatedStaff(staffId);
         return feesService.getTotalSemesterFees(staffId, staff.getInstitution());
     }
 
     @GetMapping("/v1/fees-paid/{staffId}")
     public ResponseEntity<?> totalAmountPaid(@PathVariable String staffId) {
-        Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
-        if (staff == null)
-            return ResponseEntity.badRequest().body("Staff not found");
-
-        Institution institution = staff.getInstitution();
-        if (institution == null)
-            return ResponseEntity.badRequest().body("Institution not found");
-
-        String semesterId = utilityClass.getCurrentSemesterId(institution.getInstitutionId());
-        List<Level> levels = institution.getLevels();
-        double totalAmountPaid = 0;
-        for (Level level : levels) {
-            double levelFeesPaid = feesService.getTotalLevelFeesPaid(semesterId, level.getLevelID());
-            totalAmountPaid += levelFeesPaid;
-        }
-        return ResponseEntity.ok(String.valueOf(totalAmountPaid));
+        Staffs staff = getValidatedStaff(staffId);
+        return feesService.getTotalFeesPaid(staffId, staff.getInstitution());
     }
 
     @GetMapping("/v1/fetch-fees-details/{semesterId}/{levelId}")
-    public ResponseEntity<?> fetchFeesDetails(@PathVariable String semesterId,
+    public ResponseEntity<?> fetchFeesDetails(@RequestHeader("staffId") String staffId,
+                                              @PathVariable String semesterId,
                                               @PathVariable String levelId) {
-        try {
-            return ResponseEntity.ok(
-                    feesService.fetchFeesDetails(semesterId, levelId)
-            );
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            return ResponseEntity.badRequest().body(ex.getMessage());
-        }
+
+        return feesService.fetchFeesDetails(semesterId, levelId, staffId);
     }
 
     @PutMapping("/v1/update-semester-fees")
-    public ResponseEntity<?> updateFeesAmount(@RequestBody FetchFeesDetails fetchFeesDetails) {
-        try {
-            return ResponseEntity.ok(
-                    feesService.updateSemesterFees(fetchFeesDetails)
-            );
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ResponseEntity<?> updateFeesAmount(@RequestHeader("staffId") String staffId,
+                                              @RequestBody FetchFeesDetails fetchFeesDetails) {
+
+        return feesService.updateSemesterFees(fetchFeesDetails, staffId);
     }
 
     @GetMapping("/v1/recent-fees-transactions/{staffId}")
     public ResponseEntity<?> getRecentPayment(@PathVariable String staffId) {
-        try {
-            return ResponseEntity.ok().body(feesService.getRecentPayments(staffId));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.badRequest().body(e.getMessage());
+        Staffs staff = getValidatedStaff(staffId);
+        return feesService.getRecentPayments(staffId, staff.getInstitution());
+    }
+
+    private Staffs getValidatedStaff(String staffId) {
+        Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
+        if (staff == null) {
+            loggingService.logActivity("FETCH_PAYMENTS_REPORT", "N/A", staffId, "FAILED");
+            return null;
         }
+        return staff;
     }
 }

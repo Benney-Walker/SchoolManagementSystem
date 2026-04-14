@@ -86,7 +86,7 @@ public class LevelService {
             throw new Exception("Institution not found");
         }
 
-        List<Level> levels = institution.getLevel();
+        List<Level> levels = institution.getLevels();
         if (levels == null || levels.isEmpty()) {
             return Collections.emptyList();
         }

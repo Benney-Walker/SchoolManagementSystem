@@ -30,7 +30,7 @@ public class GlobalExceptionHandler {
 
         error.put("timestamp", LocalDateTime.now());
         error.put("status", 500);
-        error.put("error", "Internal Server Error");
+        error.put("error", "Internal Server Error. Contact developer");
         error.put("message", ex.getMessage());
         error.put("path", request.getRequestURI());
 
