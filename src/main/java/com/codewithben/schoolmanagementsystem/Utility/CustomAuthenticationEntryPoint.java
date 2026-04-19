@@ -23,7 +23,7 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
                 {
                   "timestamp": "%s",
                   "status": 401,
-                  "error": "Unauthorized",
+                  "error": "Session expired. Login again",
                   "message": "%s",
                   "path": "%s"
                 }
