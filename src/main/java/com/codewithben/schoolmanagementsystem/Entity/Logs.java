@@ -4,7 +4,6 @@ import com.codewithben.schoolmanagementsystem.Contants.LogStatus;
 import com.codewithben.schoolmanagementsystem.Contants.LogType;
 import jakarta.persistence.*;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -21,9 +20,7 @@ public class Logs {
     @Column(length = 5000)
     private String actionData;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(nullable = false, name = "createdBy_staffId")
-    private Staffs createdBy;
+    private String createdBy;
 
     @Enumerated(EnumType.STRING)
     private LogStatus status;
@@ -62,11 +59,11 @@ public class Logs {
         this.actionData = actionData;
     }
 
-    public Staffs getCreatedBy() {
+    public String getCreatedBy() {
         return createdBy;
     }
 
-    public void setCreatedBy(Staffs createdBy) {
+    public void setCreatedBy(String createdBy) {
         this.createdBy = createdBy;
     }
 

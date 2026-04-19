@@ -3,7 +3,6 @@ package com.codewithben.schoolmanagementsystem.Service;
 import com.codewithben.schoolmanagementsystem.Contants.LogStatus;
 import com.codewithben.schoolmanagementsystem.Contants.LogType;
 import com.codewithben.schoolmanagementsystem.Entity.Logs;
-import com.codewithben.schoolmanagementsystem.Entity.Staffs;
 import com.codewithben.schoolmanagementsystem.Repository.LogsRepository;
 import com.codewithben.schoolmanagementsystem.Repository.StaffsRepository;
 import com.codewithben.schoolmanagementsystem.Utility.UtilityClass;
@@ -28,17 +27,19 @@ public class LoggingService {
 
     public void logActivity(String actionType, String actionData, String staffId, String status) {
 
-        Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
+        try {
+            Logs log = new Logs();
 
-        Logs log = new Logs();
+            log.setActionId(utilityClass.generateEntityId("LOG"));
+            log.setActionTime(LocalDateTime.now());
+            log.setActionType(LogType.valueOf(actionType));
+            log.setActionData(actionData);
+            log.setCreatedBy(staffId);
+            log.setStatus(LogStatus.valueOf(status));
 
-        log.setActionId(utilityClass.generateEntityId("LOG"));
-        log.setActionTime(LocalDateTime.now());
-        log.setActionType(LogType.valueOf(actionType));
-        log.setActionData(actionData);
-        log.setCreatedBy(staff);
-        log.setStatus(LogStatus.valueOf(status));
-
-        logsRepository.save(log);
+            logsRepository.save(log);
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
