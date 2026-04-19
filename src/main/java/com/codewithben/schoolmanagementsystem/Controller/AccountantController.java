@@ -9,6 +9,7 @@ import com.codewithben.schoolmanagementsystem.Repository.InstitutiionRepository;
 import com.codewithben.schoolmanagementsystem.Repository.StaffsRepository;
 import com.codewithben.schoolmanagementsystem.Service.FeesService;
 import com.codewithben.schoolmanagementsystem.Service.LoggingService;
+import com.codewithben.schoolmanagementsystem.Service.StaffService;
 import com.codewithben.schoolmanagementsystem.Service.StudentService;
 import com.codewithben.schoolmanagementsystem.Utility.UtilityClass;
 import org.springframework.http.HttpStatus;
@@ -22,15 +23,12 @@ import java.util.List;
 public class AccountantController {
     private final FeesService feesService;
 
-    private final StaffsRepository staffsRepository;
+    private final StaffService staffService;
 
-    private final LoggingService loggingService;
-
-    public AccountantController(FeesService feesService, StaffsRepository staffsRepository, LoggingService loggingService) {
+    public AccountantController(FeesService feesService, StaffService staffService, StudentService studentService) {
 
         this.feesService = feesService;
-        this.staffsRepository = staffsRepository;
-        this.loggingService = loggingService;
+        this.staffService = staffService;
     }
 
     @PostMapping("/v1/add-new-fees")
@@ -102,31 +100,46 @@ public class AccountantController {
 
     @GetMapping("/v1/fully-paid-students/{staffId}")
     public ResponseEntity<?> getFullyPaidStudents(@PathVariable String staffId) {
-        Staffs staff = getValidatedStaff(staffId);
+        Staffs staff = staffService.getValidatedStaff(staffId);
+        if (staff == null)
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid staff Id");
+
         return feesService.getFullyPaidStudents(staffId, staff.getInstitution());
     }
 
     @GetMapping("/v1/partially-paid-students/{staffId}")
     public ResponseEntity<?> getPartiallyPaidStudents(@PathVariable String staffId) {
-        Staffs staff = getValidatedStaff(staffId);
+        Staffs staff = staffService.getValidatedStaff(staffId);
+        if (staff == null)
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid staff Id");
+
         return feesService.getPartiallyPaidStudents(staffId, staff.getInstitution());
     }
 
     @GetMapping("/v1/not-paid-students/{staffId}")
     public ResponseEntity<?> getNotPaidStudents(@PathVariable String staffId) {
-        Staffs staff = getValidatedStaff(staffId);
+        Staffs staff = staffService.getValidatedStaff(staffId);
+        if (staff == null)
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid staff Id");
+
         return feesService.getNotPaidStudents(staffId, staff.getInstitution());
     }
 
     @GetMapping("/v1/total-fees/{staffId}")
     public ResponseEntity<?> totalSemesterFees(@PathVariable String staffId) {
-        Staffs staff = getValidatedStaff(staffId);
+        Staffs staff = staffService.getValidatedStaff(staffId);
+        if (staff == null)
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid staff Id");
+
         return feesService.getTotalSemesterFees(staffId, staff.getInstitution());
     }
 
     @GetMapping("/v1/fees-paid/{staffId}")
     public ResponseEntity<?> totalAmountPaid(@PathVariable String staffId) {
-        Staffs staff = getValidatedStaff(staffId);
+        Staffs staff = staffService.getValidatedStaff(staffId);
+        if (staff == null)
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid staff Id");
+
         return feesService.getTotalFeesPaid(staffId, staff.getInstitution());
     }
 
@@ -147,16 +160,10 @@ public class AccountantController {
 
     @GetMapping("/v1/recent-fees-transactions/{staffId}")
     public ResponseEntity<?> getRecentPayment(@PathVariable String staffId) {
-        Staffs staff = getValidatedStaff(staffId);
-        return feesService.getRecentPayments(staffId, staff.getInstitution());
-    }
+        Staffs staff = staffService.getValidatedStaff(staffId);
+        if (staff == null)
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid staff Id");
 
-    private Staffs getValidatedStaff(String staffId) {
-        Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
-        if (staff == null) {
-            loggingService.logActivity("FETCH_PAYMENTS_REPORT", "N/A", staffId, "FAILED");
-            return null;
-        }
-        return staff;
+        return feesService.getRecentPayments(staffId, staff.getInstitution());
     }
 }

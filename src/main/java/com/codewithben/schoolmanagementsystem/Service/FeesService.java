@@ -682,6 +682,7 @@ public class FeesService {
 
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staff == null) {
+            loggingService.logActivity("FETCH_TOTAL_FEES", "N/A", staffId, "FAILED");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid staff id");
         }
 
