@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -24,15 +25,7 @@ import java.util.List;
 public class StaffService {
     private final StaffsRepository staffsRepository;
 
-    private final StudentsRepository studentsRepository;
-
-    private final ResultsRepository resultsRepository;
-
     private final SubjectsRepository subjectsRepository;
-
-    private final SubjectScoreRepository subjectScoreRepository;
-
-    private final SemesterRepository semesterRepository;
 
     private final LevelRepository levelRepository;
 
@@ -44,21 +37,19 @@ public class StaffService {
 
     private final StaffRolesEntityRepo staffRolesEntityRepo;
 
-    public StaffService(StaffsRepository staffsRepository, StudentsRepository studentsRepository, ResultsRepository resultsRepository,
-                        SubjectsRepository subjectsRepository, SubjectScoreRepository subjectScoreRepository, SemesterRepository semesterRepository,
-                        LevelRepository levelRepository, UtilityClass utilityClass, StaffRolesEntityRepo staffRolesEntityRepo,
-                        InstitutiionRepository institutionRepository,  BCryptPasswordEncoder bCryptPasswordEncoder) {
+    private final LoggingService loggingService;
+
+    public StaffService(StaffsRepository staffsRepository, SubjectsRepository subjectsRepository, LevelRepository levelRepository,
+                        UtilityClass utilityClass, StaffRolesEntityRepo staffRolesEntityRepo,
+                        InstitutiionRepository institutionRepository,  BCryptPasswordEncoder bCryptPasswordEncoder, LoggingService loggingService) {
         this.staffsRepository = staffsRepository;
-        this.studentsRepository = studentsRepository;
-        this.resultsRepository = resultsRepository;
         this.subjectsRepository = subjectsRepository;
-        this.subjectScoreRepository = subjectScoreRepository;
-        this.semesterRepository = semesterRepository;
         this.levelRepository = levelRepository;
         this.utilityClass = utilityClass;
         this.institutionRepository = institutionRepository;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
         this.staffRolesEntityRepo = staffRolesEntityRepo;
+        this.loggingService = loggingService;
     }
 
     public String addNewStaff(String firstName, String surName, String gender, String dateOfBirth,
@@ -140,9 +131,18 @@ public class StaffService {
         return staffData;
     }
 
-    public String updateStaffInfo(FindStaffDTO updateInfo) throws Exception {
-        Staffs staff = staffsRepository.findByStaffId(updateInfo.getStaffId())
-                .orElseThrow(() -> new Exception("Staff not found"));
+    public ResponseEntity<?> updateStaffInfo(FindStaffDTO updateInfo, String staffId) {
+        String logData = "staff Id: " + updateInfo.getStaffId() + " first Name: " + updateInfo.getFirstName() +
+                " Surname: " + updateInfo.getSurname() + " gender: " + updateInfo.getGender() + " DOB: " + updateInfo.getDateOfBirth() +
+                " Email: " + updateInfo.getEmail() + " Contact: " + updateInfo.getPhoneNumber() +
+                " Roles: " + Arrays.toString(updateInfo.getStaffRoles().toArray()) + " Status: " + updateInfo.getStaffStatus() +
+                " DOR: " + updateInfo.getDateOfRegistration();
+
+        Staffs staff = staffsRepository.findByStaffId(updateInfo.getStaffId()).orElse(null);
+        if (staff == null) {
+            loggingService.logActivity("UPDATE_STAFF_DETAILS", logData, staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid Staff Id");
+        }
 
         staff.setFirstName(updateInfo.getFirstName());
         staff.setLastName(updateInfo.getSurname());
@@ -157,7 +157,8 @@ public class StaffService {
         staff.setStaffStatus(StaffStatus.valueOf(updateInfo.getStaffStatus()));
         staffsRepository.save(staff);
 
-        return "Staff Info Updated Successfully";
+        loggingService.logActivity("UPDATE_STAFF_DETAILS", logData, staffId, "SUCCESS");
+        return ResponseEntity.ok().build();
     }
 
     private List<StaffRolesEntity> updateStaffRoles(Staffs staff, List<String> staffRoles) {
@@ -222,92 +223,114 @@ public class StaffService {
     }
 
 
-    public String addNewSubjects(String subjectName, String levelId) throws Exception {
+    public ResponseEntity<?> addNewSubjects(String subjectName, String levelId, String staffId) {
+        String logData = "Subject Name: " + subjectName + " Class Id: " + levelId;
 
-            Level level = levelRepository.findByLevelID(levelId).orElse(null);
-            if (level == null) {
-                throw new Exception("Invalid levelId");
-            }
+        Level level = levelRepository.findByLevelID(levelId).orElse(null);
+        if (level == null) {
+            loggingService.logActivity("NEW_SUBJECT", logData, staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Selected class do not exist");
+        }
 
-            Subjects  subject = subjectsRepository.findBySubjectNameAndLevel_LevelID(subjectName, levelId).orElse(null);
-            if (subject != null) {
-                throw new Exception("Subject already exists");
-            }
+        Subjects  subject = subjectsRepository.findBySubjectNameAndLevel_LevelID(subjectName, levelId).orElse(null);
+        if (subject != null) {
+            loggingService.logActivity("NEW_SUBJECT", logData, staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("Subject already exist");
+        }
 
-            Subjects subjects = new Subjects();
-            String subjectId = utilityClass.generateEntityId("SUBJECT");
-            subjects.setSubjectId(subjectId);
-            subjects.setSubjectName(subjectName.toUpperCase());
-            subjects.setLevel(level);
-            subjectsRepository.saveAndFlush(subjects);
+        Subjects subjects = new Subjects();
+        String subjectId = utilityClass.generateEntityId("SUBJECT");
+        subjects.setSubjectId(subjectId);
+        subjects.setSubjectName(subjectName.toUpperCase());
+        subjects.setLevel(level);
+        subjectsRepository.saveAndFlush(subjects);
 
-            //Add subject to Level Subjects
-            List<Subjects> levelSubjects = level.getSubjects();
-            if (levelSubjects == null) {
-                levelSubjects = new ArrayList<>();
-            }
-            levelSubjects.add(subjects);
-            level.setSubjects(levelSubjects);
-            levelRepository.save(level);
+        //Add subject to Level Subjects
+        List<Subjects> levelSubjects = level.getSubjects();
+        if (levelSubjects == null) {
+            levelSubjects = new ArrayList<>();
+        }
+        levelSubjects.add(subjects);
+        level.setSubjects(levelSubjects);
+        levelRepository.save(level);
 
-            return subjectId;
+        loggingService.logActivity("NEW_SUBJECT", logData, staffId, "SUCCESS");
+        return ResponseEntity.ok().build();
     }
 
-    public ResponseEntity<?> loadSubjectData(String subjectId) {
+    public ResponseEntity<?> loadSubjectData(String subjectId, String staffId) {
+        String logData = "Subject Id: " + subjectId;
+
         Subjects subject = subjectsRepository.findBySubjectId(subjectId).orElse(null);
         if (subject == null) {
+            loggingService.logActivity("FIND_SUBJECT_DATA", logData, staffId, "FAILED");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Subject not found");
         }
 
-        return ResponseEntity.ok(
-                new SubjectDTO(
+        loggingService.logActivity("FIND_SUBJECT_DATA", logData, staffId, "SUCCESS");
+        return ResponseEntity.ok( new SubjectDTO(
                         subject.getSubjectId(),
                         subject.getSubjectName(),
                         subject.getLevel().getLevelID()
-                )
-        );
+                ));
     }
 
-    public ResponseEntity<?> updateSubjectData(SubjectDTO subjectDTO) {
+    public ResponseEntity<?> updateSubjectData(SubjectDTO subjectDTO, String staffId) {
+        String logData = "Subject Id: " + subjectDTO.getSubjectId() + " Subject Name: " + subjectDTO.getSubjectName() +
+                " Class Id: " + subjectDTO.getLevelId();
+
         Subjects subject = subjectsRepository.findBySubjectId(subjectDTO.getSubjectId()).orElse(null);
         if (subject == null) {
+            loggingService.logActivity("UPDATE_SUBJECT_DATA", logData, staffId, "FAILED");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Subject not found");
         }
 
         Level level = levelRepository.findByLevelID(subjectDTO.getLevelId()).orElse(null);
         if (level == null) {
+            loggingService.logActivity("UPDATE_SUBJECT_DATA", logData, staffId, "FAILED");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Grade not found");
         }
 
         subject.setSubjectName(subjectDTO.getSubjectName());
         subject.setLevel(level);
         subjectsRepository.save(subject);
+
+        loggingService.logActivity("UPDATE_SUBJECT_DATA", logData, staffId, "SUCCESS");
         return ResponseEntity.ok("Subject updated successfully");
     }
 
-    public ResponseEntity<?> deleteSubjectData(String subjectId) {
+    public ResponseEntity<?> deleteSubjectData(String subjectId, String staffId) {
+        String logData = "Subject Id: " + subjectId;
+
         Subjects subject = subjectsRepository.findBySubjectId(subjectId).orElse(null);
         if (subject == null) {
+            loggingService.logActivity("DELETE_SUBJECT", logData, staffId, "FAILED");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Subject not found");
         }
 
         subjectsRepository.delete(subject);
-        return ResponseEntity.ok("Subject deleted successfully");
+        loggingService.logActivity("DELETE_SUBJECT", logData, staffId, "FAILED");
+        return ResponseEntity.ok().build();
     }
 
-    public String resetStaffPassword(String staffId, String newPassword) throws Exception {
-        Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
-        if (staff == null)
-            throw new Exception("Staff not found");
+    public ResponseEntity<?> resetStaffPassword(String newPasswordStaffId, String newPassword, String staffId) {
+        String logData = "staff Id: " + newPasswordStaffId + " New Password: " + "***********";
+        Staffs staff = staffsRepository.findByStaffId(newPasswordStaffId).orElse(null);
+        if (staff == null) {
+            loggingService.logActivity("PASSWORD_RESET", logData, staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid staffId");
+        }
 
         if (bCryptPasswordEncoder.matches(newPassword, staff.getPassword())) {
-            throw new Exception("You can't use old password");
+            loggingService.logActivity("PASSWORD_RESET", logData, staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("You can't use old password");
         }
 
         staff.setPassword(bCryptPasswordEncoder.encode(newPassword));
         staffsRepository.save(staff);
 
-        return "Password reset successfull";
+        loggingService.logActivity("PASSWORD_RESET", logData, staffId, "SUCCESS");
+        return ResponseEntity.ok().build();
     }
 
     public List<StaffCaching> loadAllStaffInfo(String staffId) throws Exception {
@@ -409,5 +432,14 @@ public class StaffService {
 
     public Staffs getStaffDetails(String staffId) {
         return staffsRepository.findByStaffId(staffId).orElse(null);
+    }
+
+    public Staffs getValidatedStaff(String staffId) {
+        Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
+        if (staff == null) {
+            loggingService.logActivity("FETCH_PAYMENTS_REPORT", "N/A", staffId, "FAILED");
+            return null;
+        }
+        return staff;
     }
 }

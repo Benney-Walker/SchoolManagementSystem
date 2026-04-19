@@ -32,9 +32,11 @@ public class AdminController {
 
     private final JasperReportService jasperReportService;
 
+    private final LoggingService loggingService;
+
     public AdminController(StaffService staffService, LevelService levelService, InstitutionService institutionService,
                            StudentService studentService, LevelRepository levelRepository, ReportService reportService,
-                           JasperReportService jasperReportService) {
+                           JasperReportService jasperReportService, LoggingService loggingService) {
         this.staffService = staffService;
         this.levelService = levelService;
         this.institutionService = institutionService;
@@ -42,173 +44,123 @@ public class AdminController {
         this.levelRepository = levelRepository;
         this.reportService = reportService;
         this.jasperReportService = jasperReportService;
+        this.loggingService = loggingService;
     }
 
     @PostMapping("/v1/reset-staff-password")
-    public ResponseEntity<?> recoverStaffPassword(@RequestParam String staffId,
+    public ResponseEntity<?> recoverStaffPassword(@RequestHeader("staffId") String staffId,
                                                   @RequestParam String newPasswordStaffId,
                                                   @RequestParam String newPassword) {
-        try {
 
-            return ResponseEntity.ok(
-                    staffService.resetStaffPassword(newPasswordStaffId, newPassword)
-            );
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            return ResponseEntity.badRequest().body(ex.getMessage());
-        }
+        return staffService.resetStaffPassword(newPasswordStaffId, newPassword, staffId);
     }
 
     @PostMapping("/v1/add-semester")
-    public ResponseEntity<?> addNewSemester(@RequestBody AddNewSemester addNewSemester) {
-        String staffId = addNewSemester.getStaffId();
+    public ResponseEntity<?> addNewSemester(@RequestHeader("staffId") String staffId,
+                                            @RequestBody AddNewSemester addNewSemester) {
+
         String semesterName = addNewSemester.getSemesterName();
         LocalDate startDate = LocalDate.parse(addNewSemester.getStartDate());
         LocalDate endDate = LocalDate.parse(addNewSemester.getEndDate());
         String academicYear = addNewSemester.getAcademicYear();
 
-        try {
-            return ResponseEntity.ok(
-                    levelService.addNewSemester(semesterName, startDate, endDate, academicYear, staffId)
-            );
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            return ResponseEntity.badRequest().body(ex.getMessage());
-        }
+        return levelService.addNewSemester(semesterName, startDate, endDate, academicYear, staffId);
     }
 
     @PostMapping("/v1/set-grades")
-    public ResponseEntity<?> setGradingCriteria(@RequestBody GradingCriteria gradingCriteria) {
-        try {
-            return ResponseEntity.ok(
-                    institutionService.setGradingCriteria(gradingCriteria)
-            );
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            return ResponseEntity.badRequest().body(ex.getMessage());
-        }
+    public ResponseEntity<?> setGradingCriteria(@RequestHeader("staffId") String staffId,
+                                                @RequestBody GradingCriteria gradingCriteria) {
+
+        return institutionService.setGradingCriteria(gradingCriteria, staffId);
     }
 
     @GetMapping("/v1/find-class-info/{levelId}")
-    public ResponseEntity<?> findClassInfo(@PathVariable String levelId) {
-        try {
-            return ResponseEntity.ok(levelService.findClassInfo(
-                    levelId
-            ));
-        } catch (Exception ex) {
-            System.out.println(ex.getMessage());
-            return ResponseEntity.badRequest().body(ex.getMessage());
-        }
+    public ResponseEntity<?> findClassInfo(@RequestHeader("staffId") String staffId,
+                                           @PathVariable String levelId) {
+
+        return levelService.findClassInfo(levelId, staffId);
     }
 
     @PutMapping("/v1/update-class-info")
-    public ResponseEntity<?> updateClassInfo(@RequestBody FindAndUpdateClassInfo updateInfo) {
-        try {
-            return ResponseEntity.ok(
-                    levelService.updateClassInfo(updateInfo)
-            );
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            return ResponseEntity.badRequest().body(ex.getMessage());
-        }
+    public ResponseEntity<?> updateClassInfo(@RequestHeader("staffId") String staffId,
+                                             @RequestBody FindAndUpdateClassInfo updateInfo) {
+
+        return levelService.updateClassInfo(updateInfo, staffId);
     }
 
     @PutMapping("/v1/update-staff-info")
-    public ResponseEntity<?> updateStaffInfo(@RequestBody FindStaffDTO info) {
-        try {
-            return ResponseEntity.ok(
-                    staffService.updateStaffInfo(info)
-            );
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ResponseEntity<?> updateStaffInfo(@RequestHeader("staffId") String staffId,
+                                             @RequestBody FindStaffDTO info) {
+
+        return staffService.updateStaffInfo(info, staffId);
     }
 
     @GetMapping("/v1/search-semester/{semesterId}")
-    public ResponseEntity<?> searchSemesterInfo(@PathVariable String semesterId) {
-        try {
-            return ResponseEntity.ok(
-                    levelService.findSemesterInfo(semesterId)
-            );
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            return ResponseEntity.badRequest().body(ex.getMessage());
-        }
+    public ResponseEntity<?> searchSemesterInfo(@RequestHeader("staffId") String staffId,
+                                                @PathVariable String semesterId) {
+        return levelService.findSemesterInfo(semesterId, staffId);
     }
 
     @PutMapping("/v1/update-semester-info")
-    public ResponseEntity<?> updateSemesterInfo(@RequestBody FindSemester updateInfo) {
-        try {
-            return ResponseEntity.ok(
-                    levelService.updateSemesterInfo(updateInfo)
-            );
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            return ResponseEntity.badRequest().body(ex.getMessage());
-        }
+    public ResponseEntity<?> updateSemesterInfo(@RequestHeader("staffId") String staffId,
+                                                @RequestBody FindSemester updateInfo) {
+        return levelService.updateSemesterInfo(updateInfo, staffId);
     }
 
     @PostMapping("/v1/add-new-class")
-    public ResponseEntity<?> addNewGrade(@RequestParam String gradeName,
+    public ResponseEntity<?> addNewGrade(@RequestHeader("staffId") String staffId,
+                                         @RequestParam String gradeName,
                                          @RequestParam String instructorId) {
-        try {
-            return ResponseEntity.ok(
-                    levelService.addNewClass(gradeName, instructorId)
-            );
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            return ResponseEntity.badRequest().body(ex.getMessage());
-        }
+        return levelService.addNewClass(gradeName, instructorId, staffId);
     }
 
     @PostMapping("/v1/add-subject")
-    public ResponseEntity<?> saveNewSubject(@RequestBody AddNewSubject addNewSubject) {
+    public ResponseEntity<?> saveNewSubject(@RequestHeader("staffId") String staffId,
+                                            @RequestBody AddNewSubject addNewSubject) {
         String subjectName = addNewSubject.getSubjectName();
         String levelId = addNewSubject.getGradeId();
-        System.out.println("DEBUG: Hit the Add Subject Endpoint!");
 
-        try {
-            //Response contains subject Id
-            String response = staffService.addNewSubjects(subjectName, levelId);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+        return staffService.addNewSubjects(subjectName, levelId, staffId);
+
     }
 
     @GetMapping("/v1/load-subject-data/{staffId}/{subjectId}")
-    public ResponseEntity<?> loadSubjectData(@PathVariable String staffId,
+    public ResponseEntity<?> loadSubjectData(@RequestHeader("staffId") String staffId,
                                              @PathVariable String subjectId) {
-        return staffService.loadSubjectData(subjectId);
+        return staffService.loadSubjectData(subjectId, staffId);
     }
 
     @PutMapping("/v1/update-subject-details")
-    public ResponseEntity<?> updateSubjectData(@RequestBody SubjectDTO subjectDTO) {
-        return staffService.updateSubjectData(subjectDTO);
+    public ResponseEntity<?> updateSubjectData(@RequestHeader("staffId") String staffId,
+                                               @RequestBody SubjectDTO subjectDTO) {
+        return staffService.updateSubjectData(subjectDTO, staffId);
     }
 
     @DeleteMapping("/v1/delete-subject/{staffId}/{subjectId}")
-    public ResponseEntity<?> deleteSubjectData(@PathVariable String staffId,
+    public ResponseEntity<?> deleteSubjectData(@RequestHeader("staffId") String staffId,
                                                @PathVariable String subjectId) {
 
-        return staffService.deleteSubjectData(subjectId);
+        return staffService.deleteSubjectData(subjectId, staffId);
     }
 
     @GetMapping(
             value = "/v2/generate-class-report",
             produces = MediaType.APPLICATION_PDF_VALUE
     )
-    public ResponseEntity<?> generateStudentReports(@RequestParam String staffId,
+    public ResponseEntity<?> generateStudentReports(@RequestHeader("staffId") String staffId,
                                                     @RequestParam String levelId,
                                                     @RequestParam String semesterId,
                                                     @RequestParam String promotionGradeId,
                                                     @RequestParam String passScore) {
+        String logData = "Class Id: " + levelId + " Semester Id: " + semesterId + " Promotion Grade Id: " + promotionGradeId +
+                " Pass Score: " + passScore;
+
         Level level = levelRepository.findByLevelID(levelId).orElse(null);
         if (level == null) {
-            return ResponseEntity.badRequest().body("Level not found");
+            loggingService.logActivity("PRINT_RESULTS", logData, staffId, "FAILED");
+            return ResponseEntity.badRequest().body("Selected class not found");
         }
+
         try {
             List<GenerateStudentReport> reportData = reportService.generateClassReports(levelId, semesterId,
                     promotionGradeId);

@@ -7,6 +7,8 @@ import com.codewithben.schoolmanagementsystem.Entity.*;
 import com.codewithben.schoolmanagementsystem.Repository.*;
 import com.codewithben.schoolmanagementsystem.Utility.UtilityClass;
 import jakarta.transaction.Transactional;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -23,32 +25,37 @@ public class LevelService {
 
     private final UtilityClass utilityClass;
 
-    private final StudentsRepository studentsRepository;
-
     private final InstitutiionRepository institutiionRepository;
 
     private final SemesterRepository semesterRepository;
 
+    private final LoggingService loggingService;
+
     public LevelService(StaffsRepository staffsRepository, LevelRepository levelRepository,  UtilityClass utilityClass,
-                        StudentsRepository studentsRepository, InstitutiionRepository institutiionRepository, SemesterRepository semesterRepository) {
+                        InstitutiionRepository institutiionRepository, SemesterRepository semesterRepository,
+                        LoggingService loggingService) {
         this.staffsRepository = staffsRepository;
         this.levelRepository = levelRepository;
         this.utilityClass = utilityClass;
-        this.studentsRepository = studentsRepository;
         this.institutiionRepository = institutiionRepository;
         this.semesterRepository = semesterRepository;
+        this.loggingService = loggingService;
     }
 
     @Transactional
-    public String addNewClass(String className, String staffID) throws Exception {
-        Staffs staffs = staffsRepository.findByStaffId(staffID).orElse(null);
+    public ResponseEntity<?> addNewClass(String className, String instructorId, String staffId) {
+        String logData = "Class Name: " + className + " Instructor Id: " + instructorId;
+
+        Staffs staffs = staffsRepository.findByStaffId(instructorId).orElse(null);
         if (staffs == null) {
-            throw new Exception("Staff not found");
+            loggingService.logActivity("ADD_NEW_CLASS", logData, staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Selected instructor not found");
         }
 
         Institution institution = staffs.getInstitution();
         if (institution == null) {
-            throw new Exception("Institution not found");
+            loggingService.logActivity("ADD_NEW_CLASS", logData, staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Institution not found");
         }
 
         Level level = levelRepository.findByLevelNameAndInstitution_InstitutionId(className, institution.getInstitutionId()).orElse(null);
@@ -72,9 +79,12 @@ public class LevelService {
 
             staffsRepository.save(staffs);
 
-            return "Grade added successfully";
+            loggingService.logActivity("ADD_NEW_CLASS", logData, staffId, "SUCCESS");
+            return ResponseEntity.ok().build();
         }
-        throw new Exception("Level already exists");
+
+        loggingService.logActivity("ADD_NEW_CLASS", logData, staffId, "FAILED");
+        return ResponseEntity.status(HttpStatus.CONFLICT).body("Level already exist");
     }
 
     public List<LevelCaching> loadLevelInfo(String staffId) throws Exception {
@@ -126,11 +136,16 @@ public class LevelService {
         ).collect(Collectors.toList());
     }
 
-    public String addNewSemester(String semesterName, LocalDate startDate, LocalDate endDate,
-                                 String academicYear, String staffId) throws Exception {
+    public ResponseEntity<?> addNewSemester(String semesterName, LocalDate startDate, LocalDate endDate,
+                                         String academicYear, String staffId) {
+
+        String logData = "SemesterName: " + semesterName + " StartDate: " + startDate + " EndDate: " + endDate + " AcademicYear: " + academicYear;
+
         Staffs staffs = staffsRepository.findByStaffId(staffId).orElse(null);
-        if (staffs == null)
-            throw new Exception("Staff not found");
+        if (staffs == null) {
+            loggingService.logActivity("NEW_SEMESTER", logData, staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid Staff id");
+        }
 
         Institution institution = staffs.getInstitution();
 
@@ -152,7 +167,9 @@ public class LevelService {
         semesters.add(semester);
         institution.setSemester(semesters);
         institutiionRepository.save(institution);
-        return "Successfully added semester";
+
+        loggingService.logActivity("NEW_SEMESTER", logData, staffId, "SUCCESS");
+        return ResponseEntity.ok().build();
     }
 
     public List<GradeInformation> loadStaffGrades(String staffId) throws Exception {
@@ -197,37 +214,52 @@ public class LevelService {
         return gradesInformation;
     }
 
-    public FindAndUpdateClassInfo findClassInfo(String levelId) throws Exception {
+    public ResponseEntity<?> findClassInfo(String levelId, String staffId) {
+        String logData = "Level Id: " + levelId;
 
-        Level level = levelRepository.findByLevelID(levelId)
-                .orElseThrow(() -> new Exception("Level not found. Verify entered Id"));
-
-        return new FindAndUpdateClassInfo(
-                level.getLevelID(), level.getLevelName(), level.getStaff().getStaffId()
-        );
-    }
-
-    public String updateClassInfo(FindAndUpdateClassInfo updateInfo) throws Exception {
-        if (updateInfo == null) {
-            throw new Exception("Update info empty");
+        Level level = levelRepository.findByLevelID(levelId).orElse(null);
+        if (level == null) {
+            loggingService.logActivity("FETCH_GRADE_INFO", logData, staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid Level Id");
         }
 
-        Staffs staff = staffsRepository.findByStaffId(updateInfo.getStaffId())
-                .orElseThrow(() -> new Exception("Staff not found"));
+        loggingService.logActivity("FETCH_GRADE_INFO", logData, staffId, "SUCCESS");
+        return ResponseEntity.ok(new FindAndUpdateClassInfo(
+                level.getLevelID(), level.getLevelName(), level.getStaff().getStaffId()
+        ));
+    }
 
-        Level level = levelRepository.findByLevelID(updateInfo.getLevelId())
-                .orElseThrow(() -> new Exception("Level not found"));
+    public ResponseEntity<?> updateClassInfo(FindAndUpdateClassInfo updateInfo, String staffId) {
+        String logData = "Level Id: " + updateInfo.getLevelId() + " Selected Staff Id: " + updateInfo.getStaffId() + " Level Name: " + updateInfo.getLevelName();
+
+        Staffs staff = staffsRepository.findByStaffId(updateInfo.getStaffId()).orElse(null);
+        if (staff == null) {
+            loggingService.logActivity("UPDATE_GRADE_INFO", logData, staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Selected Staff Not Found");
+        }
+
+        Level level = levelRepository.findByLevelID(updateInfo.getLevelId()).orElse(null);
+        if (level == null) {
+            loggingService.logActivity("UPDATE_GRADE_INFO", logData, staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Grade Not Found");
+        }
 
         level.setLevelName(updateInfo.getLevelName());
         level.setStaff(staff);
         levelRepository.save(level);
 
-        return "Grade information updated";
+        loggingService.logActivity("UPDATE_GRADE_INFO", logData, staffId, "SUCCESS");
+        return ResponseEntity.ok().build();
     }
 
-    public FindSemester findSemesterInfo(String semesterId) throws Exception {
-        Semester semester = semesterRepository.findBySemesterID(semesterId)
-                .orElseThrow(() -> new Exception("Semester not found"));
+    public ResponseEntity<?> findSemesterInfo(String semesterId, String staffId) {
+        String logData = "Semester Id: " + semesterId;
+
+        Semester semester = semesterRepository.findBySemesterID(semesterId).orElse(null);
+        if (semester == null) {
+            loggingService.logActivity("FIND_SEMESTER", logData, staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Semester not found");
+        }
 
         FindSemester findSemester = new FindSemester();
         findSemester.setSemesterID(semesterId);
@@ -236,13 +268,20 @@ public class LevelService {
         findSemester.setSemesterEndDate(semester.getSemesterEndDate().toString());
         findSemester.setAcademicYear(semester.getAcademicYear());
 
-        return findSemester;
-
+        loggingService.logActivity("FIND_SEMESTER", logData, staffId, "SUCCESS");
+        return ResponseEntity.ok(findSemester);
     }
 
-    public String updateSemesterInfo(FindSemester updateInfo) throws Exception {
-        Semester semester = semesterRepository.findBySemesterID(updateInfo.getSemesterID())
-                .orElseThrow(() -> new Exception("Semester not found"));
+    public ResponseEntity<?> updateSemesterInfo(FindSemester updateInfo, String staffId) {
+        String logData = "Semester Id: " + updateInfo.getSemesterID() + " Semester Name: " + updateInfo.getSemesterName() +
+                " Semester start: " + updateInfo.getSemesterStartDate() + " Semester End: " + updateInfo.getSemesterEndDate() +
+                " Academic Year: " + updateInfo.getAcademicYear();
+
+        Semester semester = semesterRepository.findBySemesterID(updateInfo.getSemesterID()).orElse(null);
+        if (semester == null) {
+            loggingService.logActivity("UPDATE_SEMESTER", logData, staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Semester do not exist");
+        }
 
         semester.setSemesterName(updateInfo.getSemesterName());
         semester.setSemesterStartDate(LocalDate.parse(updateInfo.getSemesterStartDate()));
@@ -250,7 +289,8 @@ public class LevelService {
         semester.setAcademicYear(updateInfo.getAcademicYear());
         semesterRepository.save(semester);
 
-        return "Semester information updated";
+        loggingService.logActivity("UPDATE_SEMESTER", logData, staffId, "SUCCESS");
+        return ResponseEntity.ok().build();
     }
 
     public List<SubjectsHolder> getLevelSubjects(String levelId) throws Exception {
