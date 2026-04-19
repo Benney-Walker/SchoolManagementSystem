@@ -17,7 +17,10 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<?> handleBadCredentials() {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body("Invalid ID or password");
+                .body(Map.of(
+                        "status", 401,
+                        "message", "Invalid ID or password"
+                ));
     }
 
     @ExceptionHandler(Exception.class)
@@ -30,8 +33,8 @@ public class GlobalExceptionHandler {
 
         error.put("timestamp", LocalDateTime.now());
         error.put("status", 500);
-        error.put("error", "Internal Server Error. Contact developer");
-        error.put("message", ex.getMessage());
+        error.put("error", ex.getMessage());
+        error.put("message", "Internal Server Error. Try again");
         error.put("path", request.getRequestURI());
 
         return ResponseEntity.status(500).body(error);
