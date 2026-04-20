@@ -1,5 +1,6 @@
 package com.codewithben.schoolmanagementsystem.Service;
 
+import com.codewithben.schoolmanagementsystem.Contants.LogType;
 import com.codewithben.schoolmanagementsystem.DTO.Academics.GradingCriteria;
 import com.codewithben.schoolmanagementsystem.Entity.GradeSystem;
 import com.codewithben.schoolmanagementsystem.Entity.Institution;
@@ -43,11 +44,11 @@ public class InstitutionService {
             institution.setInstitutionName(institutionName);
             institutiionRepository.save(institution);
 
-            loggingService.logActivity("SUBSCRIPTION", logData, "N/A", "SUCCESS");
+            loggingService.logActivity(LogType.SUBSCRIPTION, logData, "N/A", "SUCCESS");
             return ResponseEntity.ok(id);
         }
 
-        loggingService.logActivity("SUBSCRIPTION", logData, "N/A", "FAILED");
+        loggingService.logActivity(LogType.SUBSCRIPTION, logData, "N/A", "FAILED");
         return ResponseEntity.status(HttpStatus.CONFLICT).body("Institution already exist");
     }
 
@@ -57,7 +58,7 @@ public class InstitutionService {
 
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if(staff == null){
-            loggingService.logActivity("ADD_GRADING_CRITERIA", logData, staffId, "FAILED");
+            loggingService.logActivity(LogType.ADD_GRADING_CRITERIA, logData, staffId, "FAILED");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid Staff id");
         }
 
@@ -71,7 +72,7 @@ public class InstitutionService {
         gradeSystem.setInstitution(institution);
         gradeSystemRepository.save(gradeSystem);
 
-        loggingService.logActivity("ADD_GRADING_CRITERIA", logData, staffId, "SUCCESS");
+        loggingService.logActivity(LogType.ADD_GRADING_CRITERIA, logData, staffId, "SUCCESS");
         return ResponseEntity.ok().build();
     }
 }
