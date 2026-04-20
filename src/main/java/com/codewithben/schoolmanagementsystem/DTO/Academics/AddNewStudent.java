@@ -19,10 +19,8 @@ public class AddNewStudent {
 
     private String levelId;
 
-    private String staffId;
-
     public AddNewStudent(String firstName, String lastName, String gender, LocalDate dateOfBirth, String hometown, String parentName,
-                         String guardianContact, String levelId, String staffId) {
+                         String guardianContact, String levelId) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.gender = gender;
@@ -31,7 +29,6 @@ public class AddNewStudent {
         this.parentName = parentName;
         this.guardianContact = guardianContact;
         this.levelId = levelId;
-        this.staffId = staffId;
     }
 
     public String getFirstName() {
@@ -96,13 +93,5 @@ public class AddNewStudent {
 
     public void setLevelId(String level) {
         this.levelId = level;
-    }
-
-    public String getStaffId() {
-        return staffId;
-    }
-
-    public void setStaffId(String staffId) {
-        this.staffId = staffId;
     }
 }
