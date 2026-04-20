@@ -1,5 +1,6 @@
 package com.codewithben.schoolmanagementsystem.Utility;
 
+import com.codewithben.schoolmanagementsystem.Contants.StudentStatus;
 import com.codewithben.schoolmanagementsystem.Entity.*;
 import com.codewithben.schoolmanagementsystem.Repository.EntityID_generationRepository;
 import com.codewithben.schoolmanagementsystem.Repository.GradeSystemRepository;
@@ -220,5 +221,15 @@ public class UtilityClass {
         DayOfWeek day = date.getDayOfWeek();
 
         return day != DayOfWeek.SATURDAY && day != DayOfWeek.SUNDAY;
+    }
+
+    public List<Students> getActiveStudents(List<Students> students) {
+        List<Students> studentsListForReport = new ArrayList<>();
+        for (Students student: students) {
+            if (student.getStudentStatus() == StudentStatus.ACTIVE) {
+                studentsListForReport.add(student);
+            }
+        }
+        return studentsListForReport;
     }
 }
