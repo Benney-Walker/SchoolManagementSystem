@@ -15,7 +15,7 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
             String levelId, LocalDate dateMarked
     );
 
-    List<Attendance> findByStatusAndDateMarkedAndInstitution_InstitutionId(
+    List<Attendance> findByStatusAndDateMarkedAndLevel_levelId(
             AttendanceStatus status, LocalDate dateMarked, String institutionId
     );
 
