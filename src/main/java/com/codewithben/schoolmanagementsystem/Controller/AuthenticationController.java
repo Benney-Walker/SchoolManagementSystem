@@ -1,5 +1,6 @@
 package com.codewithben.schoolmanagementsystem.Controller;
 
+import com.codewithben.schoolmanagementsystem.Contants.LogType;
 import com.codewithben.schoolmanagementsystem.DTO.Institution.InstitutionRegistrationDTO;
 import com.codewithben.schoolmanagementsystem.DTO.Institution.EnrollNewStaffDTO;
 import com.codewithben.schoolmanagementsystem.DTO.Institution.LoginRequest;
@@ -55,7 +56,7 @@ public class AuthenticationController {
 
         if (!data.getSubscriptionCode().equals(subscriptionCode)) {
 
-            loggingService.logActivity("SUBSCRIPTION", logData, "N/A", "FAILED");
+            loggingService.logActivity(LogType.SUBSCRIPTION, logData, "N/A", "FAILED");
             return ResponseEntity.ok(Map.of(
                     "status", "failed",
                     "message", "Invalid subscriptionCode"
@@ -89,7 +90,7 @@ public class AuthenticationController {
         Institution institution = institutiionRepository.findByInstitutionId(institutionID).orElse(null);
         if (institution == null) {
 
-            loggingService.logActivity("STAFF_ENROLLMENT", logData, "N/A", "FAILED");
+            loggingService.logActivity(LogType.STAFF_ENROLLMENT, logData, "N/A", "FAILED");
             return ResponseEntity.status(HttpStatus.CONFLICT).body("Invalid institution Id");
         }
 

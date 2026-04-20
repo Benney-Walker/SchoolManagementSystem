@@ -1,5 +1,6 @@
 package com.codewithben.schoolmanagementsystem.Controller;
 
+import com.codewithben.schoolmanagementsystem.Contants.LogType;
 import com.codewithben.schoolmanagementsystem.DTO.Academics.*;
 import com.codewithben.schoolmanagementsystem.DTO.Institution.AddNewSemester;
 import com.codewithben.schoolmanagementsystem.DTO.Institution.FindAndUpdateClassInfo;
@@ -157,7 +158,7 @@ public class AdminController {
 
         Level level = levelRepository.findByLevelID(levelId).orElse(null);
         if (level == null) {
-            loggingService.logActivity("PRINT_RESULTS", logData, staffId, "FAILED");
+            loggingService.logActivity(LogType.RESULTS, logData, staffId, "FAILED");
             return ResponseEntity.badRequest().body("Selected class not found");
         }
 

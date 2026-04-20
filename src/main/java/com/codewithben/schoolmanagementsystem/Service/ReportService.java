@@ -71,7 +71,7 @@ public class ReportService {
         }
 
         //Get student list for report
-        List<Students> studentsListForReport = getActiveStudents(level.getStudents());
+        List<Students> studentsListForReport = utilityClass.getActiveStudents(level.getStudents());
         String classSize = String.valueOf(studentsListForReport.size());
 
         List<Subjects> levelSubjects = level.getSubjects();
@@ -158,7 +158,7 @@ public class ReportService {
         }
 
         //Get student list for report
-        List<Students> studentsListForReport = getActiveStudents(level.getStudents());
+        List<Students> studentsListForReport = utilityClass.getActiveStudents(level.getStudents());
         String classSize = String.valueOf(studentsListForReport.size());
 
         for (Students student: studentsListForReport) {
@@ -252,16 +252,6 @@ public class ReportService {
                 .orElse(null);
     }
 
-    private List<Students> getActiveStudents(List<Students> students) {
-        List<Students> studentsListForReport = new ArrayList<>();
-        for (Students student: students) {
-            if (student.getStudentStatus() == StudentStatus.ACTIVE) {
-                studentsListForReport.add(student);
-            }
-        }
-        return studentsListForReport;
-    }
-
     public ResponseEntity<?> movePassedStudents(String levelId, String staffId) {
         String logData = "Level Id: " + levelId;
 
@@ -285,7 +275,7 @@ public class ReportService {
 
         String semesterId = utilityClass.getCurrentSemesterId(level.getInstitution().getInstitutionId());
 
-        List<Students> students = getActiveStudents(level.getStudents());
+        List<Students> students = utilityClass.getActiveStudents(level.getStudents());
         int count = 0;
         for (Students student: students) {
             Results result = resultsRepository.findByStudent_StudentIdAndSemester_SemesterIDAndLevel_LevelID(
