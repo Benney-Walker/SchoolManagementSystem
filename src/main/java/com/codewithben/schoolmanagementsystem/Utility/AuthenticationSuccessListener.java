@@ -1,5 +1,6 @@
 package com.codewithben.schoolmanagementsystem.Utility;
 
+import com.codewithben.schoolmanagementsystem.Contants.LogType;
 import com.codewithben.schoolmanagementsystem.Service.LoggingService;
 import org.springframework.context.ApplicationListener;
 import org.springframework.security.authentication.event.AuthenticationSuccessEvent;
@@ -20,7 +21,7 @@ public class AuthenticationSuccessListener implements ApplicationListener<Authen
         Authentication auth = event.getAuthentication();
 
         loggingService.logActivity(
-                "LOGIN",
+                LogType.LOGIN,
                 "N/A",
                 auth.getName(),
                 "SUCCESS"
