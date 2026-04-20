@@ -3,16 +3,13 @@ package com.codewithben.schoolmanagementsystem.DTO.Academics;
 public class Attendance {
     private String levelId;
 
-    private String staffId;
-
     private String studentId;
 
     private String status;
 
-    public Attendance(String studentId, String levelId, String staffId, String status) {
+    public Attendance(String studentId, String levelId, String status) {
         this.studentId = studentId;
         this.levelId = levelId;
-        this.staffId = staffId;
         this.status = status;
     }
 
@@ -30,14 +27,6 @@ public class Attendance {
 
     public void setLevelId(String levelId) {
         this.levelId = levelId;
-    }
-
-    public String getStaffId() {
-        return staffId;
-    }
-
-    public void setStaffId(String staffId) {
-        this.staffId = staffId;
     }
 
     public String getStatus() {

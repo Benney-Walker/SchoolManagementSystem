@@ -1,6 +1,6 @@
 package com.codewithben.schoolmanagementsystem.Service;
 
-import com.codewithben.schoolmanagementsystem.Contants.AttendanceStatus;
+import com.codewithben.schoolmanagementsystem.Contants.LogType;
 import com.codewithben.schoolmanagementsystem.Contants.StudentStatus;
 import com.codewithben.schoolmanagementsystem.DTO.Academics.GenerateStudentReport;
 import com.codewithben.schoolmanagementsystem.DTO.Academics.SubjectReportDTO;
@@ -9,6 +9,9 @@ import com.codewithben.schoolmanagementsystem.DTO.Academics.ViewStudentsSubjects
 import com.codewithben.schoolmanagementsystem.Entity.*;
 import com.codewithben.schoolmanagementsystem.Repository.*;
 import com.codewithben.schoolmanagementsystem.Utility.UtilityClass;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -34,10 +37,12 @@ public class ReportService {
 
     private final UtilityClass utilityClass;
 
+    private final LoggingService loggingService;
+
     public ReportService(StudentsRepository studentsRepository, ResultsRepository resultsRepository,
                          LevelRepository levelRepository, SemesterRepository semesterRepository,
                          AttendanceRepository attendanceRepository, SubjectScoreRepository subjectScoreRepository,
-                         PromotionCriteriaRepository promoCriRepository, UtilityClass utilityClass) {
+                         PromotionCriteriaRepository promoCriRepository, UtilityClass utilityClass, LoggingService loggingService) {
         this.studentsRepository = studentsRepository;
         this.resultsRepository = resultsRepository;
         this.levelRepository = levelRepository;
@@ -46,34 +51,45 @@ public class ReportService {
         this.subjectScoreRepository = subjectScoreRepository;
         this.promoCriRepository = promoCriRepository;
         this.utilityClass = utilityClass;
+        this.loggingService = loggingService;
     }
 
-    public List<ViewClassSemesterReport> viewClassSemesterReport(String levelId, String semesterId) throws Exception {
-        List<ViewClassSemesterReport> viewClassSemesterReports = new ArrayList<>();
+    public ResponseEntity<?> viewClassSemesterReport(String levelId, String semesterId, String staffId) {
+        String logData = "Class Id: " + levelId + " semester Id: " + semesterId;
 
         //This finds the level and the semester with their IDs
-        Level level = levelRepository.findByLevelID(levelId)
-                .orElseThrow(() -> new Exception("Level Not Found"));
-        Semester semester = semesterRepository.findBySemesterID(semesterId)
-                .orElseThrow(()-> new Exception("Semester not found"));
+        Level level = levelRepository.findByLevelID(levelId).orElse(null);
+        if (level == null) {
+            loggingService.logActivity(LogType.RESULTS, logData, staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Selected class not found");
+        }
+
+        Semester semester = semesterRepository.findBySemesterID(semesterId).orElse(null);
+        if (semester == null) {
+            loggingService.logActivity(LogType.RESULTS, logData, staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Selected semester not found");
+        }
 
         //Get student list for report
-        List<Students> studentsListForReport = checkStudentStatus(level.getStudents());
+        List<Students> studentsListForReport = getActiveStudents(level.getStudents());
         String classSize = String.valueOf(studentsListForReport.size());
 
+        List<Subjects> levelSubjects = level.getSubjects();
+
+        List<ViewClassSemesterReport> viewClassSemesterReports = new ArrayList<>();
         for (Students student : studentsListForReport) {
             //Check if the results is complete else stop the whole operation and throw an exception "Class results not complete"
-            Results results = resultsRepository
-                    .findByStudentAndSemester(student, semester)
-                    .orElseThrow(()-> new Exception(
-                            student.getFirstName() + "'s result not created"));
+            Results results = resultsRepository.findByStudentAndSemester(student, semester).orElse(null);
+            if (results == null){
+                loggingService.logActivity(LogType.RESULTS, logData, staffId, "FAILED");
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(student.getFirstName() + "'s result not created");
+            }
 
             //Check if all subjects scores are uploaded else throw an exception and cancel the whole operation
-            List<Subjects> levelSubjects = level.getSubjects();
-            List<SubjectScore> expectedSubjectsScores = subjectScoreRepository
-                    .findByResults_ResultId(results.getResultId());
-            if (expectedSubjectsScores.size() != levelSubjects.size()) {
-                throw new Exception("Not all subject scores are added");
+            List<SubjectScore> subjectScores = results.getSubjectScores();
+            if (subjectScores.size() != levelSubjects.size()) {
+                loggingService.logActivity(LogType.RESULTS, logData, staffId, "FAILED");
+                return ResponseEntity.status(HttpStatus.CONFLICT).body("Not all subjects are uploaded");
             }
 
             //Get results parameters
@@ -85,25 +101,7 @@ public class ReportService {
             String averageScore = results.getAverageScore().toString();
             String position = results.getPosition();
 
-            List<ViewStudentsSubjectsResults> subScoresValues = new ArrayList<>();
-
-            List<SubjectScore> subjectScores = results.getSubjectScores();
-            for (SubjectScore subjectScore: subjectScores) {
-                ViewStudentsSubjectsResults scores = new ViewStudentsSubjectsResults();
-                scores.setSubjectName(subjectScore.getSubject().getSubjectName());
-                scores.setExercise1Score(String.valueOf(subjectScore.getExercise1Score()));
-                scores.setClassTestScore(String.valueOf(subjectScore.getClassTestScore()));
-                scores.setExercise2Score(String.valueOf(subjectScore.getExercise2Score()));
-                scores.setProjectScore(String.valueOf(subjectScore.getProjectScore()));
-                scores.setClassScore(String.valueOf(subjectScore.getClassScore()));
-                scores.setExamScore(String.valueOf(subjectScore.getExamScore()));
-                scores.setCalculatedExamScore(String.valueOf(subjectScore.getCalculatedExamScore()));
-                scores.setTotal(String.valueOf(subjectScore.getTotalScore()));
-                scores.setGrade(String.valueOf(subjectScore.getGrade()));
-                scores.setDescription(subjectScore.getRemarks());
-
-                subScoresValues.add(scores);
-            }
+            List<ViewStudentsSubjectsResults> subScoresValues = getResultsSubjectScores(subjectScores);
 
             ViewClassSemesterReport classReport = new ViewClassSemesterReport(
                     studentId, studentName, levelName,
@@ -114,7 +112,29 @@ public class ReportService {
             viewClassSemesterReports.add(classReport);
         }
 
-        return viewClassSemesterReports;
+        return ResponseEntity.ok(viewClassSemesterReports);
+    }
+
+    private List<ViewStudentsSubjectsResults> getResultsSubjectScores(List<SubjectScore> subjectScores) {
+        List<ViewStudentsSubjectsResults> subScoresValues = new ArrayList<>();
+
+        for (SubjectScore subjectScore: subjectScores) {
+            ViewStudentsSubjectsResults scores = new ViewStudentsSubjectsResults();
+            scores.setSubjectName(subjectScore.getSubject().getSubjectName());
+            scores.setExercise1Score(String.valueOf(subjectScore.getExercise1Score()));
+            scores.setClassTestScore(String.valueOf(subjectScore.getClassTestScore()));
+            scores.setExercise2Score(String.valueOf(subjectScore.getExercise2Score()));
+            scores.setProjectScore(String.valueOf(subjectScore.getProjectScore()));
+            scores.setClassScore(String.valueOf(subjectScore.getClassScore()));
+            scores.setExamScore(String.valueOf(subjectScore.getExamScore()));
+            scores.setCalculatedExamScore(String.valueOf(subjectScore.getCalculatedExamScore()));
+            scores.setTotal(String.valueOf(subjectScore.getTotalScore()));
+            scores.setGrade(String.valueOf(subjectScore.getGrade()));
+            scores.setDescription(subjectScore.getRemarks());
+
+            subScoresValues.add(scores);
+        }
+        return subScoresValues;
     }
 
     public List<GenerateStudentReport> generateClassReports(String levelId, String semesterId,
@@ -138,7 +158,7 @@ public class ReportService {
         }
 
         //Get student list for report
-        List<Students> studentsListForReport = checkStudentStatus(level.getStudents());
+        List<Students> studentsListForReport = getActiveStudents(level.getStudents());
         String classSize = String.valueOf(studentsListForReport.size());
 
         for (Students student: studentsListForReport) {
@@ -232,7 +252,7 @@ public class ReportService {
                 .orElse(null);
     }
 
-    private List<Students> checkStudentStatus(List<Students> students) {
+    private List<Students> getActiveStudents(List<Students> students) {
         List<Students> studentsListForReport = new ArrayList<>();
         for (Students student: students) {
             if (student.getStudentStatus() == StudentStatus.ACTIVE) {
@@ -242,26 +262,41 @@ public class ReportService {
         return studentsListForReport;
     }
 
-    public String movePassedStudents(String levelId) throws Exception{
-        Level level = levelRepository.findByLevelID(levelId)
-                .orElseThrow( () -> new Exception("Level Not Found"));
+    public ResponseEntity<?> movePassedStudents(String levelId, String staffId) {
+        String logData = "Level Id: " + levelId;
 
-        PromotionCriteria criteria = promoCriRepository.findByLevelId(levelId)
-                .orElseThrow(() -> new Exception("Level Not Found"));
+        Level level = levelRepository.findByLevelID(levelId).orElse(null);
+        if (level == null) {
+            loggingService.logActivity(LogType.PROMOTION, logData, staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Class not found");
+        }
 
-        Level nextLevel = levelRepository.findByLevelID(criteria.getLevelId())
-                .orElseThrow(()-> new Exception("Next level not found"));
+        PromotionCriteria criteria = promoCriRepository.findByLevelId(levelId).orElse(null);
+        if (criteria == null) {
+            loggingService.logActivity(LogType.PROMOTION, logData, staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("Promotion criteria not set for this class");
+        }
+
+        Level nextLevel = levelRepository.findByLevelID(criteria.getLevelId()).orElse(null);
+        if (nextLevel == null) {
+            loggingService.logActivity(LogType.PROMOTION, logData, staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("Promotion grade not found");
+        }
 
         String semesterId = utilityClass.getCurrentSemesterId(level.getInstitution().getInstitutionId());
 
-        List<Students> students = level.getStudents();
+        List<Students> students = getActiveStudents(level.getStudents());
         int count = 0;
         for (Students student: students) {
             Results result = resultsRepository.findByStudent_StudentIdAndSemester_SemesterIDAndLevel_LevelID(
                     student.getStudentId(),
                     semesterId,
                     level.getLevelID()
-            ).orElseThrow(()-> new Exception("Student " + student.getStudentId() + "result not found"));
+            ).orElse(null);
+            if (result == null) {
+                loggingService.logActivity(LogType.PROMOTION, logData, staffId, "FAILED");
+                return ResponseEntity.status(HttpStatus.CONFLICT).body("Student " + student.getStudentId() + "result not found");
+            }
 
             if (result.getTotalScore() >= criteria.getTotalPassScore()) {
                 student.setLevel(nextLevel);
@@ -270,6 +305,6 @@ public class ReportService {
             }
         }
 
-        return count + "Students passed to " + nextLevel.getLevelName();
+        return ResponseEntity.ok(count + "Students passed to " + nextLevel.getLevelName());
     }
 }

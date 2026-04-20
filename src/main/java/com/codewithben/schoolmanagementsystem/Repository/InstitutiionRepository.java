@@ -8,4 +8,6 @@ import java.util.Optional;
 
 public interface InstitutiionRepository extends JpaRepository<Institution, Long> {
     Optional<Institution> findByInstitutionId(String institutionId);
+
+    Optional<Institution> findByInstitutionName(String institutionName);
 }

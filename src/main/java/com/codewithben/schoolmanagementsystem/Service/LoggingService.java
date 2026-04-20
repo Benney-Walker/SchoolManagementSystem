@@ -25,14 +25,14 @@ public class LoggingService {
         this.staffsRepository = staffsRepository;
     }
 
-    public void logActivity(String actionType, String actionData, String staffId, String status) {
+    public void logActivity(LogType actionType, String actionData, String staffId, String status) {
 
         try {
             Logs log = new Logs();
 
             log.setActionId(utilityClass.generateEntityId("LOG"));
             log.setActionTime(LocalDateTime.now());
-            log.setActionType(LogType.valueOf(actionType));
+            log.setActionType(actionType);
             log.setActionData(actionData);
             log.setCreatedBy(staffId);
             log.setStatus(LogStatus.valueOf(status));

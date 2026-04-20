@@ -7,6 +7,7 @@ import com.codewithben.schoolmanagementsystem.Repository.InstitutiionRepository;
 import com.codewithben.schoolmanagementsystem.Repository.ResultsRepository;
 import org.springframework.stereotype.Component;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -215,5 +216,9 @@ public class UtilityClass {
         }
     }
 
+    public boolean isSchoolDay(LocalDate date) {
+        DayOfWeek day = date.getDayOfWeek();
 
+        return day != DayOfWeek.SATURDAY && day != DayOfWeek.SUNDAY;
+    }
 }

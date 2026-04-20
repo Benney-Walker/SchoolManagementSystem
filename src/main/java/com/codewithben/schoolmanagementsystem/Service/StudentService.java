@@ -1,6 +1,7 @@
 package com.codewithben.schoolmanagementsystem.Service;
 
 import com.codewithben.schoolmanagementsystem.Contants.AttendanceStatus;
+import com.codewithben.schoolmanagementsystem.Contants.LogType;
 import com.codewithben.schoolmanagementsystem.Contants.StudentStatus;
 import com.codewithben.schoolmanagementsystem.DTO.Academics.*;
 import com.codewithben.schoolmanagementsystem.DTO.Institution.StudentAttendance;
@@ -11,12 +12,15 @@ import com.codewithben.schoolmanagementsystem.Entity.Attendance;
 import com.codewithben.schoolmanagementsystem.Repository.*;
 import com.codewithben.schoolmanagementsystem.Utility.UtilityClass;
 import jakarta.transaction.Transactional;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -43,10 +47,12 @@ public class StudentService {
 
     private final AttendanceRepository attendanceRepository;
 
+    private final LoggingService loggingService;
+
     public StudentService(StaffsRepository staffsRepository, LevelRepository levelRepository, StudentsRepository studentsRepository,
                           UtilityClass utilityClass, SubjectsRepository subjectsRepository, SemesterRepository semesterRepository,
                           ResultsRepository resultsRepository, InstitutiionRepository institutionRepository, SubjectScoreRepository subjectScoreRepository,
-                          GradeSystemRepository gradeSystemRepository,  AttendanceRepository attendanceRepository) {
+                          GradeSystemRepository gradeSystemRepository,  AttendanceRepository attendanceRepository, LoggingService loggingService) {
         this.staffsRepository = staffsRepository;
         this.levelRepository = levelRepository;
         this.studentsRepository = studentsRepository;
@@ -58,6 +64,7 @@ public class StudentService {
         this.subjectScoreRepository = subjectScoreRepository;
         this.gradeSystemRepository = gradeSystemRepository;
         this.attendanceRepository = attendanceRepository;
+        this.loggingService = loggingService;
     }
 
     //Method for adding new student
@@ -445,7 +452,7 @@ public class StudentService {
         return new SubjectScores(subjectName, subjectId, subjectStudents);
     }
 
-    public List<StudentListPrint> getLevelStudents(String levelId) throws Exception {
+    /*public List<StudentListPrint> getLevelStudents(String levelId) throws Exception {
         Level level = levelRepository.findByLevelID(levelId)
                 .orElseThrow(() -> new Exception("Level Not Found"));
 
@@ -462,7 +469,7 @@ public class StudentService {
                     return new StudentListPrint(studentId, fullName);
                 }
         ).collect(Collectors.toList());
-    }
+    }*/
 
     public List<StudentAttendance> loadStudentForAttendance(String levelId, String attendanceDate) throws Exception {
         List<StudentAttendance> attendanceList = new ArrayList<>();
@@ -536,85 +543,78 @@ public class StudentService {
         return attendanceList;
     }
 
-    public String markStudentAttendance(String studentId, String staffId, String levelId,
-                                        String status) throws Exception {
+    public ResponseEntity<?> markStudentAttendance(String studentId, String levelId, String status, String staffId) {
+        String logData = "Student Id: " + studentId + " levelId: " + " status: " + status;
 
-        Students student = studentsRepository.findByStudentId(studentId)
-                .orElseThrow(() -> new Exception("Student Not Found"));
+        //Check if date is not weekends
+        if (!utilityClass.isSchoolDay(LocalDate.now())) {
+            loggingService.logActivity(LogType.ATTENDANCE, logData, staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                    "message", "Attendance can't be marked on weekends"
+            ));
+        }
 
-        Institution institution = student.getInstitution();
+        Students student = studentsRepository.findByStudentId(studentId).orElse(null);
+        if (student == null) {
+            loggingService.logActivity(LogType.ATTENDANCE, logData, staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Student not found"
+            ));
+        }
+
+        Level level = levelRepository.findByLevelID(levelId).orElse(null);
+        if (level == null) {
+            loggingService.logActivity(LogType.ATTENDANCE, logData, staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Class not found"
+            ));
+        }
 
         String currentSemesterId = utilityClass.getCurrentSemesterId(
                 student.getInstitution().getInstitutionId()
         );
+        Semester semester = semesterRepository.findBySemesterID(currentSemesterId).orElse(null);
+        if (semester == null) {
+            loggingService.logActivity(LogType.ATTENDANCE, logData, staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                    "message", "Internal server error! Please try again"
+            ));
+        }
 
-        Attendance markedAttendance = attendanceRepository
-                .findByStudent_StudentIdAndDateMarked(
+        Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
+        if (staff == null) {
+            loggingService.logActivity(LogType.ATTENDANCE, logData, staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                    "message", "Server error! Please try again"
+            ));
+        }
+
+        Attendance todaysAttendance = attendanceRepository.findByStudent_StudentIdAndDateMarked(
                         studentId, LocalDate.now()
                 ).orElse(null);
-        if (markedAttendance != null) {
-            return "marked";
-        }
+        if (todaysAttendance == null) {
+            todaysAttendance = new Attendance();
+            todaysAttendance.setStudent(student);
+            todaysAttendance.setSemester(semester);
+            todaysAttendance.setLevel(level);
+            todaysAttendance.setDateMarked(LocalDate.now());
+            todaysAttendance.setMarkedBy(staff);
 
-
-        Level level = levelRepository.findByLevelID(levelId)
-                .orElseThrow(() -> new Exception("Level Not Found"));
-
-        Semester semester = semesterRepository
-                .findBySemesterID(currentSemesterId).orElseThrow(() -> new Exception("Semester Not Found"));
-
-        Staffs staff = staffsRepository.findByStaffId(staffId)
-                .orElseThrow(() -> new Exception("Staff Not Found"));
-
-
-        Attendance attendance = new Attendance();
-        attendance.setStudent(student);
-        attendance.setSemester(semester);
-        attendance.setLevel(level);
-        attendance.setDateMarked(LocalDate.now());
-        attendance.setStatus(AttendanceStatus.valueOf(status));
-        attendance.setMarkedBy(staff);
-        attendance.setInstitution(institution);
-        attendanceRepository.save(attendance);
-
-        List<Attendance> studentAttendance = student.getAttendance();
-        if (studentAttendance == null || studentAttendance.isEmpty()) {
-            studentAttendance = new ArrayList<>();
-        }
-        studentAttendance.add(attendance);
-        studentsRepository.save(student);
-
-        return "success";
-    }
-
-    public String updateStudentAttendance(String studentId, String staffId, String levelId, String status,
-                                          LocalDate dateMarked) throws Exception {
-        if (dateMarked.isBefore(LocalDate.now())) {
-            throw new Exception("You can't update previous attendance");
-        }
-
-        Staffs staff = staffsRepository.findByStaffId(staffId)
-                .orElseThrow(() -> new Exception("Staff Not Found"));
-
-        List<Attendance> markedAttendance = attendanceRepository
-                .findByLevel_LevelIDAndDateMarked(
-                        levelId, LocalDate.now()
-                );
-
-        if (markedAttendance == null) {
-            throw new Exception("Today's attendance not marked");
-        }
-
-        for (Attendance attendance : markedAttendance) {
-            if (attendance.getStudent().getStudentId().equals(studentId)) {
-                attendance.setStatus(AttendanceStatus.valueOf(status));
-                attendance.setMarkedBy(staff);
-                attendanceRepository.save(attendance);
+            List<Attendance> studentAttendance = student.getAttendance();
+            if (studentAttendance == null || studentAttendance.isEmpty()) {
+                studentAttendance = new ArrayList<>();
             }
+            studentAttendance.add(todaysAttendance);
+            studentsRepository.save(student);
         }
 
-        return "success";
+        todaysAttendance.setStatus(AttendanceStatus.valueOf(status));
+        attendanceRepository.save(todaysAttendance);
+
+        loggingService.logActivity(LogType.ATTENDANCE, logData, staffId, "SUCCESS");
+        return ResponseEntity.ok().build();
     }
+
 
     public List<StudentsHolder> getGradeStudents(String levelId) throws Exception {
         Level level = levelRepository.findByLevelID(levelId)

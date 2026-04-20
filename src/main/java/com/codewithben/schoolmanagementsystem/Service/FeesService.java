@@ -1,5 +1,6 @@
 package com.codewithben.schoolmanagementsystem.Service;
 
+import com.codewithben.schoolmanagementsystem.Contants.LogType;
 import com.codewithben.schoolmanagementsystem.Contants.StudentStatus;
 import com.codewithben.schoolmanagementsystem.DTO.Account.*;
 import com.codewithben.schoolmanagementsystem.DTO.Institution.FetchFeesDetails;
@@ -7,6 +8,7 @@ import com.codewithben.schoolmanagementsystem.Entity.*;
 import com.codewithben.schoolmanagementsystem.Repository.*;
 import com.codewithben.schoolmanagementsystem.Utility.UtilityClass;
 import jakarta.transaction.Transactional;
+import org.apache.juli.logging.Log;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -55,7 +57,7 @@ public class FeesService {
 
         Students student = studentsRepository.findByStudentId(studentId).orElse(null);
         if (student == null) {
-            loggingService.logActivity("FETCH_PAYMENT", logData, staffId, "FAILED");
+            loggingService.logActivity(LogType.FETCH_PAYMENT_RECORD, logData, staffId, "FAILED");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Student not found");
         }
 
@@ -63,13 +65,13 @@ public class FeesService {
                 semesterId, levelId
         ).orElse(null);
         if (fees == null) {
-            loggingService.logActivity("FETCH_PAYMENT", logData, staffId, "FAILED");
+            loggingService.logActivity(LogType.FETCH_PAYMENT_RECORD, logData, staffId, "FAILED");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Fees not found");
         }
 
         List<FeesReport> feesReports = feesReportRepository.findByStudent_StudentIdAndFees_FeesId(studentId, fees.getFeesId());
         if (feesReports == null || feesReports.isEmpty()) {
-            loggingService.logActivity("FETCH_PAYMENT", logData, staffId, "FAILED");
+            loggingService.logActivity(LogType.FETCH_PAYMENT_RECORD, logData, staffId, "FAILED");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No records found");
         }
 
@@ -118,13 +120,13 @@ public class FeesService {
         String logData = "studentId: " + studentId + ", semesterId: " + semesterId + ", levelId: " + levelId;
         Students student = studentsRepository.findByStudentId(studentId).orElse(null);
         if (student == null) {
-            loggingService.logActivity("FETCH_RECORDS", logData, staffId, "FAILED");
+            loggingService.logActivity(LogType.FETCH_PAYMENT_RECORD, logData, staffId, "FAILED");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Student not found");
         }
 
         Level level = levelRepository.findByLevelID(levelId).orElse(null);
         if (level == null) {
-            loggingService.logActivity("FETCH_RECORDS", logData, staffId, "FAILED");
+            loggingService.logActivity(LogType.FETCH_PAYMENT_RECORD, logData, staffId, "FAILED");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Level not found");
         }
 
@@ -132,19 +134,19 @@ public class FeesService {
                 semesterId, levelId
         ).orElse(null);
         if (fees == null) {
-            loggingService.logActivity("FETCH_RECORDS", logData, staffId, "FAILED");
+            loggingService.logActivity(LogType.FETCH_PAYMENT_RECORD, logData, staffId, "FAILED");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Fees not found");
         }
 
         List<FeesReport> feesReports = feesReportRepository.findByStudent_StudentIdAndFees_FeesId(studentId, fees.getFeesId());
         if (feesReports == null || feesReports.isEmpty()) {
-            loggingService.logActivity("FETCH_RECORDS", logData, staffId, "FAILED");
+            loggingService.logActivity(LogType.FETCH_PAYMENT_RECORD, logData, staffId, "FAILED");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No records found");
         }
 
         List<StudentPaymentRecords> studentPaymentRecordsList = getStudentPaymentRecords(feesReports);
 
-        loggingService.logActivity("FETCH_RECORDS", logData, staffId, "FAILED");
+        loggingService.logActivity(LogType.FETCH_PAYMENT_RECORD, logData, staffId, "FAILED");
         return ResponseEntity.ok(studentPaymentRecordsList);
     }
 
@@ -170,7 +172,7 @@ public class FeesService {
 
         FeesReport feesReport = feesReportRepository.findByFeesReportId(update.getPaymentId()).orElse(null);
         if (feesReport == null) {
-            loggingService.logActivity("UPDATE_RECORD", logData, staffId, "FAILED");
+            loggingService.logActivity(LogType.UPDATE_PAYMENT, logData, staffId, "FAILED");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Payment record not found");
         }
 
@@ -189,7 +191,7 @@ public class FeesService {
         feesReport.setFeesBalance(feesBalance);
         feesReportRepository.save(feesReport);
 
-        loggingService.logActivity("FETCH_RECORDS", logData, staffId, "SUCCESS");
+        loggingService.logActivity(LogType.UPDATE_PAYMENT, logData, staffId, "SUCCESS");
         return ResponseEntity.status(HttpStatus.OK).body("Payment record updated successfully");
     }
 
@@ -197,33 +199,33 @@ public class FeesService {
         String logData = "Record Id: " + transactionId;
         FeesReport paymentRecord = feesReportRepository.findByFeesReportId(transactionId).orElse(null);
         if (paymentRecord == null) {
-            loggingService.logActivity("DELETE_RECORD", logData, staffId, "FAILED");
+            loggingService.logActivity(LogType.DELETE_PAYMENT, logData, staffId, "FAILED");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Payment record not found");
         }
 
         feesReportRepository.delete(paymentRecord);
 
-        loggingService.logActivity("DELETE_RECORD", logData, staffId, "SUCCESS");
+        loggingService.logActivity(LogType.DELETE_PAYMENT, logData, staffId, "SUCCESS");
         return ResponseEntity.status(HttpStatus.OK).body("Payment record deleted successfully");
     }
 
     public ResponseEntity<?> loadClassFeesSummary(String staffId) {
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staff == null) {
-            loggingService.logActivity("FETCH_PAYMENTS_REPORT", "N/A", staffId, "FAILED");
+            loggingService.logActivity(LogType.FETCH_PAYMENTS_REPORTS, "N/A", staffId, "FAILED");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid staff id");
         }
         //Get institution from staff
         Institution institution = staff.getInstitution();
         if (institution == null) {
-            loggingService.logActivity("FETCH_PAYMENTS_REPORT", "N/A", staffId, "FAILED");
+            loggingService.logActivity(LogType.FETCH_PAYMENTS_REPORTS, "N/A", staffId, "FAILED");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Unknown institution");
         }
 
         //Retrieve all classes
         List<Level> levels = institution.getLevels();
         if (levels == null || levels.isEmpty()) {
-            loggingService.logActivity("FETCH_PAYMENTS_REPORT", "N/A", staffId, "FAILED");
+            loggingService.logActivity(LogType.FETCH_PAYMENTS_REPORTS, "N/A", staffId, "FAILED");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Institution has no grades");
         }
 
@@ -240,7 +242,7 @@ public class FeesService {
             classFeesSummaryList.add(classFeesSummary);
         }
 
-        loggingService.logActivity("FETCH_PAYMENTS_REPORT", "N/A", staffId, "SUCCESS");
+        loggingService.logActivity(LogType.FETCH_PAYMENTS_REPORTS, "N/A", staffId, "SUCCESS");
         return ResponseEntity.ok(classFeesSummaryList);
     }
 
@@ -250,19 +252,19 @@ public class FeesService {
                 semesterId, levelId
         ).orElse(null);
         if (fee == null) {
-            loggingService.logActivity("FETCH_PAYMENTS_REPORT", logData, staffId, "FAILED");
+            loggingService.logActivity(LogType.FETCH_PAYMENTS_REPORTS, logData, staffId, "FAILED");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Semester fees not added");
         }
 
         List<FeesReport> records = fee.getFeesReport();
         if (records == null || records.isEmpty()) {
-            loggingService.logActivity("FETCH_PAYMENT", logData, staffId, "FAILED");
+            loggingService.logActivity(LogType.FETCH_PAYMENTS_REPORTS, logData, staffId, "FAILED");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No records found");
         }
 
         List<Students> levelStudents = fee.getLevel().getStudents();
         if (levelStudents == null || levelStudents.isEmpty()) {
-            loggingService.logActivity("FETCH_PAYMENT", logData, staffId, "FAILED");
+            loggingService.logActivity(LogType.FETCH_PAYMENTS_REPORTS, logData, staffId, "FAILED");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No students found for selected grade");
         }
 
@@ -293,7 +295,7 @@ public class FeesService {
             gradeFeesReportList.add(paymentRecord);
         }
 
-        loggingService.logActivity("FETCH_PAYMENT", logData, staffId, "SUCCESS");
+        loggingService.logActivity(LogType.FETCH_PAYMENTS_REPORTS, logData, staffId, "SUCCESS");
         return ResponseEntity.ok(gradeFeesReportList);
     }
 
@@ -339,19 +341,19 @@ public class FeesService {
 
         Semester semester = semesterRepository.findBySemesterID(semesterId).orElse(null);
         if (semester == null) {
-            loggingService.logActivity("NEW_FEES", logData, staffId, "FAILED");
+            loggingService.logActivity(LogType.NEW_FEES, logData, staffId, "FAILED");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Semester Not Found");
         }
 
         Level level = levelRepository.findByLevelID(levelID).orElse(null);
         if (level == null) {
-            loggingService.logActivity("NEW_FEES", logData, staffId, "FAILED");
+            loggingService.logActivity(LogType.NEW_FEES, logData, staffId, "FAILED");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Level Not Found");
         }
 
         Fees fees = feesRepository.findBySemester_SemesterIDAndLevel_LevelID(semesterId, levelID).orElse(null);
         if (fees != null) {
-            loggingService.logActivity("NEW_FEES", logData, staffId, "FAILED");
+            loggingService.logActivity(LogType.NEW_FEES, logData, staffId, "FAILED");
             return ResponseEntity.status(HttpStatus.CONFLICT).body("Fees already added");
         }
 
@@ -377,7 +379,7 @@ public class FeesService {
         }
         institutionFees.add(fees);
         institutionRepository.save(institution);
-        loggingService.logActivity("NEW_FEES", logData, staffId, "SUCCESS");
+        loggingService.logActivity(LogType.NEW_FEES, logData, staffId, "SUCCESS");
         return ResponseEntity.status(HttpStatus.CREATED).body("Fees added successfully");
     }
 
@@ -388,11 +390,11 @@ public class FeesService {
                 semesterId, levelId
         ).orElse(null);
         if (fee == null) {
-            loggingService.logActivity("FETCH_FEES_DETAILS", logData, staffId, "FAILED");
+            loggingService.logActivity(LogType.FETCH_FEES_DETAILS, logData, staffId, "FAILED");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Fees for selected class not added for the selected semester");
         }
 
-        loggingService.logActivity("FETCH_FEES_DETAILS", logData, staffId, "SUCCESS");
+        loggingService.logActivity(LogType.FETCH_FEES_DETAILS, logData, staffId, "SUCCESS");
         return ResponseEntity.ok(
                 new FetchFeesDetails(
                 String.valueOf(fee.getAmountToBePayed()),
@@ -402,20 +404,20 @@ public class FeesService {
     }
 
     public ResponseEntity<?> updateSemesterFees(FetchFeesDetails update, String staffId) {
-        String logData =
-                "Amount: " + update.getAmount() + " SemesterId: " + update.getSemesterId() + " LevelId: " + update.getLevelId();
+        String logData = "Amount: " + update.getAmount() + " SemesterId: " + update.getSemesterId() + " LevelId: " + update.getLevelId();
+
         Fees fees = feesRepository.findBySemester_SemesterIDAndLevel_LevelID(
                 update.getSemesterId(), update.getLevelId()
         ).orElse(null);
         if (fees == null) {
-            loggingService.logActivity("UPDATE_FEES", logData, staffId, "FAILED");
+            loggingService.logActivity(LogType.UPDATE_FEES, logData, staffId, "FAILED");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Fees not found in the system");
         }
 
         fees.setAmountToBePayed(Double.parseDouble(update.getAmount()));
         feesRepository.save(fees);
 
-        loggingService.logActivity("UPDATE_FEES", logData, staffId, "SUCCESS");
+        loggingService.logActivity(LogType.UPDATE_FEES, logData, staffId, "SUCCESS");
         return ResponseEntity.ok("Fees Updated Successfully");
     }
 
@@ -427,13 +429,13 @@ public class FeesService {
 
         Students student = studentsRepository.findByStudentId(studentId).orElse(null);
         if (student == null) {
-            loggingService.logActivity("PAYMENT", logData, staffId, "FAILED");
+            loggingService.logActivity(LogType.PAYMENT, logData, staffId, "FAILED");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Student Not Found");
         }
 
         Level level = levelRepository.findByLevelID(levelId).orElse(null);
         if (level == null) {
-            loggingService.logActivity("PAYMENT", logData, staffId, "FAILED");
+            loggingService.logActivity(LogType.PAYMENT, logData, staffId, "FAILED");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Level Not Found");
         }
 
@@ -441,7 +443,7 @@ public class FeesService {
 
         Fees fees = feesRepository.findBySemester_SemesterIDAndLevel_LevelID(semesterId, levelId).orElse(null);
         if (fees == null) {
-            loggingService.logActivity("PAYMENT", logData, staffId, "FAILED");
+            loggingService.logActivity(LogType.PAYMENT, logData, staffId, "FAILED");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Grade or semester fee not found");
         }
 
@@ -482,7 +484,7 @@ public class FeesService {
         institutionFeesReports.add(feesReport);
         institutionRepository.save(institution);
 
-        loggingService.logActivity("PAYMENT", logData, staffId, "SUCCESS");
+        loggingService.logActivity(LogType.PAYMENT, logData, staffId, "SUCCESS");
         return ResponseEntity.status(HttpStatus.CREATED).body("Fees added successfully");
     }
 
@@ -519,13 +521,13 @@ public class FeesService {
         //Get current Semester
         String currentSemesterId = utilityClass.getCurrentSemesterId(institution.getInstitutionId());
         if (currentSemesterId == null) {
-            loggingService.logActivity("FETCH_PAYMENTS_REPORT", "N/A", staffId, "FAILED");
+            loggingService.logActivity(LogType.FETCH_PAYMENTS_REPORTS, "N/A", staffId, "FAILED");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Current semester not found. Contact admin");
         }
 
         List<Students> students = institution.getStudents();
         if (students == null || students.isEmpty()) {
-            loggingService.logActivity("FETCH_PAYMENTS_REPORT", "N/A", staffId, "FAILED");
+            loggingService.logActivity(LogType.FETCH_PAYMENTS_REPORTS, "N/A", staffId, "FAILED");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Institution has no students");
         }
 
@@ -535,7 +537,7 @@ public class FeesService {
 
             Fees fee = feesRepository.findBySemester_SemesterIDAndLevel_LevelID(currentSemesterId, levelId).orElse(null);
             if (fee == null) {
-                loggingService.logActivity("FETCH_PAYMENTS_REPORT", "N/A", staffId, "FAILED");
+                loggingService.logActivity(LogType.FETCH_PAYMENTS_REPORTS, "N/A", staffId, "FAILED");
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(student.getLevel().getLevelName() + " semester fee not added to the system");
             }
 
@@ -575,13 +577,13 @@ public class FeesService {
 
         List<Students> students = institution.getStudents();
         if (students == null || students.isEmpty()) {
-            loggingService.logActivity("FETCH_PAYMENTS_REPORT", "N/A", staffId, "FAILED");
+            loggingService.logActivity(LogType.FETCH_PAYMENTS_REPORTS, "N/A", staffId, "FAILED");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Institution has no students");
         }
 
         String currentSemester = utilityClass.getCurrentSemesterId(institution.getInstitutionId());
         if (currentSemester == null) {
-            loggingService.logActivity("FETCH_PAYMENTS_REPORT", "N/A", staffId, "FAILED");
+            loggingService.logActivity(LogType.FETCH_PAYMENTS_REPORTS, "N/A", staffId, "FAILED");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Current semester not added. Contact admin");
         }
 
@@ -592,7 +594,7 @@ public class FeesService {
                     currentSemester, student.getLevel().getLevelID()
                     ).orElse(null);
             if (fee == null) {
-                loggingService.logActivity("FETCH_PAYMENTS_REPORT", "N/A", staffId, "FAILED");
+                loggingService.logActivity(LogType.FETCH_PAYMENTS_REPORTS, "N/A", staffId, "FAILED");
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(student.getLevel().getLevelName() + " semester fee not added to the system");
             }
 
@@ -624,7 +626,7 @@ public class FeesService {
         }
 
         if (feesSummaryTables.isEmpty()) {
-            loggingService.logActivity("FETCH_PAYMENTS_REPORT", "N/A", staffId, "FAILED");
+            loggingService.logActivity(LogType.FETCH_PAYMENTS_REPORTS, "N/A", staffId, "FAILED");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No partially paid students found");
         }
         return ResponseEntity.ok(feesSummaryTables);
@@ -634,13 +636,13 @@ public class FeesService {
         //Get current Semester
         String currentSemester = utilityClass.getCurrentSemesterId(institution.getInstitutionId());
         if (currentSemester == null || currentSemester.isEmpty()) {
-            loggingService.logActivity("FETCH_PAYMENTS_REPORT", "N/A", staffId, "FAILED");
+            loggingService.logActivity(LogType.FETCH_PAYMENTS_REPORTS, "N/A", staffId, "FAILED");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Current semester not added. Contact admin");
         }
 
         List<Students> students = institution.getStudents();
         if (students == null || students.isEmpty()) {
-            loggingService.logActivity("FETCH_PAYMENTS_REPORT", "N/A", staffId, "FAILED");
+            loggingService.logActivity(LogType.FETCH_PAYMENTS_REPORTS, "N/A", staffId, "FAILED");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Institution has no students");
         }
 
@@ -650,7 +652,7 @@ public class FeesService {
 
             Fees fee = feesRepository.findBySemester_SemesterIDAndLevel_LevelID(currentSemester, levelId).orElse(null);
             if (fee == null) {
-                loggingService.logActivity("FETCH_PAYMENTS_REPORT", "N/A", staffId, "FAILED");
+                loggingService.logActivity(LogType.FETCH_PAYMENTS_REPORTS, "N/A", staffId, "FAILED");
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(student.getLevel().getLevelName() + " semester fee not added to the system");
             }
 
@@ -672,7 +674,7 @@ public class FeesService {
         }
 
         if (feesSummaryTables.isEmpty()) {
-            loggingService.logActivity("FETCH_PAYMENTS_REPORT", "N/A", staffId, "FAILED");
+            loggingService.logActivity(LogType.FETCH_PAYMENTS_REPORTS, "N/A", staffId, "FAILED");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No records found for this filter");
         }
         return ResponseEntity.ok(feesSummaryTables);
@@ -682,20 +684,20 @@ public class FeesService {
 
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staff == null) {
-            loggingService.logActivity("FETCH_TOTAL_FEES", "N/A", staffId, "FAILED");
+            loggingService.logActivity(LogType.FETCH_TOTAL_FEES, "N/A", staffId, "FAILED");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid staff id");
         }
 
         //Get current Semester
         String currentSemesterId = utilityClass.getCurrentSemesterId(institution.getInstitutionId());
         if (currentSemesterId == null || currentSemesterId.isEmpty()) {
-            loggingService.logActivity("FETCH_TOTAL_FEES", "N/A", staffId, "FAILED");
+            loggingService.logActivity(LogType.FETCH_TOTAL_FEES, "N/A", staffId, "FAILED");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Current semester not added. Contact admin");
         }
 
         List<Level> levels = institution.getLevels();
         if (levels == null || levels.isEmpty()) {
-            loggingService.logActivity("FETCH_TOTAL_FEES", "N/A", staffId, "FAILED");
+            loggingService.logActivity(LogType.FETCH_TOTAL_FEES, "N/A", staffId, "FAILED");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Institution has no grades yet");
         }
         double totalSemesterFees = 0;
@@ -706,7 +708,7 @@ public class FeesService {
             totalSemesterFees += levelFees;
         }
 
-        loggingService.logActivity("FETCH_TOTAL_FEES", "N/A", staffId, "SUCCESS");
+        loggingService.logActivity(LogType.FETCH_TOTAL_FEES, "N/A", staffId, "SUCCESS");
         return ResponseEntity.ok(totalSemesterFees);
     }
 
@@ -714,19 +716,20 @@ public class FeesService {
 
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staff == null) {
+            loggingService.logActivity(LogType.FETCH_TOTAL_FEES_PAID, "N/A", staffId, "FAILED");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid staff id");
         }
 
         //Get current Semester
         String currentSemesterId = utilityClass.getCurrentSemesterId(institution.getInstitutionId());
         if (currentSemesterId == null || currentSemesterId.isEmpty()) {
-            loggingService.logActivity("FETCH_TOTAL_FEES", "N/A", staffId, "FAILED");
+            loggingService.logActivity(LogType.FETCH_TOTAL_FEES_PAID, "N/A", staffId, "FAILED");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Current semester not added. Contact admin");
         }
 
         List<Level> levels = institution.getLevels();
         if (levels == null || levels.isEmpty()) {
-            loggingService.logActivity("FETCH_TOTAL_FEES", "N/A", staffId, "FAILED");
+            loggingService.logActivity(LogType.FETCH_TOTAL_FEES_PAID, "N/A", staffId, "FAILED");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Institution has no grades yet");
         }
 
@@ -736,7 +739,7 @@ public class FeesService {
             totalAmountPaid += levelFeesPaid;
         }
 
-        loggingService.logActivity("FETCH_TOTAL_FEES", "N/A", staffId, "SUCCESS");
+        loggingService.logActivity(LogType.FETCH_TOTAL_FEES_PAID, "N/A", staffId, "SUCCESS");
         return ResponseEntity.ok(totalAmountPaid);
     }
 
@@ -744,14 +747,14 @@ public class FeesService {
 
         String currentSemesterId = utilityClass.getCurrentSemesterId(institution.getInstitutionId());
         if (currentSemesterId == null || currentSemesterId.isEmpty()) {
-            loggingService.logActivity("FETCH_PAYMENT_REPORTS", "N/A", staffId, "FAILED");
+            loggingService.logActivity(LogType.FETCH_PAYMENTS_REPORTS, "N/A", staffId, "FAILED");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Current semester not added. Contact admin");
         }
 
         List<FeesReport> feesReports = feesReportRepository
                 .findByInstitution_InstitutionIdOrderByDateOfPaymentDesc(institution.getInstitutionId());
         if (feesReports == null || feesReports.isEmpty()) {
-            loggingService.logActivity("FETCH_PAYMENT_REPORTS", "N/A", staffId, "FAILED");
+            loggingService.logActivity(LogType.FETCH_PAYMENTS_REPORTS, "N/A", staffId, "FAILED");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Institution has no payment records yet");
         }
 
@@ -775,7 +778,7 @@ public class FeesService {
             }
         }
 
-        loggingService.logActivity("FETCH_PAYMENT_REPORTS", "N/A", staffId, "SUCCESS");
+        loggingService.logActivity(LogType.FETCH_PAYMENTS_REPORTS, "N/A", staffId, "SUCCESS");
         return ResponseEntity.ok(recentPaymentTables);
     }
 

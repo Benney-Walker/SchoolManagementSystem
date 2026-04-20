@@ -1,5 +1,6 @@
 package com.codewithben.schoolmanagementsystem.Service;
 
+import com.codewithben.schoolmanagementsystem.Contants.LogType;
 import com.codewithben.schoolmanagementsystem.DTO.Academics.LevelCaching;
 import com.codewithben.schoolmanagementsystem.DTO.Academics.SemesterCaching;
 import com.codewithben.schoolmanagementsystem.DTO.Institution.*;
@@ -7,8 +8,10 @@ import com.codewithben.schoolmanagementsystem.Entity.*;
 import com.codewithben.schoolmanagementsystem.Repository.*;
 import com.codewithben.schoolmanagementsystem.Utility.UtilityClass;
 import jakarta.transaction.Transactional;
+import org.apache.juli.logging.Log;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -48,13 +51,13 @@ public class LevelService {
 
         Staffs staffs = staffsRepository.findByStaffId(instructorId).orElse(null);
         if (staffs == null) {
-            loggingService.logActivity("ADD_NEW_CLASS", logData, staffId, "FAILED");
+            loggingService.logActivity(LogType.ADD_NEW_CLASS, logData, staffId, "FAILED");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Selected instructor not found");
         }
 
         Institution institution = staffs.getInstitution();
         if (institution == null) {
-            loggingService.logActivity("ADD_NEW_CLASS", logData, staffId, "FAILED");
+            loggingService.logActivity(LogType.ADD_NEW_CLASS, logData, staffId, "FAILED");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Institution not found");
         }
 
@@ -79,61 +82,61 @@ public class LevelService {
 
             staffsRepository.save(staffs);
 
-            loggingService.logActivity("ADD_NEW_CLASS", logData, staffId, "SUCCESS");
+            loggingService.logActivity(LogType.ADD_NEW_CLASS, logData, staffId, "SUCCESS");
             return ResponseEntity.ok().build();
         }
 
-        loggingService.logActivity("ADD_NEW_CLASS", logData, staffId, "FAILED");
+        loggingService.logActivity(LogType.ADD_NEW_CLASS, logData, staffId, "FAILED");
         return ResponseEntity.status(HttpStatus.CONFLICT).body("Level already exist");
     }
 
-    public List<LevelCaching> loadLevelInfo(String staffId) throws Exception {
-        Staffs staffs = staffsRepository.findByStaffId(staffId)
-                .orElseThrow(() -> new Exception("You can't access staff list"));
-
-        Institution institution = staffs.getInstitution();
-        if (institution == null) {
-            throw new Exception("Institution not found");
+    public ResponseEntity<?> loadLevelInfo(String staffId) {
+        Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
+        if (staff == null) {
+            loggingService.logActivity(LogType.FETCH_CLASSES, "N/A", staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Could not load classes");
         }
 
-        List<Level> levels = institution.getLevels();
+        List<Level> levels = staff.getInstitution().getLevels();
         if (levels == null || levels.isEmpty()) {
-            return Collections.emptyList();
+            loggingService.logActivity(LogType.FETCH_CLASSES, "N/A", staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No classes found");
         }
 
-        return levels.stream().map(
+        return ResponseEntity.ok(levels.stream().map(
                 loadInfo -> {
                     String levelName = loadInfo.getLevelName();
                     String levelID = loadInfo.getLevelID();
 
+                    loggingService.logActivity(LogType.FETCH_CLASSES, "N/A", staffId, "FAILED");
                     return new LevelCaching(levelID, levelName);
                 }
-        ).collect(Collectors.toList());
+        ).collect(Collectors.toList()));
     }
 
-    public List<SemesterCaching> loadSemesterCaching(String staffId) throws Exception {
-        Staffs staffs = staffsRepository.findByStaffId(staffId).orElse(null);
-        if (staffs == null)
-            throw new Exception("You can access semester list");
-
-        Institution institution = institutiionRepository.findByInstitutionId(staffs.getInstitution().getInstitutionId()).orElse(null);
-        if (institution == null)
-            throw new Exception("Institution not found");
-
-        List<Semester> semesters = institution.getSemester();
-        if (semesters == null || semesters.isEmpty()) {
-            return Collections.emptyList();
+    public ResponseEntity<?> loadSemesterCaching(String staffId) {
+        Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
+        if (staff == null) {
+            loggingService.logActivity(LogType.FETCH_SEMESTERS, "N/A", staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Could not load semesters");
         }
 
-        return semesters.stream().map(
+        List<Semester> semesters = staff.getInstitution().getSemester();
+        if (semesters == null || semesters.isEmpty()) {
+            loggingService.logActivity(LogType.FETCH_SEMESTERS, "N/A", staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No semesters found");
+        }
+
+        return ResponseEntity.ok(semesters.stream().map(
                 loadInfo -> {
                     String semesterId = loadInfo.getSemesterID();
                     String semesterName = loadInfo.getSemesterName();
                     String academicYear = loadInfo.getAcademicYear();
 
+                    loggingService.logActivity(LogType.FETCH_SEMESTERS, "N/A", staffId, "SUCCESS");
                     return new SemesterCaching(semesterId, semesterName, academicYear);
                 }
-        ).collect(Collectors.toList());
+        ).collect(Collectors.toList()));
     }
 
     public ResponseEntity<?> addNewSemester(String semesterName, LocalDate startDate, LocalDate endDate,
@@ -143,7 +146,7 @@ public class LevelService {
 
         Staffs staffs = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staffs == null) {
-            loggingService.logActivity("NEW_SEMESTER", logData, staffId, "FAILED");
+            loggingService.logActivity(LogType.NEW_SEMESTER, logData, staffId, "FAILED");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid Staff id");
         }
 
@@ -168,18 +171,31 @@ public class LevelService {
         institution.setSemester(semesters);
         institutiionRepository.save(institution);
 
-        loggingService.logActivity("NEW_SEMESTER", logData, staffId, "SUCCESS");
+        loggingService.logActivity(LogType.NEW_SEMESTER, logData, staffId, "SUCCESS");
         return ResponseEntity.ok().build();
     }
 
-    public List<GradeInformation> loadStaffGrades(String staffId) throws Exception {
-        Staffs staffs = staffsRepository.findByStaffId(staffId)
-                .orElseThrow(() -> new Exception("Staff not found"));
+    public ResponseEntity<?> loadStaffGrades(String staffId) {
+        Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
+        if (staff == null) {
+            loggingService.logActivity(LogType.FETCH_CLASSES, "N/A", staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid staff Id");
+        }
 
-        List<Level> levels = staffs.getLevels();
-        if (levels == null || levels.isEmpty())
-            return Collections.emptyList();
+        List<Level> levels = staff.getLevels();
+        if (levels == null || levels.isEmpty()) {
+            loggingService.logActivity(LogType.FETCH_CLASSES, "N/A", staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No class assigned to your account");
+        }
 
+        List<GradeInformation> gradesInformation = getGradesInformation(levels);
+
+        loggingService.logActivity(LogType.FETCH_CLASSES, "N/A", staffId, "SUCCESS");
+        return ResponseEntity.ok(gradesInformation);
+    }
+
+
+    private List<GradeInformation> getGradesInformation(List<Level> levels) {
         List<GradeInformation> gradesInformation = new ArrayList<>();
         for (Level level : levels) {
             String gradeId = level.getLevelID();
@@ -210,7 +226,6 @@ public class LevelService {
 
             gradesInformation.add(gradeInformation);
         }
-
         return gradesInformation;
     }
 
@@ -219,11 +234,11 @@ public class LevelService {
 
         Level level = levelRepository.findByLevelID(levelId).orElse(null);
         if (level == null) {
-            loggingService.logActivity("FETCH_GRADE_INFO", logData, staffId, "FAILED");
+            loggingService.logActivity(LogType.FETCH_GRADE_INFO, logData, staffId, "FAILED");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid Level Id");
         }
 
-        loggingService.logActivity("FETCH_GRADE_INFO", logData, staffId, "SUCCESS");
+        loggingService.logActivity(LogType.FETCH_GRADE_INFO, logData, staffId, "SUCCESS");
         return ResponseEntity.ok(new FindAndUpdateClassInfo(
                 level.getLevelID(), level.getLevelName(), level.getStaff().getStaffId()
         ));
@@ -234,13 +249,13 @@ public class LevelService {
 
         Staffs staff = staffsRepository.findByStaffId(updateInfo.getStaffId()).orElse(null);
         if (staff == null) {
-            loggingService.logActivity("UPDATE_GRADE_INFO", logData, staffId, "FAILED");
+            loggingService.logActivity(LogType.UPDATE_GRADE_INFO, logData, staffId, "FAILED");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Selected Staff Not Found");
         }
 
         Level level = levelRepository.findByLevelID(updateInfo.getLevelId()).orElse(null);
         if (level == null) {
-            loggingService.logActivity("UPDATE_GRADE_INFO", logData, staffId, "FAILED");
+            loggingService.logActivity(LogType.UPDATE_GRADE_INFO, logData, staffId, "FAILED");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Grade Not Found");
         }
 
@@ -248,7 +263,7 @@ public class LevelService {
         level.setStaff(staff);
         levelRepository.save(level);
 
-        loggingService.logActivity("UPDATE_GRADE_INFO", logData, staffId, "SUCCESS");
+        loggingService.logActivity(LogType.UPDATE_GRADE_INFO, logData, staffId, "SUCCESS");
         return ResponseEntity.ok().build();
     }
 
@@ -257,7 +272,7 @@ public class LevelService {
 
         Semester semester = semesterRepository.findBySemesterID(semesterId).orElse(null);
         if (semester == null) {
-            loggingService.logActivity("FIND_SEMESTER", logData, staffId, "FAILED");
+            loggingService.logActivity(LogType.FIND_SEMESTER, logData, staffId, "FAILED");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Semester not found");
         }
 
@@ -268,7 +283,7 @@ public class LevelService {
         findSemester.setSemesterEndDate(semester.getSemesterEndDate().toString());
         findSemester.setAcademicYear(semester.getAcademicYear());
 
-        loggingService.logActivity("FIND_SEMESTER", logData, staffId, "SUCCESS");
+        loggingService.logActivity(LogType.FIND_SEMESTER, logData, staffId, "SUCCESS");
         return ResponseEntity.ok(findSemester);
     }
 
@@ -279,7 +294,7 @@ public class LevelService {
 
         Semester semester = semesterRepository.findBySemesterID(updateInfo.getSemesterID()).orElse(null);
         if (semester == null) {
-            loggingService.logActivity("UPDATE_SEMESTER", logData, staffId, "FAILED");
+            loggingService.logActivity(LogType.UPDATE_SEMESTER, logData, staffId, "FAILED");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Semester do not exist");
         }
 
@@ -289,21 +304,26 @@ public class LevelService {
         semester.setAcademicYear(updateInfo.getAcademicYear());
         semesterRepository.save(semester);
 
-        loggingService.logActivity("UPDATE_SEMESTER", logData, staffId, "SUCCESS");
+        loggingService.logActivity(LogType.UPDATE_SEMESTER, logData, staffId, "SUCCESS");
         return ResponseEntity.ok().build();
     }
 
-    public List<SubjectsHolder> getLevelSubjects(String levelId) throws Exception {
-        List<SubjectsHolder> subjectsHolders = new ArrayList<>();
+    public ResponseEntity<?> getLevelSubjects(String levelId, String staffId) {
 
-        Level level = levelRepository.findByLevelID(levelId)
-                .orElseThrow(() -> new Exception("Grade not found"));
+        String logData = "Class Id: " + levelId;
+        Level level = levelRepository.findByLevelID(levelId).orElse(null);
+        if (level == null) {
+            loggingService.logActivity(LogType.FETCH_SUBJECTS, logData, staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Selected grade not found");
+        }
 
         List<Subjects> subjects = level.getSubjects();
         if (subjects == null || subjects.isEmpty()) {
-            throw new Exception("Grade has no subjects");
+            loggingService.logActivity(LogType.FETCH_SUBJECTS, logData, staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Class has no subject");
         }
 
+        List<SubjectsHolder> subjectsHolders = new ArrayList<>();
         for (Subjects subject: subjects) {
             SubjectsHolder sub = new SubjectsHolder(
                     subject.getSubjectId(),
@@ -311,7 +331,8 @@ public class LevelService {
             );
             subjectsHolders.add(sub);
         }
-        return subjectsHolders;
+        loggingService.logActivity(LogType.FETCH_SUBJECTS, logData, staffId, "SUCCESS");
+        return ResponseEntity.ok(subjectsHolders);
     }
 
 }

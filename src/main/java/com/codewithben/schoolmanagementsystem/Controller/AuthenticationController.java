@@ -9,8 +9,10 @@ import com.codewithben.schoolmanagementsystem.Entity.Staffs;
 import com.codewithben.schoolmanagementsystem.Repository.InstitutiionRepository;
 import com.codewithben.schoolmanagementsystem.Repository.StaffsRepository;
 import com.codewithben.schoolmanagementsystem.Service.InstitutionService;
+import com.codewithben.schoolmanagementsystem.Service.LoggingService;
 import com.codewithben.schoolmanagementsystem.Service.StaffService;
 import com.codewithben.schoolmanagementsystem.Utility.JwtUtility;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -34,39 +36,33 @@ public class AuthenticationController {
 
     private final String subscriptionCode = "SC1547863";
 
-    private final StaffsRepository staffsRepository;
+    private final LoggingService loggingService;
 
     public AuthenticationController(InstitutionService institutionService, StaffService staffService,
                                     InstitutiionRepository institutiionRepository, AuthenticationManager authenticationManager,
-                                    JwtUtility jwtUtility, StaffsRepository staffsRepository) {
+                                    JwtUtility jwtUtility, LoggingService loggingService) {
         this.institutionService = institutionService;
         this.staffService = staffService;
         this.institutiionRepository = institutiionRepository;
         this.authenticationManager = authenticationManager;
         this.jwtUtility = jwtUtility;
-        this.staffsRepository = staffsRepository;
+        this.loggingService = loggingService;
     }
 
     @PostMapping("/v1/school-subscription")
-    public ResponseEntity<?> schoolSubscription(@RequestBody InstitutionRegistrationDTO institutionRegistrationDTO) {
-        if (!institutionRegistrationDTO.getSubscriptionCode().equals(subscriptionCode))
+    public ResponseEntity<?> schoolSubscription(@RequestBody InstitutionRegistrationDTO data) {
+        String logData = "Institution Name: " + data.getInstitutionName() + " Subscription code: " + "N/A";
+
+        if (!data.getSubscriptionCode().equals(subscriptionCode)) {
+
+            loggingService.logActivity("SUBSCRIPTION", logData, "N/A", "FAILED");
             return ResponseEntity.ok(Map.of(
                     "status", "failed",
                     "message", "Invalid subscriptionCode"
             ));
-
-        try {
-            String response = institutionService.addNewInstitution(institutionRegistrationDTO.getInstitutionName());
-            return ResponseEntity.ok(Map.of(
-                    "status", "success",
-                    "message", response
-            ));
-        } catch (Exception e) {
-            return ResponseEntity.ok(Map.of(
-                    "status", "failed",
-                    "message", e.getMessage()
-            ));
         }
+
+        return institutionService.addNewInstitution(data.getInstitutionName(), logData);
     }
 
     @PostMapping("/v1/enroll-new-staff")
@@ -81,26 +77,24 @@ public class AuthenticationController {
         List<String> role = enrollNewStaffDTO.getRoles();
         String institutionID = enrollNewStaffDTO.getInstitutionId();
 
+        String logData = "First Name: " + firstName +
+                ", Last Name: " + lastName +
+                ", Gender: " + gender +
+                ", DOB: " + dateOfBirth +
+                ", Email: " + email +
+                ", Phone: " + phoneNumber +
+                ", Roles: " + role.toString() +
+                ", Institution ID: " + institutionID;
+
         Institution institution = institutiionRepository.findByInstitutionId(institutionID).orElse(null);
         if (institution == null) {
-            return ResponseEntity.ok(Map.of(
-                    "status", "failed",
-                    "message", "Institution not found"
-            ));
+
+            loggingService.logActivity("STAFF_ENROLLMENT", logData, "N/A", "FAILED");
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("Invalid institution Id");
         }
 
-        try {
-            //Response contains just the staff Id
-            String response = staffService.addNewStaff(firstName, lastName, gender, dateOfBirth, institutionID,
-                    email, password, phoneNumber, role);
-            return ResponseEntity.ok(Map.of(
-                    "status", "success",
-                    "message", response
-            ));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+        return staffService.addNewStaff(firstName, lastName, gender, dateOfBirth, institutionID,
+                    email, password, phoneNumber, role, institution, logData);
     }
 
     @PostMapping("/v1/staff-login")
