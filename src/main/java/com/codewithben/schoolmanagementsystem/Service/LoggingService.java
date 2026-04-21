@@ -6,6 +6,7 @@ import com.codewithben.schoolmanagementsystem.Entity.Logs;
 import com.codewithben.schoolmanagementsystem.Repository.LogsRepository;
 import com.codewithben.schoolmanagementsystem.Repository.StaffsRepository;
 import com.codewithben.schoolmanagementsystem.Utility.UtilityClass;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -29,8 +30,6 @@ public class LoggingService {
 
         try {
             Logs log = new Logs();
-
-            log.setActionId(utilityClass.generateEntityId("LOG"));
             log.setActionTime(LocalDateTime.now());
             log.setActionType(actionType);
             log.setActionData(actionData);
