@@ -18,7 +18,6 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -387,7 +386,7 @@ public class StudentService {
         for (Level level : levels) {
 
             List<Attendance> absentees =
-                    attendanceRepository.findByStatusAndDateMarkedAndLevel_levelId(
+                    attendanceRepository.findByStatusAndDateMarkedAndLevel_levelID(
                             AttendanceStatus.ABSENT,
                             currentDate,
                             level.getLevelID()
@@ -429,6 +428,11 @@ public class StudentService {
                 ", Grade ID: " + data.getGradeId() +
                 ", Status: " + data.getStatus() +
                 ", Hometown: " + data.getHomeTown();
+
+        if (data.getParentPhoneNumber().length() != 10) {
+            loggingService.logActivity(LogType.UPDATE_STUDENT_DETAILS, logData, staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid parent phone number");
+        }
 
         Students student = studentsRepository.findByStudentId(data.getStudentId()).orElse(null);
         if (student == null) {
@@ -588,7 +592,7 @@ public class StudentService {
     }
 
     public ResponseEntity<?> markStudentAttendance(String studentId, String levelId, String status, String staffId) {
-        String logData = "Student Id: " + studentId + " levelId: " + " status: " + status;
+        String logData = "Student Id: " + studentId + " levelId: " + levelId + " status: " + status;
 
         //Check if date is not weekends
         if (!utilityClass.isSchoolDay(LocalDate.now())) {
