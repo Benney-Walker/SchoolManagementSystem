@@ -57,10 +57,7 @@ public class AuthenticationController {
         if (!data.getSubscriptionCode().equals(subscriptionCode)) {
 
             loggingService.logActivity(LogType.SUBSCRIPTION, logData, "N/A", "FAILED");
-            return ResponseEntity.ok(Map.of(
-                    "status", "failed",
-                    "message", "Invalid subscriptionCode"
-            ));
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("Invalid subscription code");
         }
 
         return institutionService.addNewInstitution(data.getInstitutionName(), logData);
