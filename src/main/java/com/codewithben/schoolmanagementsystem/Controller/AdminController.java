@@ -112,6 +112,7 @@ public class AdminController {
     public ResponseEntity<?> addNewGrade(@RequestHeader("staffId") String staffId,
                                          @RequestParam String gradeName,
                                          @RequestParam String instructorId) {
+
         return levelService.addNewClass(gradeName, instructorId, staffId);
     }
 
