@@ -88,14 +88,14 @@ public class AccountantController {
         return feesService.fetchGradeFeesReport(levelId, semesterId, staffId);
     }
 
-    @GetMapping("/v1/class-summary-fees/{staffId}")
-    public ResponseEntity<?> getClassSummaryFees(@PathVariable String staffId) {
+    @GetMapping("/v1/class-summary-fees")
+    public ResponseEntity<?> getClassSummaryFees(@RequestHeader("staffId") String staffId) {
 
         return feesService.loadClassFeesSummary(staffId);
     }
 
-    @GetMapping("/v1/fully-paid-students/{staffId}")
-    public ResponseEntity<?> getFullyPaidStudents(@PathVariable String staffId) {
+    @GetMapping("/v1/fully-paid-students")
+    public ResponseEntity<?> getFullyPaidStudents(@RequestHeader("staffId") String staffId) {
         Staffs staff = getValidatedStaff(staffId);
         if (staff == null)
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid staff Id");
@@ -103,8 +103,8 @@ public class AccountantController {
         return feesService.getFullyPaidStudents(staffId, staff.getInstitution());
     }
 
-    @GetMapping("/v1/partially-paid-students/{staffId}")
-    public ResponseEntity<?> getPartiallyPaidStudents(@PathVariable String staffId) {
+    @GetMapping("/v1/partially-paid-students")
+    public ResponseEntity<?> getPartiallyPaidStudents(@RequestHeader("staffId") String staffId) {
         Staffs staff = getValidatedStaff(staffId);
         if (staff == null)
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid staff Id");
@@ -112,8 +112,8 @@ public class AccountantController {
         return feesService.getPartiallyPaidStudents(staffId, staff.getInstitution());
     }
 
-    @GetMapping("/v1/not-paid-students/{staffId}")
-    public ResponseEntity<?> getNotPaidStudents(@PathVariable String staffId) {
+    @GetMapping("/v1/not-paid-students")
+    public ResponseEntity<?> getNotPaidStudents(@RequestHeader("staffId") String staffId) {
         Staffs staff = getValidatedStaff(staffId);
         if (staff == null)
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid staff Id");
@@ -121,8 +121,8 @@ public class AccountantController {
         return feesService.getNotPaidStudents(staffId, staff.getInstitution());
     }
 
-    @GetMapping("/v1/total-fees/{staffId}")
-    public ResponseEntity<?> totalSemesterFees(@PathVariable String staffId) {
+    @GetMapping("/v1/total-fees")
+    public ResponseEntity<?> totalSemesterFees(@RequestHeader("staffId") String staffId) {
         Staffs staff = getValidatedStaff(staffId);
         if (staff == null)
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid staff Id");
@@ -130,8 +130,8 @@ public class AccountantController {
         return feesService.getTotalSemesterFees(staffId, staff.getInstitution());
     }
 
-    @GetMapping("/v1/fees-paid/{staffId}")
-    public ResponseEntity<?> totalAmountPaid(@PathVariable String staffId) {
+    @GetMapping("/v1/fees-paid")
+    public ResponseEntity<?> totalAmountPaid(@RequestHeader("staffId") String staffId) {
         Staffs staff = getValidatedStaff(staffId);
         if (staff == null)
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid staff Id");
@@ -154,8 +154,8 @@ public class AccountantController {
         return feesService.updateSemesterFees(fetchFeesDetails, staffId);
     }
 
-    @GetMapping("/v1/recent-fees-transactions/{staffId}")
-    public ResponseEntity<?> getRecentPayment(@PathVariable String staffId) {
+    @GetMapping("/v1/recent-fees-transactions")
+    public ResponseEntity<?> getRecentPayment(@RequestHeader("staffId") String staffId) {
         Staffs staff = getValidatedStaff(staffId);
         if (staff == null)
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid staff Id");
