@@ -108,7 +108,7 @@ public class LevelService {
                     String levelName = loadInfo.getLevelName();
                     String levelID = loadInfo.getLevelID();
 
-                    loggingService.logActivity(LogType.FETCH_CLASSES, "N/A", staffId, "FAILED");
+                    loggingService.logActivity(LogType.FETCH_CLASSES, "N/A", staffId, "SUCCESS");
                     return new LevelCaching(levelID, levelName);
                 }
         ).collect(Collectors.toList()));
