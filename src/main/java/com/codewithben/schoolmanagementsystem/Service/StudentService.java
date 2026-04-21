@@ -563,21 +563,16 @@ public class StudentService {
 
         for (Students student : students) {
 
-            Attendance foundAttendance = null;
+            String status = AttendanceStatus.ABSENT.name();
 
             if (markedAttendance != null) {
                 for (Attendance attendance : markedAttendance) {
-                    if (attendance.getStudent().getStudentId()
-                            .equals(student.getStudentId())) {
-                        foundAttendance = attendance;
+                    if (attendance.getStudent().getStudentId().equals(student.getStudentId())) {
+                        status = attendance.getStatus().name();
                         break;
                     }
                 }
             }
-
-            String status = (foundAttendance != null)
-                    ? foundAttendance.getStatus().name()
-                    : AttendanceStatus.ABSENT.name();
 
             attendanceList.add(new StudentAttendance(
                     level.getLevelID(),
