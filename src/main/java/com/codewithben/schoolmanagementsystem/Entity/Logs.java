@@ -10,7 +10,8 @@ import java.time.LocalDateTime;
 public class Logs {
 
     @Id
-    private String actionId;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private long actionId;
 
     private LocalDateTime actionTime;
 
@@ -26,14 +27,6 @@ public class Logs {
     private LogStatus status;
 
     public Logs() {}
-
-    public String getActionId() {
-        return actionId;
-    }
-
-    public void setActionId(String actionId) {
-        this.actionId = actionId;
-    }
 
     public LocalDateTime getActionTime() {
         return actionTime;
