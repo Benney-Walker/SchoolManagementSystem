@@ -37,6 +37,7 @@ public class GlobalExceptionHandler {
         error.put("message", "Internal Server Error. Try again");
         error.put("path", request.getRequestURI());
 
+        System.out.println(error);
         return ResponseEntity.status(500).body(error);
     }
 }
