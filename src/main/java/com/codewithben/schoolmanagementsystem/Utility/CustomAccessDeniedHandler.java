@@ -35,6 +35,8 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
                 request.getRequestURI()
         );
 
+        System.out.println(json);
+
         response.getWriter().write(json);
     }
 }

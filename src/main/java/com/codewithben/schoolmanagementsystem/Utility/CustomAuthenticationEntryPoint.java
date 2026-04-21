@@ -33,6 +33,8 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
                 request.getRequestURI()
         );
 
+        System.out.println(json);
+
         response.getWriter().write(json);
     }
 }
