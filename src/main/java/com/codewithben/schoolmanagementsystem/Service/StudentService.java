@@ -593,6 +593,7 @@ public class StudentService {
 
     public ResponseEntity<?> markStudentAttendance(String studentId, String levelId, String status, String staffId) {
         String logData = "Student Id: " + studentId + " levelId: " + levelId + " status: " + status;
+        System.out.println(logData);
 
         //Check if date is not weekends
         if (!utilityClass.isSchoolDay(LocalDate.now())) {
