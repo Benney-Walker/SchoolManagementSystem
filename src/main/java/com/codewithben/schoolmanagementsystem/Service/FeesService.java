@@ -339,6 +339,11 @@ public class FeesService {
     public ResponseEntity<?> addNewSemesterFees(Double feesAmount, String semesterId, String levelID, String staffId) {
         String logData = "Amount: " + feesAmount + " Semester: " + semesterId + " grade: " + levelID;
 
+        if (feesAmount < 0) {
+            loggingService.logActivity(LogType.NEW_FEES, logData, staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Fee amount can't be negative");
+        }
+
         Semester semester = semesterRepository.findBySemesterID(semesterId).orElse(null);
         if (semester == null) {
             loggingService.logActivity(LogType.NEW_FEES, logData, staffId, "FAILED");
