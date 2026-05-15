@@ -9,7 +9,8 @@ import com.codewithben.schoolmanagementsystem.Utility.UtilityClass;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.time.LocalTime;
 
 @Service
 public class LoggingService {
@@ -30,7 +31,8 @@ public class LoggingService {
 
         try {
             Logs log = new Logs();
-            log.setActionTime(LocalDateTime.now());
+            log.setActionDate(LocalDate.now());
+            log.setActionTime(LocalTime.now());
             log.setActionType(actionType);
             log.setActionData(actionData);
             log.setCreatedBy(staffId);
