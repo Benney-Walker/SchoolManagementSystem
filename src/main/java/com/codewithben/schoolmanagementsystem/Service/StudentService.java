@@ -574,6 +574,8 @@ public class StudentService {
                 }
             }
 
+            System.out.println( "Status: " + status);
+
             attendanceList.add(new StudentAttendance(
                     level.getLevelID(),
                     student.getStudentId(),
