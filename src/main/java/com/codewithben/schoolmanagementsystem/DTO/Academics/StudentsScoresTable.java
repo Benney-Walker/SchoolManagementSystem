@@ -5,11 +5,11 @@ public class StudentsScoresTable {
 
     private String studentName;
 
-    private String exercise1Score;
+    private String classTest1Score;
 
-    private String classTestScore;
+    private String groupWorkScore;
 
-    private String exercise2Score;
+    private String classTest2Score;
 
     private String projectScore;
 
@@ -21,19 +21,7 @@ public class StudentsScoresTable {
 
     public StudentsScoresTable() {}
 
-    public StudentsScoresTable(String studentId, String studentName, String exercise1Score, String classTestScore,
-                               String exercise2Score, String projectScore, String classScore, String examScore, String calculatedExamScore) {
-        this.studentId = studentId;
-        this.studentName = studentName;
-        this.exercise1Score = exercise1Score;
-        this.classTestScore = classTestScore;
-        this.exercise2Score = exercise2Score;
-        this.projectScore = projectScore;
-        this.classScore = classScore;
-        this.examScore = examScore;
-        this.calculatedExamScore = calculatedExamScore;
-    }
-
+    //Getters and Setters
     public String getStudentId() {
         return studentId;
     }
@@ -50,28 +38,28 @@ public class StudentsScoresTable {
         this.studentName = studentName;
     }
 
-    public String getExercise1Score() {
-        return exercise1Score;
+    public String getClassTest1Score() {
+        return classTest1Score;
     }
 
-    public void setExercise1Score(String exercise1Score) {
-        this.exercise1Score = exercise1Score;
+    public void setClassTest1Score(String classTest1Score) {
+        this.classTest1Score = classTest1Score;
     }
 
-    public String getClassTestScore() {
-        return classTestScore;
+    public String getGroupWorkScore() {
+        return groupWorkScore;
     }
 
-    public void setClassTestScore(String classTestScore) {
-        this.classTestScore = classTestScore;
+    public void setGroupWorkScore(String groupWorkScore) {
+        this.groupWorkScore = groupWorkScore;
     }
 
-    public String getExercise2Score() {
-        return exercise2Score;
+    public String getClassTest2Score() {
+        return classTest2Score;
     }
 
-    public void setExercise2Score(String exercise2Score) {
-        this.exercise2Score = exercise2Score;
+    public void setClassTest2Score(String classTest2Score) {
+        this.classTest2Score = classTest2Score;
     }
 
     public String getProjectScore() {

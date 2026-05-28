@@ -467,10 +467,13 @@ public class StudentService {
         Subjects subject = subjectsRepository.findBySubjectId(subjectId).orElse(null);
         if (subject == null) {
             loggingService.logActivity(LogType.FETCH_STUDENTS, logData, staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Student not found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Subject not found");
         }
 
-        List<Students> students = subject.getLevel().getStudents();
+        //Gets the active students
+        List<Students> students =
+                utilityClass.getActiveStudents(subject.getLevel().getStudents());
+
         if (students == null || students.isEmpty()) {
             loggingService.logActivity(LogType.FETCH_STUDENTS, logData, staffId, "FAILED");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Selected class has no students");
@@ -493,10 +496,10 @@ public class StudentService {
 
                 scoresTable.setStudentId(studentId);
                 scoresTable.setStudentName(studentName);
-                scoresTable.setExercise1Score("0");
-                scoresTable.setClassTestScore("0");
-                scoresTable.setExercise2Score("0");
+                scoresTable.setClassTest1Score("0");
+                scoresTable.setClassTest2Score("0");
                 scoresTable.setProjectScore("0");
+                scoresTable.setGroupWorkScore("0");
                 scoresTable.setClassScore("0");
                 scoresTable.setExamScore("0");
                 scoresTable.setCalculatedExamScore("0");
@@ -505,13 +508,27 @@ public class StudentService {
 
                 scoresTable.setStudentId(studentId);
                 scoresTable.setStudentName(studentName);
-                scoresTable.setExercise1Score(String.valueOf(score.getExercise1Score()));
-                scoresTable.setClassTestScore(String.valueOf(score.getClassTestScore()));
-                scoresTable.setExercise2Score(String.valueOf(score.getExercise2Score()));
-                scoresTable.setProjectScore(String.valueOf(score.getProjectScore()));
-                scoresTable.setClassScore(String.valueOf(score.getClassScore()));
-                scoresTable.setExamScore(String.valueOf(score.getExamScore()));
-                scoresTable.setCalculatedExamScore(String.valueOf(score.getCalculatedExamScore()));
+                scoresTable.setClassTest1Score(
+                        String.valueOf(score.getClassTestScore())
+                );
+                scoresTable.setClassTest2Score(
+                        String.valueOf(score.getProjectScore())
+                );
+                scoresTable.setGroupWorkScore(
+                        String.valueOf(score.getExercise2Score())
+                );
+                scoresTable.setProjectScore(
+                        String.valueOf(score.getExercise1Score())
+                );
+                scoresTable.setClassScore(
+                        String.valueOf(score.getClassScore())
+                );
+                scoresTable.setExamScore(
+                        String.valueOf(score.getExamScore())
+                );
+                scoresTable.setCalculatedExamScore(
+                        String.valueOf(score.getCalculatedExamScore())
+                );
 
             }
 
@@ -523,25 +540,6 @@ public class StudentService {
                 new SubjectScores(subjectName, subjectId, subjectStudents)
         );
     }
-
-    /*public List<StudentListPrint> getLevelStudents(String levelId) throws Exception {
-        Level level = levelRepository.findByLevelID(levelId)
-                .orElseThrow(() -> new Exception("Level Not Found"));
-
-        List<Students> students = level.getStudents();
-        if (students == null || students.isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        return students.stream().map(
-                student -> {
-                    String studentId = student.getStudentId();
-                    String fullName = student.getFirstName() + " " + student.getLastName();
-
-                    return new StudentListPrint(studentId, fullName);
-                }
-        ).collect(Collectors.toList());
-    }*/
 
     public ResponseEntity<?> loadStudentForAttendance(String levelId, String attendanceDate, String staffId) {
         String logData = "Class Id: " + levelId + " Attendance date: " + attendanceDate;

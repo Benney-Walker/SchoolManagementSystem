@@ -20,12 +20,16 @@ public class SubjectScore {
     @JoinColumn(name = "results_resultId")
     private Results results;
 
+    //Now Project work
     private Double exercise1Score;
 
-    private Double classTestScore;
-
+    //Now Group work
     private Double exercise2Score;
 
+    //Now Class test 1
+    private Double classTestScore;
+
+    //Now Class test 2
     private Double projectScore;
 
     private Double classScore;
