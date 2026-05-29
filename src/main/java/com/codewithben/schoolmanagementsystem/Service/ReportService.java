@@ -33,8 +33,6 @@ public class ReportService {
 
     private final SubjectScoreRepository subjectScoreRepository;
 
-    private final PromotionCriteriaRepository promoCriRepository;
-
     private final UtilityClass utilityClass;
 
     private final LoggingService loggingService;
@@ -42,14 +40,13 @@ public class ReportService {
     public ReportService(StudentsRepository studentsRepository, ResultsRepository resultsRepository,
                          LevelRepository levelRepository, SemesterRepository semesterRepository,
                          AttendanceRepository attendanceRepository, SubjectScoreRepository subjectScoreRepository,
-                         PromotionCriteriaRepository promoCriRepository, UtilityClass utilityClass, LoggingService loggingService) {
+                         UtilityClass utilityClass, LoggingService loggingService) {
         this.studentsRepository = studentsRepository;
         this.resultsRepository = resultsRepository;
         this.levelRepository = levelRepository;
         this.semesterRepository = semesterRepository;
         this.attendanceRepository = attendanceRepository;
         this.subjectScoreRepository = subjectScoreRepository;
-        this.promoCriRepository = promoCriRepository;
         this.utilityClass = utilityClass;
         this.loggingService = loggingService;
     }
