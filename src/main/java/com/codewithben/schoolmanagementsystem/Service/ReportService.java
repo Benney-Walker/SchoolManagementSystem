@@ -1,7 +1,6 @@
 package com.codewithben.schoolmanagementsystem.Service;
 
 import com.codewithben.schoolmanagementsystem.Contants.LogType;
-import com.codewithben.schoolmanagementsystem.Contants.StudentStatus;
 import com.codewithben.schoolmanagementsystem.DTO.Academics.GenerateStudentReport;
 import com.codewithben.schoolmanagementsystem.DTO.Academics.SubjectReportDTO;
 import com.codewithben.schoolmanagementsystem.DTO.Academics.ViewClassSemesterReport;
@@ -11,7 +10,6 @@ import com.codewithben.schoolmanagementsystem.Repository.*;
 import com.codewithben.schoolmanagementsystem.Utility.UtilityClass;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
