@@ -48,6 +48,9 @@ public class Students {
     private List<SubjectScore> subjectScore;
 
     @OneToMany(mappedBy = "student")
+    private List<Conduct> conducts;
+
+    @OneToMany(mappedBy = "student")
     private List<FeesReport> feesReport;
 
     @OneToMany(mappedBy = "student")

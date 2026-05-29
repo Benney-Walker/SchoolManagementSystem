@@ -27,6 +27,9 @@ public class Results {
     @OneToMany(mappedBy = "results", cascade = CascadeType.ALL)
     private List<SubjectScore> subjectScores;
 
+    @OneToOne(mappedBy = "results")
+    private Conduct conduct;
+
     private LocalDate createdAt;
 
     private LocalDate updatedAt;

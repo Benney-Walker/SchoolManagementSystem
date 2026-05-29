@@ -78,11 +78,12 @@ public class StaffController {
         return reportService.viewClassSemesterReport(levelId, semesterId, staffId);
     }
 
-    @PostMapping("/v1/move-passed-students/{levelId}")
+    @PostMapping("/v1/promote-student/{studentId}/{levelId}")
     public ResponseEntity<?> movePassedStudents(@RequestHeader("staffId") String staffId,
-                                                @PathVariable String levelId) {
+                                                @PathVariable String levelId,
+                                                @PathVariable String studentId) {
 
-        return reportService.movePassedStudents(levelId, staffId);
+        return reportService.movePassedStudents(studentId, levelId, staffId);
     }
 
     @PostMapping("/v1/mark-attendance")
