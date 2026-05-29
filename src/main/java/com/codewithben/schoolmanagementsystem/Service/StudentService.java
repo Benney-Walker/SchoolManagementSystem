@@ -467,7 +467,9 @@ public class StudentService {
         Subjects subject = subjectsRepository.findBySubjectId(subjectId).orElse(null);
         if (subject == null) {
             loggingService.logActivity(LogType.FETCH_STUDENTS, logData, staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Subject not found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Subject not found"
+            ));
         }
 
         //Gets the active students
@@ -476,7 +478,9 @@ public class StudentService {
 
         if (students == null || students.isEmpty()) {
             loggingService.logActivity(LogType.FETCH_STUDENTS, logData, staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Selected class has no students");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Class has no students"
+            ));
         }
 
         String subjectName = subject.getSubjectName();
@@ -535,7 +539,7 @@ public class StudentService {
             subjectStudents.add(scoresTable);
         }
 
-        loggingService.logActivity(LogType.FETCH_STUDENTS, logData, staffId, "FAILED");
+        loggingService.logActivity(LogType.FETCH_STUDENTS, logData, staffId, "SUCCESS");
         return ResponseEntity.ok(
                 new SubjectScores(subjectName, subjectId, subjectStudents)
         );
