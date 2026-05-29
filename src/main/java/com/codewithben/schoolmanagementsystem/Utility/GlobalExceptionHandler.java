@@ -34,7 +34,7 @@ public class GlobalExceptionHandler {
         error.put("timestamp", LocalDateTime.now());
         error.put("status", 500);
         error.put("error", ex.getMessage());
-        error.put("message", "Internal Server Error. Try again");
+        error.put("message", "Internal Server Error. Contact developer");
         error.put("path", request.getRequestURI());
 
         System.out.println(error);
