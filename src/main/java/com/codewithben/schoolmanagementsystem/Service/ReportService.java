@@ -252,8 +252,8 @@ public class ReportService {
                 .orElse(null);
     }
 
-    public ResponseEntity<?> movePassedStudents(String levelId, String staffId) {
-        String logData = "Level Id: " + levelId;
+    public ResponseEntity<?> movePassedStudents(String studentId, String levelId, String staffId) {
+        String logData = "Level Id: " + levelId + " studentId: " + studentId;
 
         Level level = levelRepository.findByLevelID(levelId).orElse(null);
         if (level == null) {
@@ -261,40 +261,14 @@ public class ReportService {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Class not found");
         }
 
-        PromotionCriteria criteria = promoCriRepository.findByLevelId(levelId).orElse(null);
-        if (criteria == null) {
+        Students student = studentsRepository.findByStudentId(studentId).orElse(null);
+        if (student == null) {
             loggingService.logActivity(LogType.PROMOTION, logData, staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("Promotion criteria not set for this class");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Student not found");
         }
 
-        Level nextLevel = levelRepository.findByLevelID(criteria.getLevelId()).orElse(null);
-        if (nextLevel == null) {
-            loggingService.logActivity(LogType.PROMOTION, logData, staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("Promotion grade not found");
-        }
-
-        String semesterId = utilityClass.getCurrentSemesterId(level.getInstitution().getInstitutionId());
-
-        List<Students> students = utilityClass.getActiveStudents(level.getStudents());
-        int count = 0;
-        for (Students student: students) {
-            Results result = resultsRepository.findByStudent_StudentIdAndSemester_SemesterIDAndLevel_LevelID(
-                    student.getStudentId(),
-                    semesterId,
-                    level.getLevelID()
-            ).orElse(null);
-            if (result == null) {
-                loggingService.logActivity(LogType.PROMOTION, logData, staffId, "FAILED");
-                return ResponseEntity.status(HttpStatus.CONFLICT).body("Student " + student.getStudentId() + "result not found");
-            }
-
-            if (result.getTotalScore() >= criteria.getTotalPassScore()) {
-                student.setLevel(nextLevel);
-                studentsRepository.save(student);
-                count++;
-            }
-        }
-
-        return ResponseEntity.ok(count + "Students passed to " + nextLevel.getLevelName());
+        student.setLevel(level);
+        studentsRepository.save(student);
+        return ResponseEntity.ok().build();
     }
 }
