@@ -17,10 +17,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 @Service
 public class StaffService {
@@ -228,13 +225,17 @@ public class StaffService {
         Level level = levelRepository.findByLevelID(levelId).orElse(null);
         if (level == null) {
             loggingService.logActivity(LogType.NEW_SUBJECT, logData, staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Selected class do not exist");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Invalid Class Id"
+            ));
         }
 
         Subjects  subject = subjectsRepository.findBySubjectNameAndLevel_LevelID(subjectName, levelId).orElse(null);
         if (subject != null) {
             loggingService.logActivity(LogType.NEW_SUBJECT, logData, staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("Subject already exist");
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                    "message", "Subject already exists"
+            ));
         }
 
         Subjects subjects = new Subjects();
@@ -263,7 +264,9 @@ public class StaffService {
         Subjects subject = subjectsRepository.findBySubjectId(subjectId).orElse(null);
         if (subject == null) {
             loggingService.logActivity(LogType.FIND_SUBJECT_DATA, logData, staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Subject not found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Subject not found"
+            ));
         }
 
         loggingService.logActivity(LogType.FIND_SUBJECT_DATA, logData, staffId, "SUCCESS");
@@ -281,13 +284,17 @@ public class StaffService {
         Subjects subject = subjectsRepository.findBySubjectId(subjectDTO.getSubjectId()).orElse(null);
         if (subject == null) {
             loggingService.logActivity(LogType.UPDATE_SUBJECT_DATA, logData, staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Subject not found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Subject not found"
+            ));
         }
 
         Level level = levelRepository.findByLevelID(subjectDTO.getLevelId()).orElse(null);
         if (level == null) {
             loggingService.logActivity(LogType.UPDATE_SUBJECT_DATA, logData, staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Grade not found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Level not found"
+            ));
         }
 
         subject.setSubjectName(subjectDTO.getSubjectName());
@@ -295,7 +302,7 @@ public class StaffService {
         subjectsRepository.save(subject);
 
         loggingService.logActivity(LogType.UPDATE_SUBJECT_DATA, logData, staffId, "SUCCESS");
-        return ResponseEntity.ok("Subject updated successfully");
+        return ResponseEntity.ok().build();
     }
 
     public ResponseEntity<?> deleteSubjectData(String subjectId, String staffId) {
@@ -304,7 +311,9 @@ public class StaffService {
         Subjects subject = subjectsRepository.findBySubjectId(subjectId).orElse(null);
         if (subject == null) {
             loggingService.logActivity(LogType.DELETE_SUBJECT, logData, staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Subject not found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Subject do not exist"
+            ));
         }
 
         subjectsRepository.delete(subject);
