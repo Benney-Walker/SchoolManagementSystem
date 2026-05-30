@@ -3,13 +3,13 @@ package com.codewithben.schoolmanagementsystem.DTO.Academics;
 public class SaveStudentScores {
     private String studentId;
 
-    private String exercise1Score;
+    private String projectWork;
 
-    private String classTestScore;
+    private String classTest1;
 
-    private String exercise2Score;
+    private String groupWork;
 
-    private String projectScore;
+    private String classTest2;
 
     private String classScore;
 
@@ -17,13 +17,13 @@ public class SaveStudentScores {
 
     private String calculatedExamScore;
 
-    public SaveStudentScores(String studentId, String exercise1Score, String classTestScore,
-                             String exercise2Score, String projectScore, String classScore, String examScore, String calculatedExamScore) {
+    public SaveStudentScores(String studentId, String projectWork, String classTest1,
+                             String groupWork, String classTest2, String classScore, String examScore, String calculatedExamScore) {
         this.studentId = studentId;
-        this.exercise1Score = exercise1Score;
-        this.classTestScore = classTestScore;
-        this.exercise2Score = exercise2Score;
-        this.projectScore = projectScore;
+        this.projectWork = projectWork;
+        this.classTest1 = classTest1;
+        this.groupWork = groupWork;
+        this.classTest2 = classTest2;
         this.classScore = classScore;
         this.examScore = examScore;
         this.calculatedExamScore = calculatedExamScore;
@@ -37,36 +37,36 @@ public class SaveStudentScores {
         this.studentId = studentId;
     }
 
-    public String getExercise1Score() {
-        return exercise1Score;
+    public String getProjectWork() {
+        return projectWork;
     }
 
-    public void setExercise1Score(String exercise1Score) {
-        this.exercise1Score = exercise1Score;
+    public void setProjectWork(String projectWork) {
+        this.projectWork = projectWork;
     }
 
-    public String getClassTestScore() {
-        return classTestScore;
+    public String getClassTest1() {
+        return classTest1;
     }
 
-    public void setClassTestScore(String classTestScore) {
-        this.classTestScore = classTestScore;
+    public void setClassTest1(String classTest1) {
+        this.classTest1 = classTest1;
     }
 
-    public String getExercise2Score() {
-        return exercise2Score;
+    public String getGroupWork() {
+        return groupWork;
     }
 
-    public void setExercise2Score(String exercise2Score) {
-        this.exercise2Score = exercise2Score;
+    public void setGroupWork(String groupWork) {
+        this.groupWork = groupWork;
     }
 
-    public String getProjectScore() {
-        return projectScore;
+    public String getClassTest2() {
+        return classTest2;
     }
 
-    public void setProjectScore(String projectScore) {
-        this.projectScore = projectScore;
+    public void setClassTest2(String classTest2) {
+        this.classTest2 = classTest2;
     }
 
     public String getClassScore() {
