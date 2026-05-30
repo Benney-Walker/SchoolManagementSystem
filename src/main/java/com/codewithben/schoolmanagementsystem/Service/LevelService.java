@@ -18,6 +18,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -46,19 +47,23 @@ public class LevelService {
     }
 
     @Transactional
-    public ResponseEntity<?> addNewClass(String className, String instructorId, String staffId) {
-        String logData = "Class Name: " + className + " Instructor Id: " + instructorId;
+    public ResponseEntity<?> addNewClass(String className, String selectedStaff, String staffId) {
+        String logData = "Class Name: " + className + " Instructor Id: " + selectedStaff;
 
-        Staffs staffs = staffsRepository.findByStaffId(instructorId).orElse(null);
+        Staffs staffs = staffsRepository.findByStaffId(selectedStaff).orElse(null);
         if (staffs == null) {
             loggingService.logActivity(LogType.ADD_NEW_CLASS, logData, staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Selected instructor not found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Selected staff does not exist"
+            ));
         }
 
         Institution institution = staffs.getInstitution();
         if (institution == null) {
             loggingService.logActivity(LogType.ADD_NEW_CLASS, logData, staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Institution not found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Institution do not exist"
+            ));
         }
 
         Level level = levelRepository.findByLevelNameAndInstitution_InstitutionId(className, institution.getInstitutionId()).orElse(null);
@@ -87,7 +92,9 @@ public class LevelService {
         }
 
         loggingService.logActivity(LogType.ADD_NEW_CLASS, logData, staffId, "FAILED");
-        return ResponseEntity.status(HttpStatus.CONFLICT).body("Level already exist");
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                "message", "Class already exists in system"
+        ));
     }
 
     public ResponseEntity<?> loadLevelInfo(String staffId) {
@@ -147,7 +154,9 @@ public class LevelService {
         Staffs staffs = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staffs == null) {
             loggingService.logActivity(LogType.NEW_SEMESTER, logData, staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid Staff id");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                    "message", "Internal Server Error! Contact Developer"
+            ));
         }
 
         Institution institution = staffs.getInstitution();
@@ -235,7 +244,9 @@ public class LevelService {
         Level level = levelRepository.findByLevelID(levelId).orElse(null);
         if (level == null) {
             loggingService.logActivity(LogType.FETCH_GRADE_INFO, logData, staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid Level Id");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Invalid class Id"
+            ));
         }
 
         loggingService.logActivity(LogType.FETCH_GRADE_INFO, logData, staffId, "SUCCESS");
@@ -250,13 +261,17 @@ public class LevelService {
         Staffs staff = staffsRepository.findByStaffId(updateInfo.getStaffId()).orElse(null);
         if (staff == null) {
             loggingService.logActivity(LogType.UPDATE_GRADE_INFO, logData, staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Selected Staff Not Found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Invalid staff Id"
+            ));
         }
 
         Level level = levelRepository.findByLevelID(updateInfo.getLevelId()).orElse(null);
         if (level == null) {
             loggingService.logActivity(LogType.UPDATE_GRADE_INFO, logData, staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Grade Not Found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Invalid level Id"
+            ));
         }
 
         level.setLevelName(updateInfo.getLevelName());
@@ -273,7 +288,9 @@ public class LevelService {
         Semester semester = semesterRepository.findBySemesterID(semesterId).orElse(null);
         if (semester == null) {
             loggingService.logActivity(LogType.FIND_SEMESTER, logData, staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Semester not found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Invalid semester Id"
+            ));
         }
 
         FindSemester findSemester = new FindSemester();
@@ -314,13 +331,17 @@ public class LevelService {
         Level level = levelRepository.findByLevelID(levelId).orElse(null);
         if (level == null) {
             loggingService.logActivity(LogType.FETCH_SUBJECTS, logData, staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Selected grade not found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Class do not exist in the system"
+            ));
         }
 
         List<Subjects> subjects = level.getSubjects();
         if (subjects == null || subjects.isEmpty()) {
             loggingService.logActivity(LogType.FETCH_SUBJECTS, logData, staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Class has no subject");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Class has no subjects"
+            ));
         }
 
         List<SubjectsHolder> subjectsHolders = new ArrayList<>();
