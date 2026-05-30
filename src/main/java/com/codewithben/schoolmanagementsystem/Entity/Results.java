@@ -85,6 +85,14 @@ public class Results {
         this.subjectScores = subjectScores;
     }
 
+    public Conduct getConduct() {
+        return conduct;
+    }
+
+    public void setConduct(Conduct conduct) {
+        this.conduct = conduct;
+    }
+
     public LocalDate getCreatedAt() {
         return createdAt;
     }
