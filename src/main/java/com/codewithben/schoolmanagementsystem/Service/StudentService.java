@@ -139,10 +139,10 @@ public class StudentService {
     @Transactional
     public ResponseEntity<?> addStudentSubjectScores(SaveStudentScores scores, String staffId, String subjectId, String semesterId) {
         String logData = "Student ID: " + scores.getStudentId() +
-                ", Ex1: " + scores.getExercise1Score() +
-                ", Class Test: " + scores.getClassTestScore() +
-                ", Ex2: " + scores.getExercise2Score() +
-                ", Project: " + scores.getProjectScore() +
+                ", Ex1: " + scores.getProjectWork() +
+                ", Class Test: " + scores.getClassTest1() +
+                ", Ex2: " + scores.getGroupWork() +
+                ", Project: " + scores.getClassTest2() +
                 ", Class Score: " + scores.getClassScore() +
                 ", Exam Score: " + scores.getExamScore() +
                 ", Calculated Exam: " + scores.getCalculatedExamScore();
@@ -209,10 +209,10 @@ public class StudentService {
         subjectScore.setSubject(subject);
         subjectScore.setStudent(student);
         subjectScore.setResults(result);
-        subjectScore.setProjectWork(Double.parseDouble(scores.getExercise1Score()));
-        subjectScore.setClassTest1(Double.parseDouble(scores.getClassTestScore()));
-        subjectScore.setGroupWork(Double.parseDouble(scores.getExercise2Score()));
-        subjectScore.setClassTest2(Double.parseDouble(scores.getProjectScore()));
+        subjectScore.setProjectWork(Double.parseDouble(scores.getProjectWork()));
+        subjectScore.setClassTest1(Double.parseDouble(scores.getClassTest1()));
+        subjectScore.setGroupWork(Double.parseDouble(scores.getGroupWork()));
+        subjectScore.setClassTest2(Double.parseDouble(scores.getClassTest2()));
         subjectScore.setClassScore(classScore);
         subjectScore.setExamScore(Double.parseDouble(scores.getExamScore()));
         subjectScore.setCalculatedExamScore(calculatedExamScore);
