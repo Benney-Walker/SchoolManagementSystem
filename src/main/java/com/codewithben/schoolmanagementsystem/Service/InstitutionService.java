@@ -13,6 +13,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
+
 @Service
 public class InstitutionService {
     private final UtilityClass utilityClass;
@@ -59,7 +61,9 @@ public class InstitutionService {
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if(staff == null){
             loggingService.logActivity(LogType.ADD_GRADING_CRITERIA, logData, staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid Staff id");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Invalid Staff info"
+            ));
         }
 
         Institution institution = staff.getInstitution();

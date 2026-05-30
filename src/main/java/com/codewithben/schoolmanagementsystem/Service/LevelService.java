@@ -312,7 +312,9 @@ public class LevelService {
         Semester semester = semesterRepository.findBySemesterID(updateInfo.getSemesterID()).orElse(null);
         if (semester == null) {
             loggingService.logActivity(LogType.UPDATE_SEMESTER, logData, staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Semester do not exist");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Invalid semester Id"
+            ));
         }
 
         semester.setSemesterName(updateInfo.getSemesterName());
