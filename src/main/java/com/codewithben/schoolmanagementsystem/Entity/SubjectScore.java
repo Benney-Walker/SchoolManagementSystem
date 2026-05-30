@@ -20,17 +20,21 @@ public class SubjectScore {
     @JoinColumn(name = "results_resultId")
     private Results results;
 
-    //Now Project work
-    private Double exercise1Score;
+    //Then exercise1Score
+    @Column(name = "exercise1score")
+    private Double projectWork;
 
-    //Now Group work
-    private Double exercise2Score;
+    //Then exercise2Score
+    @Column(name = "exercise2score")
+    private Double groupWork;
 
-    //Now Class test 1
-    private Double classTestScore;
+    //Then classTestScore
+    @Column(name = "class_test_score")
+    private Double classTest1;
 
-    //Now Class test 2
-    private Double projectScore;
+    //Then projectScore
+    @Column(name = "project_score")
+    private Double classTest2;
 
     private Double classScore;
 
@@ -42,27 +46,27 @@ public class SubjectScore {
 
     private String grade;
 
-    private String remarks;
+    private String gradeDescriptor;
 
     public SubjectScore() {}
 
     public SubjectScore(long id, Subjects subject, Students student, Results results,
-                        Double exercise1Score, Double classTestScore, Double exercise2Score,
-                        Double projectScore, Double classScore, Double examScore, Double calculatedExamScore, Double totalScore, String grade, String remarks) {
+                        Double projectWork, Double classTest1, Double groupWork,
+                        Double classTest2, Double classScore, Double examScore, Double calculatedExamScore, Double totalScore, String grade, String gradeDescriptor) {
         this.id = id;
         this.subject = subject;
         this.student = student;
         this.results = results;
-        this.exercise1Score = exercise1Score;
-        this.classTestScore = classTestScore;
-        this.exercise2Score = exercise2Score;
-        this.projectScore = projectScore;
+        this.projectWork = projectWork;
+        this.classTest1 = classTest1;
+        this.groupWork = groupWork;
+        this.classTest2 = classTest2;
         this.classScore = classScore;
         this.examScore = examScore;
         this.calculatedExamScore = calculatedExamScore;
         this.totalScore = totalScore;
         this.grade = grade;
-        this.remarks = remarks;
+        this.gradeDescriptor = gradeDescriptor;
     }
 
     public long getId() {
@@ -97,36 +101,36 @@ public class SubjectScore {
         this.results = results;
     }
 
-    public Double getExercise1Score() {
-        return exercise1Score;
+    public Double getProjectWork() {
+        return projectWork;
     }
 
-    public void setExercise1Score(Double exercise1Score) {
-        this.exercise1Score = exercise1Score;
+    public void setProjectWork(Double exercise1Score) {
+        this.projectWork = exercise1Score;
     }
 
-    public Double getClassTestScore() {
-        return classTestScore;
+    public Double getClassTest1() {
+        return classTest1;
     }
 
-    public void setClassTestScore(Double classTestScore) {
-        this.classTestScore = classTestScore;
+    public void setClassTest1(Double classTestScore) {
+        this.classTest1 = classTestScore;
     }
 
-    public Double getExercise2Score() {
-        return exercise2Score;
+    public Double getGroupWork() {
+        return groupWork;
     }
 
-    public void setExercise2Score(Double exercise2Score) {
-        this.exercise2Score = exercise2Score;
+    public void setGroupWork(Double exercise2Score) {
+        this.groupWork = exercise2Score;
     }
 
-    public Double getProjectScore() {
-        return projectScore;
+    public Double getClassTest2() {
+        return classTest2;
     }
 
-    public void setProjectScore(Double projectScore) {
-        this.projectScore = projectScore;
+    public void setClassTest2(Double projectScore) {
+        this.classTest2 = projectScore;
     }
 
     public Double getClassScore() {
@@ -169,11 +173,11 @@ public class SubjectScore {
         this.grade = grade;
     }
 
-    public String getRemarks() {
-        return remarks;
+    public String getGradeDescriptor() {
+        return gradeDescriptor;
     }
 
-    public void setRemarks(String remarks) {
-        this.remarks = remarks;
+    public void setGradeDescriptor(String remarks) {
+        this.gradeDescriptor = remarks;
     }
 }
