@@ -68,7 +68,7 @@ public class AdminController {
         return levelService.addNewSemester(semesterName, startDate, endDate, academicYear, staffId);
     }
 
-    @PostMapping("/v1/set-grades")
+    @PostMapping("/v1/new-grading-criteria")
     public ResponseEntity<?> setGradingCriteria(@RequestHeader("staffId") String staffId,
                                                 @RequestBody GradingCriteria gradingCriteria) {
 
@@ -105,11 +105,12 @@ public class AdminController {
     @PutMapping("/v1/update-semester-info")
     public ResponseEntity<?> updateSemesterInfo(@RequestHeader("staffId") String staffId,
                                                 @RequestBody FindSemester updateInfo) {
+
         return levelService.updateSemesterInfo(updateInfo, staffId);
     }
 
     @PostMapping("/v1/add-new-class")
-    public ResponseEntity<?> addNewGrade(@RequestHeader("staffId") String staffId,
+    public ResponseEntity<?> addNewClass(@RequestHeader("staffId") String staffId,
                                          @RequestParam String gradeName,
                                          @RequestParam String instructorId) {
 

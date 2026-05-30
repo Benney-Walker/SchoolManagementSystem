@@ -65,6 +65,7 @@ public class StaffController {
     public ResponseEntity<?> viewClassSemesterResults(@RequestHeader("staffId") String staffId,
                                                       @RequestParam String levelId,
                                                       @RequestParam String semesterId) {
+
         return reportService.viewClassSemesterReport(levelId, semesterId, staffId);
     }
 
