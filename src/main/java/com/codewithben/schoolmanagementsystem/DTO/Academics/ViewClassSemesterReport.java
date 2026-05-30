@@ -11,99 +11,71 @@ public class ViewClassSemesterReport {
 
     private String semesterName;
 
-    private String total;
+    private String totalScore;
 
-    private String average;
+    private String averageScore;
 
     private String classPosition;
 
     private String totalStudents;
 
-    private List<ViewStudentsSubjectsResults> subjects;
+    private String semesterRemark;
+
+    private List<ViewStudentsSubjectsResults> scoresList;
 
     public ViewClassSemesterReport(String studentId, String studentName, String className, String semesterName,
-                                   String classPosition, String total, String average, List<ViewStudentsSubjectsResults> subjects,
-                                   String totalStudents) {
+                                   String classPosition, String totalScore, String averageScore, String semesterRemark,
+                                   List<ViewStudentsSubjectsResults> scoresList, String totalStudents) {
         this.studentId = studentId;
         this.studentName = studentName;
         this.className = className;
         this.semesterName = semesterName;
-        this.subjects = subjects;
+        this.scoresList = scoresList;
         this.classPosition = classPosition;
-        this.total = total;
-        this.average = average;
+        this.totalScore = totalScore;
+        this.averageScore = averageScore;
         this.classPosition = classPosition;
         this.totalStudents = totalStudents;
+        this.semesterRemark = semesterRemark;
     }
 
     public String getStudentId() {
         return studentId;
-    }
-    public void setStudentId(String studentId) {
-        this.studentId = studentId;
     }
 
     public String getStudentName() {
         return studentName;
     }
 
-    public void setStudentName(String studentName) {
-        this.studentName = studentName;
-    }
-
     public String getClassName() {
         return className;
-    }
-
-    public void setClassName(String className) {
-        this.className = className;
     }
 
     public String getSemesterName() {
         return semesterName;
     }
 
-    public void setSemesterName(String semesterName) {
-        this.semesterName = semesterName;
+    public String getTotalScore() {
+        return totalScore;
     }
 
-    public List<ViewStudentsSubjectsResults> getSubjects() {
-        return subjects;
-    }
-
-    public void setSubjects(List<ViewStudentsSubjectsResults> subjects) {
-        this.subjects = subjects;
-    }
-
-    public String getTotal() {
-        return total;
-    }
-
-    public void setTotal(String total) {
-        this.total = total;
-    }
-
-    public String getAverage() {
-        return average;
-    }
-
-    public void setAverage(String average) {
-        this.average = average;
+    public String getAverageScore() {
+        return averageScore;
     }
 
     public String getClassPosition() {
         return classPosition;
     }
 
-    public void setClassPosition(String classPosition) {
-        this.classPosition = classPosition;
-    }
-
     public String getTotalStudents() {
         return totalStudents;
     }
 
-    public void setTotalStudents(String totalStudents) {
-        this.totalStudents = totalStudents;
+    public String getSemesterRemark() {
+        return semesterRemark;
+    }
+
+    public List<ViewStudentsSubjectsResults> getScoresList() {
+        return scoresList;
     }
 }

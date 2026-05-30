@@ -139,10 +139,10 @@ public class StudentService {
     @Transactional
     public ResponseEntity<?> addStudentSubjectScores(SaveStudentScores scores, String staffId, String subjectId, String semesterId) {
         String logData = "Student ID: " + scores.getStudentId() +
-                ", Ex1: " + scores.getProjectWork() +
-                ", Class Test: " + scores.getClassTest1() +
-                ", Ex2: " + scores.getGroupWork() +
-                ", Project: " + scores.getClassTest2() +
+                ", Ex1: " + scores.getProjectScore() +
+                ", Class Test: " + scores.getClassTest1Score() +
+                ", Ex2: " + scores.getGroupWorkScore() +
+                ", Project: " + scores.getClassTest2Score() +
                 ", Class Score: " + scores.getClassScore() +
                 ", Exam Score: " + scores.getExamScore() +
                 ", Calculated Exam: " + scores.getCalculatedExamScore();
@@ -152,7 +152,9 @@ public class StudentService {
         Students student = studentsRepository.findByStudentId(scores.getStudentId()).orElse(null);
         if (student == null) {
             loggingService.logActivity(LogType.SAVE_SCORES, logData, staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Student not found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Student not found"
+            ));
         }
 
         List<GradeSystem> gradeSystem = gradeSystemRepository.findAllByInstitution_InstitutionId(
@@ -161,19 +163,25 @@ public class StudentService {
 
         if (gradeSystem == null || gradeSystem.isEmpty()) {
             loggingService.logActivity(LogType.SAVE_SCORES, logData, staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Grading criteria not added");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Grade information not found"
+            ));
         }
 
         Subjects subject = subjectsRepository.findBySubjectId(subjectId).orElse(null);
         if (subject == null) {
             loggingService.logActivity(LogType.SAVE_SCORES, logData, staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Selected subject not found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Invalid subject ID"
+            ));
         }
 
         Semester semester = semesterRepository.findBySemesterID(semesterId).orElse(null);
         if (semester == null) {
             loggingService.logActivity(LogType.SAVE_SCORES, logData, staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Semester not found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Invalid semester ID"
+            ));
         }
 
 
@@ -209,10 +217,10 @@ public class StudentService {
         subjectScore.setSubject(subject);
         subjectScore.setStudent(student);
         subjectScore.setResults(result);
-        subjectScore.setProjectWork(Double.parseDouble(scores.getProjectWork()));
-        subjectScore.setClassTest1(Double.parseDouble(scores.getClassTest1()));
-        subjectScore.setGroupWork(Double.parseDouble(scores.getGroupWork()));
-        subjectScore.setClassTest2(Double.parseDouble(scores.getClassTest2()));
+        subjectScore.setProjectWork(Double.parseDouble(scores.getProjectScore()));
+        subjectScore.setClassTest1(Double.parseDouble(scores.getClassTest1Score()));
+        subjectScore.setGroupWork(Double.parseDouble(scores.getGroupWorkScore()));
+        subjectScore.setClassTest2(Double.parseDouble(scores.getClassTest2Score()));
         subjectScore.setClassScore(classScore);
         subjectScore.setExamScore(Double.parseDouble(scores.getExamScore()));
         subjectScore.setCalculatedExamScore(calculatedExamScore);
@@ -254,7 +262,6 @@ public class StudentService {
                 total += score.getTotalScore();
             }
 
-            System.out.println("TOTAL SCORE:" + total);
             result.setTotalScore(total);
             result.setAverageScore(total / scores.size());
         }
