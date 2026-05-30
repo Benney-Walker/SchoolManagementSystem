@@ -209,17 +209,17 @@ public class StudentService {
         subjectScore.setSubject(subject);
         subjectScore.setStudent(student);
         subjectScore.setResults(result);
-        subjectScore.setExercise1Score(Double.parseDouble(scores.getExercise1Score()));
-        subjectScore.setClassTestScore(Double.parseDouble(scores.getClassTestScore()));
-        subjectScore.setExercise2Score(Double.parseDouble(scores.getExercise2Score()));
-        subjectScore.setProjectScore(Double.parseDouble(scores.getProjectScore()));
+        subjectScore.setProjectWork(Double.parseDouble(scores.getExercise1Score()));
+        subjectScore.setClassTest1(Double.parseDouble(scores.getClassTestScore()));
+        subjectScore.setGroupWork(Double.parseDouble(scores.getExercise2Score()));
+        subjectScore.setClassTest2(Double.parseDouble(scores.getProjectScore()));
         subjectScore.setClassScore(classScore);
         subjectScore.setExamScore(Double.parseDouble(scores.getExamScore()));
         subjectScore.setCalculatedExamScore(calculatedExamScore);
         subjectScore.setGrade(
                 utilityClass.extractGrade(totalScore, student.getInstitution().getInstitutionId())
         );
-        subjectScore.setRemarks(
+        subjectScore.setGradeDescriptor(
                 utilityClass.extractDescription(totalScore, student.getInstitution().getInstitutionId())
         );
         subjectScore.setTotalScore(totalScore);
@@ -293,7 +293,7 @@ public class StudentService {
                             subjectScore.getSubject().getSubjectName(),
                             String.valueOf(subjectScore.getTotalScore()),
                             subjectScore.getGrade(),
-                            subjectScore.getRemarks()
+                            subjectScore.getGradeDescriptor()
                     );
                     subjectResults.add(studentSubjectResults);
                 }
@@ -513,16 +513,16 @@ public class StudentService {
                 scoresTable.setStudentId(studentId);
                 scoresTable.setStudentName(studentName);
                 scoresTable.setClassTest1Score(
-                        String.valueOf(score.getClassTestScore())
+                        String.valueOf(score.getClassTest1())
                 );
                 scoresTable.setClassTest2Score(
-                        String.valueOf(score.getProjectScore())
+                        String.valueOf(score.getClassTest2())
                 );
                 scoresTable.setGroupWorkScore(
-                        String.valueOf(score.getExercise2Score())
+                        String.valueOf(score.getGroupWork())
                 );
                 scoresTable.setProjectScore(
-                        String.valueOf(score.getExercise1Score())
+                        String.valueOf(score.getProjectWork())
                 );
                 scoresTable.setClassScore(
                         String.valueOf(score.getClassScore())
@@ -670,13 +670,17 @@ public class StudentService {
         Level level = levelRepository.findByLevelID(levelId).orElse(null);
         if (level == null) {
             loggingService.logActivity(LogType.FETCH_STUDENTS, logData, staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Class not found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Invalid class Id"
+            ));
         }
 
         List<Students> levelStudents = utilityClass.getActiveStudents(level.getStudents());
         if (levelStudents == null || levelStudents.isEmpty()) {
             loggingService.logActivity(LogType.FETCH_STUDENTS, logData, staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Class has no students");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Class has no students"
+            ));
         }
 
         List<StudentsHolder> studentsHolders = new ArrayList<>();

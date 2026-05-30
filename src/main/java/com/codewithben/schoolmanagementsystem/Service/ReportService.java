@@ -16,6 +16,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class ReportService {
@@ -116,16 +117,16 @@ public class ReportService {
         for (SubjectScore subjectScore: subjectScores) {
             ViewStudentsSubjectsResults scores = new ViewStudentsSubjectsResults();
             scores.setSubjectName(subjectScore.getSubject().getSubjectName());
-            scores.setExercise1Score(String.valueOf(subjectScore.getExercise1Score()));
-            scores.setClassTestScore(String.valueOf(subjectScore.getClassTestScore()));
-            scores.setExercise2Score(String.valueOf(subjectScore.getExercise2Score()));
-            scores.setProjectScore(String.valueOf(subjectScore.getProjectScore()));
+            scores.setExercise1Score(String.valueOf(subjectScore.getProjectWork()));
+            scores.setClassTestScore(String.valueOf(subjectScore.getClassTest1()));
+            scores.setExercise2Score(String.valueOf(subjectScore.getGroupWork()));
+            scores.setProjectScore(String.valueOf(subjectScore.getClassTest2()));
             scores.setClassScore(String.valueOf(subjectScore.getClassScore()));
             scores.setExamScore(String.valueOf(subjectScore.getExamScore()));
             scores.setCalculatedExamScore(String.valueOf(subjectScore.getCalculatedExamScore()));
             scores.setTotal(String.valueOf(subjectScore.getTotalScore()));
             scores.setGrade(String.valueOf(subjectScore.getGrade()));
-            scores.setDescription(subjectScore.getRemarks());
+            scores.setDescription(subjectScore.getGradeDescriptor());
 
             subScoresValues.add(scores);
         }
@@ -206,7 +207,7 @@ public class ReportService {
                         subjectScore.getCalculatedExamScore().toString(),
                         subjectScore.getTotalScore().toString(),
                         subjectScore.getGrade(),
-                        subjectScore.getRemarks()
+                        subjectScore.getGradeDescriptor()
                 );
                 subjectReportDTOs.add(subjectReportDTO);
             }
@@ -247,19 +248,23 @@ public class ReportService {
                 .orElse(null);
     }
 
-    public ResponseEntity<?> movePassedStudents(String studentId, String levelId, String staffId) {
+    public ResponseEntity<?> promoteStudent(String studentId, String levelId, String staffId) {
         String logData = "Level Id: " + levelId + " studentId: " + studentId;
 
         Level level = levelRepository.findByLevelID(levelId).orElse(null);
         if (level == null) {
             loggingService.logActivity(LogType.PROMOTION, logData, staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Class not found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Invalid class Id"
+            ));
         }
 
         Students student = studentsRepository.findByStudentId(studentId).orElse(null);
         if (student == null) {
             loggingService.logActivity(LogType.PROMOTION, logData, staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Student not found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Invalid student Id"
+            ));
         }
 
         student.setLevel(level);
