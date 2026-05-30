@@ -46,6 +46,7 @@ public class SubjectScore {
 
     private String grade;
 
+    @Column(name = "remarks")
     private String gradeDescriptor;
 
     public SubjectScore() {}
