@@ -92,7 +92,8 @@ public class ReportService {
             String averageScore = result.getAverageScore().toString();
             String position = result.getPosition();
             String totalStudents = String.valueOf(studentResults.size());
-            String semesterRemark = result.getConduct().getClassTeacherRemark();
+            String semesterRemark = result.getConduct().getClassTeacherRemark() == null ?
+                    "Not field yet" : result.getConduct().getClassTeacherRemark();
 
             List<ViewStudentsSubjectsResults> scoresList = new ArrayList<>();
 
