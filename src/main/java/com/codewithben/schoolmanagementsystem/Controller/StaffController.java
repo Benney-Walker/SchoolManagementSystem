@@ -1,19 +1,9 @@
 package com.codewithben.schoolmanagementsystem.Controller;
 
 import com.codewithben.schoolmanagementsystem.DTO.Academics.*;
-import com.codewithben.schoolmanagementsystem.DTO.Institution.FindStaffDTO;
-import com.codewithben.schoolmanagementsystem.DTO.Institution.StudentListPrint;
-import com.codewithben.schoolmanagementsystem.Entity.Level;
-import com.codewithben.schoolmanagementsystem.Repository.LevelRepository;
-import com.codewithben.schoolmanagementsystem.Repository.StaffsRepository;
 import com.codewithben.schoolmanagementsystem.Service.*;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/staff")
@@ -83,7 +73,7 @@ public class StaffController {
                                                 @PathVariable String levelId,
                                                 @PathVariable String studentId) {
 
-        return reportService.movePassedStudents(studentId, levelId, staffId);
+        return reportService.promoteStudent(studentId, levelId, staffId);
     }
 
     @PostMapping("/v1/mark-attendance")

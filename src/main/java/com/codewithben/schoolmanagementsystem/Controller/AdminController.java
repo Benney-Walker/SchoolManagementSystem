@@ -126,19 +126,21 @@ public class AdminController {
 
     }
 
-    @GetMapping("/v1/load-subject-data/{staffId}/{subjectId}")
+    @GetMapping("/v1/load-subject-data/{subjectId}")
     public ResponseEntity<?> loadSubjectData(@RequestHeader("staffId") String staffId,
                                              @PathVariable String subjectId) {
+
         return staffService.loadSubjectData(subjectId, staffId);
     }
 
     @PutMapping("/v1/update-subject-details")
     public ResponseEntity<?> updateSubjectData(@RequestHeader("staffId") String staffId,
                                                @RequestBody SubjectDTO subjectDTO) {
+
         return staffService.updateSubjectData(subjectDTO, staffId);
     }
 
-    @DeleteMapping("/v1/delete-subject/{staffId}/{subjectId}")
+    @DeleteMapping("/v1/delete-subject/{subjectId}")
     public ResponseEntity<?> deleteSubjectData(@RequestHeader("staffId") String staffId,
                                                @PathVariable String subjectId) {
 
