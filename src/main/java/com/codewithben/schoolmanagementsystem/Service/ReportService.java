@@ -57,80 +57,80 @@ public class ReportService {
         Level level = levelRepository.findByLevelID(levelId).orElse(null);
         if (level == null) {
             loggingService.logActivity(LogType.RESULTS, logData, staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Selected class not found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Invalid Level Id"
+            ));
         }
 
         Semester semester = semesterRepository.findBySemesterID(semesterId).orElse(null);
         if (semester == null) {
             loggingService.logActivity(LogType.RESULTS, logData, staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Selected semester not found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Invalid Semester Id"
+            ));
         }
 
-        //Get student list for report
-        List<Students> studentsListForReport = utilityClass.getActiveStudents(level.getStudents());
-        String classSize = String.valueOf(studentsListForReport.size());
-
-        List<Subjects> levelSubjects = level.getSubjects();
-
         List<ViewClassSemesterReport> viewClassSemesterReports = new ArrayList<>();
-        for (Students student : studentsListForReport) {
-            //Check if the results is complete else stop the whole operation and throw an exception "Class results not complete"
-            Results results = resultsRepository.findByStudentAndSemester(student, semester).orElse(null);
-            if (results == null){
-                loggingService.logActivity(LogType.RESULTS, logData, staffId, "FAILED");
-                return ResponseEntity.status(HttpStatus.CONFLICT).body(student.getFirstName() + "'s result not created");
+
+        List<Results> studentResults = resultsRepository
+                .findByLevel_LevelIDAndSemester_SemesterIDOrderByTotalScoreDesc(levelId, semesterId);
+        if (studentResults == null || studentResults.isEmpty()) {
+            loggingService.logActivity(LogType.RESULTS, logData, staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "No Results Found for this criteria"
+            ));
+        }
+
+        for (Results result : studentResults) {
+
+            String studentId = result.getStudent().getStudentId();
+            String studentName = result.getStudent().getFirstName() +
+                    " " + result.getStudent().getLastName();
+            String className = level.getLevelName();
+            String semesterName = semester.getSemesterName();
+            String totalScore = result.getTotalScore().toString();
+            String averageScore = result.getAverageScore().toString();
+            String position = result.getPosition();
+            String totalStudents = String.valueOf(studentResults.size());
+            String semesterRemark = result.getConduct().getClassTeacherRemark();
+
+            List<ViewStudentsSubjectsResults> scoresList = new ArrayList<>();
+
+            //Fetch subject scores
+            List<SubjectScore> subjectScores = result.getSubjectScores();
+            for (SubjectScore subjectScore : subjectScores) {
+
+                String subjectName = subjectScore.getSubject().getSubjectName();
+                String classTest1Score = subjectScore.getClassTest1().toString();
+                String classTest2Score = subjectScore.getClassTest2().toString();
+                String groupWorkScore = subjectScore.getGroupWork().toString();
+                String projectWorkScore = subjectScore.getProjectWork().toString();
+                String classScore = subjectScore.getClassScore().toString();
+                String examScore = subjectScore.getExamScore().toString();
+                String calculatedExamScore = subjectScore.getCalculatedExamScore().toString();
+                String total = subjectScore.getTotalScore().toString();
+                String grade = subjectScore.getGrade();
+                String description = subjectScore.getGradeDescriptor();
+
+                ViewStudentsSubjectsResults scores = new ViewStudentsSubjectsResults(
+                        subjectName, classTest1Score, groupWorkScore,
+                        classTest2Score, projectWorkScore, classScore,
+                        examScore, calculatedExamScore, total,
+                        grade, description
+                );
+
+                scoresList.add(scores);
             }
 
-            //Check if all subjects scores are uploaded else throw an exception and cancel the whole operation
-            List<SubjectScore> subjectScores = results.getSubjectScores();
-            if (subjectScores.size() != levelSubjects.size()) {
-                loggingService.logActivity(LogType.RESULTS, logData, staffId, "FAILED");
-                return ResponseEntity.status(HttpStatus.CONFLICT).body("Not all subjects are uploaded");
-            }
-
-            //Get results parameters
-            String studentId = results.getStudent().getStudentId();
-            String studentName = results.getStudent().getFirstName() + " " + results.getStudent().getLastName();
-            String levelName = results.getLevel().getLevelName();
-            String semesterName = results.getSemester().getSemesterName() + "(" + results.getSemester().getAcademicYear() + ")";
-            String totalScore = results.getTotalScore().toString();
-            String averageScore = results.getAverageScore().toString();
-            String position = results.getPosition();
-
-            List<ViewStudentsSubjectsResults> subScoresValues = getResultsSubjectScores(subjectScores);
-
-            ViewClassSemesterReport classReport = new ViewClassSemesterReport(
-                    studentId, studentName, levelName,
-                    semesterName, position, totalScore,
-                    averageScore, subScoresValues, classSize
+            ViewClassSemesterReport results =  new ViewClassSemesterReport(
+                    studentId, studentName, className, semesterName, position,
+                    totalScore, averageScore, semesterRemark, scoresList, totalStudents
             );
 
-            viewClassSemesterReports.add(classReport);
+            viewClassSemesterReports.add(results);
         }
 
         return ResponseEntity.ok(viewClassSemesterReports);
-    }
-
-    private List<ViewStudentsSubjectsResults> getResultsSubjectScores(List<SubjectScore> subjectScores) {
-        List<ViewStudentsSubjectsResults> subScoresValues = new ArrayList<>();
-
-        for (SubjectScore subjectScore: subjectScores) {
-            ViewStudentsSubjectsResults scores = new ViewStudentsSubjectsResults();
-            scores.setSubjectName(subjectScore.getSubject().getSubjectName());
-            scores.setExercise1Score(String.valueOf(subjectScore.getProjectWork()));
-            scores.setClassTestScore(String.valueOf(subjectScore.getClassTest1()));
-            scores.setExercise2Score(String.valueOf(subjectScore.getGroupWork()));
-            scores.setProjectScore(String.valueOf(subjectScore.getClassTest2()));
-            scores.setClassScore(String.valueOf(subjectScore.getClassScore()));
-            scores.setExamScore(String.valueOf(subjectScore.getExamScore()));
-            scores.setCalculatedExamScore(String.valueOf(subjectScore.getCalculatedExamScore()));
-            scores.setTotal(String.valueOf(subjectScore.getTotalScore()));
-            scores.setGrade(String.valueOf(subjectScore.getGrade()));
-            scores.setDescription(subjectScore.getGradeDescriptor());
-
-            subScoresValues.add(scores);
-        }
-        return subScoresValues;
     }
 
     public List<GenerateStudentReport> generateClassReports(String levelId, String semesterId,
