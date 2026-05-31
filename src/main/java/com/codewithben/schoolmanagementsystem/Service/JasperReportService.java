@@ -18,11 +18,11 @@ public class JasperReportService {
 
     private JasperReport cachedReport;
 
-    public byte[] generateClassReport(
+    public byte[] generateClassReportCards(
             List<GenerateStudentReport> generateStudentReports,
             String schoolName) throws Exception {
 
-        if (generateStudentReports == null || generateStudentReports.isEmpty()) {
+        if (generateStudentReports == null) {
             throw new IllegalArgumentException("No report data available");
         }
 
