@@ -218,9 +218,9 @@ public class ReportService {
 
             GenerateStudentReport generateStudentReport = new GenerateStudentReport(
                     studentId, studentName, className, semesterName,
-                    position, totalScore, averageScore, scores, academicYear,
+                    position, totalScore, averageScore, academicYear,
                     totalStudents, vacationDate, resumingDate, attendancePresent,
-                    totalAttendance, instructorName, currentDate, "-"
+                    totalAttendance, instructorName, currentDate, "-", scores
             );
 
             generateStudentReports.add(generateStudentReport);
