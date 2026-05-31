@@ -1,7 +1,13 @@
 package com.codewithben.schoolmanagementsystem.DTO.Academics;
 
+import lombok.*;
+
 import java.util.List;
 
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class GenerateStudentReport {
     private String studentId;
 
