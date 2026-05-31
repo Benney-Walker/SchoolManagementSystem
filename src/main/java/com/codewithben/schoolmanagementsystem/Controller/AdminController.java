@@ -7,14 +7,18 @@ import com.codewithben.schoolmanagementsystem.DTO.Institution.FindAndUpdateClass
 import com.codewithben.schoolmanagementsystem.DTO.Institution.FindSemester;
 import com.codewithben.schoolmanagementsystem.DTO.Institution.FindStaffDTO;
 import com.codewithben.schoolmanagementsystem.Entity.Level;
+import com.codewithben.schoolmanagementsystem.Entity.Semester;
 import com.codewithben.schoolmanagementsystem.Repository.LevelRepository;
+import com.codewithben.schoolmanagementsystem.Repository.SemesterRepository;
 import com.codewithben.schoolmanagementsystem.Service.*;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.NonNull;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -29,6 +33,8 @@ public class AdminController {
 
     private final LevelRepository levelRepository;
 
+    private final SemesterRepository semesterRepository;
+
     private final ReportService reportService;
 
     private final JasperReportService jasperReportService;
@@ -36,13 +42,15 @@ public class AdminController {
     private final LoggingService loggingService;
 
     public AdminController(StaffService staffService, LevelService levelService, InstitutionService institutionService,
-                           StudentService studentService, LevelRepository levelRepository, ReportService reportService,
+                           StudentService studentService, LevelRepository levelRepository, SemesterRepository semesterRepository,
+                           ReportService reportService,
                            JasperReportService jasperReportService, LoggingService loggingService) {
         this.staffService = staffService;
         this.levelService = levelService;
         this.institutionService = institutionService;
         this.studentService = studentService;
         this.levelRepository = levelRepository;
+        this.semesterRepository = semesterRepository;
         this.reportService = reportService;
         this.jasperReportService = jasperReportService;
         this.loggingService = loggingService;
@@ -154,30 +162,9 @@ public class AdminController {
     )
     public ResponseEntity<?> generateStudentReports(@RequestHeader("staffId") String staffId,
                                                     @RequestParam String levelId,
-                                                    @RequestParam String semesterId,
-                                                    @RequestParam String promotionGradeId,
-                                                    @RequestParam String passScore) {
-        String logData = "Class Id: " + levelId + " Semester Id: " + semesterId + " Promotion Grade Id: " + promotionGradeId +
-                " Pass Score: " + passScore;
+                                                    @RequestParam String semesterId) {
 
-        Level level = levelRepository.findByLevelID(levelId).orElse(null);
-        if (level == null) {
-            loggingService.logActivity(LogType.RESULTS, logData, staffId, "FAILED");
-            return ResponseEntity.badRequest().body("Selected class not found");
-        }
-
-        try {
-            List<GenerateStudentReport> reportData = reportService.generateClassReports(levelId, semesterId,
-                    promotionGradeId);
-
-            byte[] reportPDF = jasperReportService.generateClassReport(reportData, level.getInstitution().getInstitutionId());
-
-            return ResponseEntity.ok().body(reportPDF);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            return ResponseEntity.badRequest().body(ex.getMessage());
-        }
+        return reportService.getClassBulkReport(staffId, levelId, semesterId);
     }
-
 
 }
