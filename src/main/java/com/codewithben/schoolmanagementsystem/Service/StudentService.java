@@ -15,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -701,5 +702,47 @@ public class StudentService {
 
         loggingService.logActivity(LogType.FETCH_STUDENTS, logData, staffId, "SUCCESS");
         return ResponseEntity.ok(studentsHolders);
+    }
+
+    public int getTotalAttendanceCount(Semester semester) {
+        LocalDate startDate = semester.getSemesterStartDate();
+        LocalDate endDate = semester.getSemesterEndDate();
+
+        int totalAttendance = 0;
+
+        for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
+
+            DayOfWeek day = date.getDayOfWeek();
+            if (day.equals(DayOfWeek.SATURDAY) || day.equals(DayOfWeek.SUNDAY)) {
+                continue;
+            }
+
+            boolean isHoliday = false;
+
+            for (SchoolHoliday holiday : semester.getSchoolHoliday()) {
+
+                if (!date.isBefore(holiday.getStartDate()) && !date.isAfter(holiday.getEndDate())) {
+                    isHoliday = true;
+                    break;
+                }
+            }
+
+            if (!isHoliday) {
+                totalAttendance++;
+            }
+        }
+
+        return totalAttendance;
+    }
+
+    public int getStudentPresentAttendance(String studentId, String semesterId) {
+
+        List<Attendance> presentDays = attendanceRepository.findByStudent_StudentIdAndSemester_SemesterIDAndStatus(
+                studentId, semesterId, AttendanceStatus.PRESENT
+        );
+        if (presentDays == null || presentDays.isEmpty()) {
+            return 0;
+        }
+        return presentDays.size();
     }
 }
