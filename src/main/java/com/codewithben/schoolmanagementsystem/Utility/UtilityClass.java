@@ -6,6 +6,8 @@ import com.codewithben.schoolmanagementsystem.Repository.EntityID_generationRepo
 import com.codewithben.schoolmanagementsystem.Repository.GradeSystemRepository;
 import com.codewithben.schoolmanagementsystem.Repository.InstitutiionRepository;
 import com.codewithben.schoolmanagementsystem.Repository.ResultsRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
 import java.time.DayOfWeek;
@@ -14,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
+@RequiredArgsConstructor
 @Component
 public class UtilityClass {
 
@@ -26,14 +29,6 @@ public class UtilityClass {
     private final ResultsRepository resultsRepository;
 
     private final AtomicReference<List<GradeSystem>> cache = new AtomicReference<>();
-
-    public UtilityClass(EntityID_generationRepository entityID_generationRepository, InstitutiionRepository institutiionRepository,
-                        GradeSystemRepository gradeSystemRepository,  ResultsRepository resultsRepository) {
-        this.entityID_generationRepository = entityID_generationRepository;
-        this.gradeSystemRepository = gradeSystemRepository;
-        this.institutiionRepository = institutiionRepository;
-        this.resultsRepository = resultsRepository;
-    }
 
     //Id generation method
     public String generateEntityId(String entityName) {
@@ -228,4 +223,5 @@ public class UtilityClass {
         }
         return studentsListForReport;
     }
+
 }
