@@ -16,8 +16,8 @@
         <field name="classScore" class="java.lang.String"/>
         <field name="examScore" class="java.lang.String"/>
         <field name="total" class="java.lang.String"/>
-        <field name="position" class="java.lang.String"/>
-        <field name="description" class="java.lang.String"/>
+        <field name="grade" class="java.lang.String"/>
+        <field name="gradeDescriptor" class="java.lang.String"/>
     </dataset>
     <parameter name="logoPath" class="java.lang.String">
         <defaultValueExpression><![CDATA["D:/BUSINESS/SchoolManagementSystem/src/main/resources/reports/daffodils Logo.png"]]></defaultValueExpression>
@@ -29,17 +29,17 @@
     <field name="studentName" class="java.lang.String"/>
     <field name="className" class="java.lang.String"/>
     <field name="semesterName" class="java.lang.String"/>
-    <field name="subjects" class="java.util.List"/>
+    <field name="classPosition" class="java.lang.String"/>
     <field name="academicYear" class="java.lang.String"/>
     <field name="totalStudents" class="java.lang.String"/>
     <field name="vacationDate" class="java.lang.String"/>
-    <field name="resumptionDate" class="java.lang.String"/>
-    <field name="promotedTo" class="java.lang.String"/>
-    <field name="attendanceMarked" class="java.lang.String"/>
+    <field name="attendancePresent" class="java.lang.String"/>
     <field name="totalAttendance" class="java.lang.String"/>
+    <field name="resumptionDate" class="java.lang.String"/>
     <field name="instructorName" class="java.lang.String"/>
     <field name="currentDate" class="java.lang.String"/>
-    <field name="classPosition" class="java.lang.String"/>
+    <field name="promotedTo" class="java.lang.String"/>
+    <field name="subjectScores" class="java.util.List"/>
     <detail>
         <band height="802" splitType="Stretch">
             <element kind="image" uuid="c1234567-89ab-cdef-0123-456789abcdef" x="10" y="0" width="70" height="70" scaleImage="RetainShape">
@@ -114,7 +114,7 @@
             <element kind="component" uuid="e930e665-15b0-4ca8-98f4-58e84ae3faeb" x="10" y="160" width="535" height="40">
                 <component kind="table">
                     <datasetRun uuid="a0c40a06-cfe9-4dac-a0ba-237c58f62c2e" subDataset="SubjectsDataset">
-                        <dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource($F{subjects})]]></dataSourceExpression>
+                        <dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource($F{subjectScores})]]></dataSourceExpression>
                     </datasetRun>
                     <column kind="single" uuid="cfb9e8e7-70a3-4258-8872-eccc0d32fc23" width="140">
                         <columnHeader height="20" style="Table_CH">
@@ -172,7 +172,7 @@
                         </columnHeader>
                         <detailCell height="20" style="Table_TD">
                             <element kind="textField" uuid="754fe790-54d3-49d3-bf06-24f447780f03" x="0" y="0" width="60" height="20" hTextAlign="Center">
-                                <expression><![CDATA[$F{position}]]></expression>
+                                <expression><![CDATA[$F{grade}]]></expression>
                             </element>
                         </detailCell>
                     </column>
@@ -184,7 +184,7 @@
                         </columnHeader>
                         <detailCell height="20" style="Table_TD">
                             <element kind="textField" uuid="6ba312c7-7a9f-4c05-85c3-e4f21e4267fb" x="5" y="0" width="90" height="20">
-                                <expression><![CDATA[$F{description}]]></expression>
+                                <expression><![CDATA[$F{gradeDescriptor}]]></expression>
                             </element>
                         </detailCell>
                     </column>
@@ -226,7 +226,7 @@
                     <pen lineWidth="0.5"/>
                 </box>
             </element>
-            <element kind="staticText" uuid="fa0f0a47-9dab-49cd-a499-5b97f2270dfe" positionType="Float" mode="Opaque" x="465" y="250" width="80" height="15" backcolor="#E8E8E8" bold="true" hTextAlign="Center">
+            <element kind="staticText" uuid="fa0f0a47-9dab-49cd-a499-5b97f2270dfe" positionType="Float" mode="Opaque" x="465" y="250" width="80" fontSize="10" height="15" backcolor="#E8E8E8" bold="true" hTextAlign="Center">
                 <text><![CDATA[NOT EXPECT.]]></text>
                 <box>
                     <pen lineWidth="0.5"/>
@@ -452,7 +452,7 @@
                 <text><![CDATA[ATTENDANCE:]]></text>
             </element>
             <element kind="textField" uuid="46552784-394b-4a4a-a455-671e9299f1d4" positionType="Float" x="90" y="370" width="50" height="15">
-                <expression><![CDATA[$F{attendanceMarked}]]></expression>
+                <expression><![CDATA[$F{attendancePresent}]]></expression>
             </element>
             <element kind="staticText" uuid="630b3f1d-5ca4-4b18-88dd-9c43028742ce" positionType="Float" x="150" y="370" width="60" height="15" bold="true">
                 <text><![CDATA[OUT OF:]]></text>
