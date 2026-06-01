@@ -559,7 +559,9 @@ public class StudentService {
         Level level = levelRepository.findByLevelID(levelId).orElse(null);
         if (level == null) {
             loggingService.logActivity(LogType.FETCH_STUDENTS, logData, staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Class not found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Invalid class Id"
+            ));
         }
 
         LocalDate date = LocalDate.parse(attendanceDate, DateTimeFormatter.ISO_DATE);
@@ -584,8 +586,6 @@ public class StudentService {
                 }
             }
 
-            System.out.println( "Status: " + status);
-
             attendanceList.add(new StudentAttendance(
                     level.getLevelID(),
                     student.getStudentId(),
@@ -598,12 +598,12 @@ public class StudentService {
         return ResponseEntity.ok(attendanceList);
     }
 
-    public ResponseEntity<?> markStudentAttendance(String studentId, String levelId, String status, String staffId) {
-        String logData = "Student Id: " + studentId + " levelId: " + levelId + " status: " + status;
-        System.out.println(logData);
+    public ResponseEntity<?> markStudentAttendance(String studentId, String levelId, String status, String date, String staffId) {
+        String logData = "Student Id: " + studentId + " levelId: " + levelId + " status: " + status + " date: " + date;
 
-        //Check if date is not weekends
-        if (!utilityClass.isSchoolDay(LocalDate.now())) {
+        //Check if date is accepted for attendance
+        LocalDate selectedDate = LocalDate.parse(date, DateTimeFormatter.ISO_DATE);
+        if (!utilityClass.isSchoolDay(selectedDate)) {
             loggingService.logActivity(LogType.ATTENDANCE, logData, staffId, "FAILED");
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
                     "message", "Attendance can't be marked on weekends"
@@ -614,15 +614,7 @@ public class StudentService {
         if (student == null) {
             loggingService.logActivity(LogType.ATTENDANCE, logData, staffId, "FAILED");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "Student not found"
-            ));
-        }
-
-        Level level = levelRepository.findByLevelID(levelId).orElse(null);
-        if (level == null) {
-            loggingService.logActivity(LogType.ATTENDANCE, logData, staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "Class not found"
+                    "message", "Invalid student Id"
             ));
         }
 
@@ -634,6 +626,27 @@ public class StudentService {
             loggingService.logActivity(LogType.ATTENDANCE, logData, staffId, "FAILED");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
                     "message", "Internal server error! Please try again"
+            ));
+        }
+
+        List<SchoolHoliday> holidays = semester.getSchoolHoliday();
+        if (holidays != null && !holidays.isEmpty()) {
+            for (SchoolHoliday holiday : holidays) {
+
+                if (!selectedDate.isBefore(holiday.getStartDate()) && !selectedDate.isAfter(holiday.getEndDate())) {
+                    loggingService.logActivity(LogType.ATTENDANCE, logData, staffId, "FAILED");
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                            "message", "Today is holiday"
+                    ));
+                }
+            }
+        }
+
+        Level level = levelRepository.findByLevelID(levelId).orElse(null);
+        if (level == null) {
+            loggingService.logActivity(LogType.ATTENDANCE, logData, staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Invalid level Id"
             ));
         }
 
@@ -653,7 +666,7 @@ public class StudentService {
             todaysAttendance.setStudent(student);
             todaysAttendance.setSemester(semester);
             todaysAttendance.setLevel(level);
-            todaysAttendance.setDateMarked(LocalDate.now());
+            todaysAttendance.setDateMarked(selectedDate);
             todaysAttendance.setMarkedBy(staff);
 
             List<Attendance> studentAttendance = student.getAttendance();
