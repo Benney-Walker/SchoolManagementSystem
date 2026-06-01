@@ -77,16 +77,6 @@ public class StaffController {
         return reportService.promoteStudent(studentId, levelId, staffId);
     }
 
-    @PostMapping("/v1/mark-attendance")
-    public ResponseEntity<?> markAttendance(@RequestHeader("staffId") String staffId,
-                                            @RequestBody Attendance attendance) {
-        String studentId = attendance.getStudentId();
-        String levelId = attendance.getLevelId();
-        String status = attendance.getStatus().toUpperCase();
-
-        return studentService.markStudentAttendance(studentId, levelId, status, staffId);
-    }
-
     @GetMapping("/v1/load-staffs-info")
     public ResponseEntity<?> loadStaffCache(@RequestHeader("staffId") String staffId) {
 
