@@ -68,25 +68,36 @@ public class ConductService {
         //Retrieve conducts
         for (Results result : studentList) {
 
-            Conduct conduct = result.getConduct();
-
             String studentId = result.getStudent().getStudentId();
             String studentName = result.getStudent().getFirstName() + " " +
                     result.getStudent().getLastName();
-            String regular = conduct.getRegular() == null ?
-                    ConductRatings.GOOD.name() : conduct.getRegular().toString();
-            String punctual = conduct.getPunctual() == null ?
-                    ConductRatings.GOOD.name() : conduct.getPunctual().toString();
-            String physicalAppearance = conduct.getPhysicalAppearance() == null ?
-                    ConductRatings.GOOD.name() : conduct.getPhysicalAppearance().toString();
-            String social = conduct.getSocial() == null ?
-                    ConductRatings.GOOD.name() : conduct.getSocial().toString();
-            String emotional = conduct.getEmotional() == null ?
-                    ConductRatings.GOOD.name() : conduct.getEmotional().toString();
-            String cognitiveSkills = conduct.getCognitiveSkills() == null ?
-                    ConductRatings.GOOD.name() : conduct.getCognitiveSkills().toString();
-            String conductRemark = conduct.getClassTeacherRemark() == null ?
-                    "" : conduct.getClassTeacherRemark();
+            String regular;
+            String punctual;
+            String physicalAppearance;
+            String social;
+            String emotional;
+            String cognitiveSkills;
+            String conductRemark;
+
+            Conduct conduct = result.getConduct();
+            if (conduct == null) {
+                regular = ConductRatings.GOOD.name();
+                punctual = ConductRatings.GOOD.name();
+                physicalAppearance = ConductRatings.GOOD.name();
+                social = ConductRatings.GOOD.name();
+                emotional = ConductRatings.GOOD.name();
+                cognitiveSkills = ConductRatings.GOOD.name();
+                conductRemark = " ";
+            } else {
+
+                regular = conduct.getRegular().toString();
+                punctual = conduct.getPunctual().toString();
+                physicalAppearance = conduct.getPhysicalAppearance().toString();
+                social = conduct.getSocial().toString();
+                emotional = conduct.getEmotional().toString();
+                cognitiveSkills = conduct.getCognitiveSkills().toString();
+                conductRemark = conduct.getClassTeacherRemark();
+            }
 
             StudentConductRecord studentConductRecord = StudentConductRecord.builder()
                     .studentId(studentId)
