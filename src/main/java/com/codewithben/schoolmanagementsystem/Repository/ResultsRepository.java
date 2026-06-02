@@ -11,11 +11,9 @@ import java.util.Optional;
 
 @Repository
 public interface ResultsRepository extends JpaRepository<Results, Long> {
-    Optional<Results> findByStudent_StudentIdAndSemester_SemesterIDAndLevel_LevelID(
-            String studentId, String semesterId, String levelId
+    Optional<Results> findByStudent_StudentIdAndSemester_SemesterID(
+            String studentId, String semesterId
     );
-
-    Optional<Results> findByStudentAndSemester(Students student, Semester semester);
 
     List<Results> findByLevel_LevelIDAndSemester_SemesterIDOrderByTotalScoreDesc(
             String levelId, String semesterId

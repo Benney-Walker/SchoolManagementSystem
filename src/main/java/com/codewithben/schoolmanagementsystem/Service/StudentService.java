@@ -195,8 +195,8 @@ public class StudentService {
 
         // Get or create Results for this student + semester + level
         Results result = resultsRepository
-                .findByStudent_StudentIdAndSemester_SemesterIDAndLevel_LevelID(
-                        student.getStudentId(), semesterId, subject.getLevel().getLevelID())
+                .findByStudent_StudentIdAndSemester_SemesterID(
+                        student.getStudentId(), semesterId)
                 .orElse(null);
 
         if (result == null) {
@@ -290,8 +290,8 @@ public class StudentService {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Student not found");
         }
 
-        Results results = resultsRepository.findByStudent_StudentIdAndSemester_SemesterIDAndLevel_LevelID(
-                studentId, semesterId, levelId
+        Results results = resultsRepository.findByStudent_StudentIdAndSemester_SemesterID(
+                studentId, semesterId
         ).orElse(null);
         if (results == null) {
             loggingService.logActivity(LogType.RESULTS, logData, staffId, "FAILED");
