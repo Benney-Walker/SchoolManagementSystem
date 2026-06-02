@@ -62,9 +62,9 @@ public class InstitutionService {
 
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if(staff == null){
-            loggingService.logActivity(LogType.ADD_GRADING_CRITERIA, logData, staffId, "FAILED");
+            loggingService.logActivity(LogType.GRADING_CRITERIA, logData, staffId, "FAILED");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "Invalid Staff info"
+                    "message", "Invalid Staff Id"
             ));
         }
 
@@ -112,4 +112,43 @@ public class InstitutionService {
         loggingService.logActivity(LogType.GRADING_CRITERIA, logData, staffId, "SUCCESS");
         return ResponseEntity.ok().build();
     }
+
+    public ResponseEntity<?> loadAllGradingCriteria(String staffId) {
+
+        Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
+        if(staff == null){
+            loggingService.logActivity(LogType.GRADING_CRITERIA, "N/A", staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Invalid Staff Id"
+            ));
+        }
+
+        List<GradeSystem> gradingList =
+                gradeSystemRepository.findAllByInstitution_InstitutionId(staff.getInstitution().getInstitutionId());
+        if(gradingList == null || gradingList.isEmpty()){
+            loggingService.logActivity(LogType.GRADING_CRITERIA, "N/A", staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Institution has no grading criteria set"
+            ));
+        }
+
+        List<GradingCriteria> gradingCriteriaList = new ArrayList<>();
+        //Retrieve all criteria
+        for(GradeSystem grading : gradingList){
+
+            GradingCriteria gradingCriteria = GradingCriteria.builder()
+                    .id(grading.getId())
+                    .grade(grading.getGrade())
+                    .gradeDescription(grading.getGradeDescription())
+                    .lowerRange(grading.getLowerRange())
+                    .upperRange(grading.getUpperRange())
+                    .build();
+
+            gradingCriteriaList.add(gradingCriteria);
+        }
+
+        return ResponseEntity.ok(gradingCriteriaList);
+    }
+
+
 }
