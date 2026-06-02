@@ -1,6 +1,7 @@
 package com.codewithben.schoolmanagementsystem.Controller;
 
 import com.codewithben.schoolmanagementsystem.Contants.LogType;
+import com.codewithben.schoolmanagementsystem.DTO.Conduct.StudentConductRecord;
 import com.codewithben.schoolmanagementsystem.DTO.Staff.NewStaff;
 import com.codewithben.schoolmanagementsystem.Entity.Staffs;
 import com.codewithben.schoolmanagementsystem.Service.*;
@@ -25,6 +26,8 @@ public class StaffController {
     private final ReportService reportService;
 
     private final LoggingService loggingService;
+
+    private final ConductService conductService;
 
 
     @GetMapping("/v1/total-staffs")
@@ -131,5 +134,13 @@ public class StaffController {
 
         return staffService.addNewStaff(firstName, lastName, gender, dateOfBirth,
                 email, password, phoneNumber, role, staff.getInstitution(), logData, staffId);
+    }
+
+    @GetMapping("/v1/conduct-records")
+    public ResponseEntity<?> getStudentsConduct(@RequestHeader("staffId")String staffId,
+                                               @RequestParam String levelId,
+                                               @RequestParam String semesterId) {
+
+        return conductService.getStudentsConduct(levelId, semesterId, staffId);
     }
 }
