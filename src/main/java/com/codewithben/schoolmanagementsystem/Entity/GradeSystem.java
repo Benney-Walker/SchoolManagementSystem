@@ -1,12 +1,18 @@
 package com.codewithben.schoolmanagementsystem.Entity;
 
 import jakarta.persistence.*;
+import lombok.*;
 
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 public class GradeSystem {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private int id;
 
     @Column(nullable = false)
     private Double lowerRange;
@@ -22,52 +28,4 @@ public class GradeSystem {
 
     @ManyToOne(fetch = FetchType.LAZY)
     private Institution institution;
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Double getLowerRange() {
-        return lowerRange;
-    }
-
-    public void setLowerRange(Double gradeRange) {
-        this.lowerRange = gradeRange;
-    }
-
-    public Double getUpperRange() {
-        return upperRange;
-    }
-
-    public void setUpperRange(Double gradeRange) {
-        this.upperRange = gradeRange;
-    }
-
-    public String getGrade() {
-        return grade;
-    }
-
-    public void setGrade(String grade) {
-        this.grade = grade;
-    }
-
-    public String getGradeDescription() {
-        return gradeDescription;
-    }
-
-    public void setGradeDescription(String grade) {
-        this.gradeDescription = grade;
-    }
-
-    public Institution getInstitution() {
-        return institution;
-    }
-
-    public void setInstitution(Institution institution) {
-        this.institution = institution;
-    }
 }
