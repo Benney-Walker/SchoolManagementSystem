@@ -63,16 +63,16 @@ public class AuthenticationController {
     }
 
     @PostMapping("/v1/enroll-new-staff")
-    public ResponseEntity<?> enrollNewStaff(@RequestBody EnrollNewStaffDTO enrollNewStaffDTO) {
-        String firstName = enrollNewStaffDTO.getFirstName();
-        String lastName = enrollNewStaffDTO.getLastName();
-        String gender = enrollNewStaffDTO.getGender();
-        String dateOfBirth = enrollNewStaffDTO.getDateOfBirth();
-        String email = enrollNewStaffDTO.getEmail();
-        String password = enrollNewStaffDTO.getPassword();
-        String phoneNumber = enrollNewStaffDTO.getPhoneNumber();
-        List<String> role = enrollNewStaffDTO.getRoles();
-        String institutionID = enrollNewStaffDTO.getInstitutionId();
+    public ResponseEntity<?> enrollNewStaff(@RequestBody NewPrincipal newPrincipal) {
+        String firstName = newPrincipal.getFirstName();
+        String lastName = newPrincipal.getLastName();
+        String gender = newPrincipal.getGender();
+        String dateOfBirth = newPrincipal.getDateOfBirth();
+        String email = newPrincipal.getEmail();
+        String password = newPrincipal.getPassword();
+        String phoneNumber = newPrincipal.getPhoneNumber();
+        List<String> role = newPrincipal.getRoles();
+        String institutionID = newPrincipal.getInstitutionId();
 
         String logData = "First Name: " + firstName +
                 ", Last Name: " + lastName +
@@ -87,11 +87,13 @@ public class AuthenticationController {
         if (institution == null) {
 
             loggingService.logActivity(LogType.STAFF_ENROLLMENT, logData, "N/A", "FAILED");
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("Invalid institution Id");
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                    "message", "Invalid institution ID"
+            ));
         }
 
-        return staffService.addNewStaff(firstName, lastName, gender, dateOfBirth, institutionID,
-                    email, password, phoneNumber, role, institution, logData);
+        return staffService.addNewStaff(firstName, lastName, gender, dateOfBirth,
+                    email, password, phoneNumber, role, institution, logData, null);
     }
 
     @PostMapping("/v1/staff-login")
