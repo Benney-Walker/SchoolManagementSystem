@@ -142,6 +142,7 @@ public class ConductService {
 
             studentResult.setConduct(conduct);
             resultsRepository.save(studentResult);
+            loggingService.logActivity(LogType.CONDUCT, logData, staffId, LogStatus.SUCCESS.name());
             return ResponseEntity.ok().build();
         }
 
@@ -153,6 +154,7 @@ public class ConductService {
         conduct.setCognitiveSkills(ConductRatings.valueOf(record.getCognitiveSkills()));
         conduct.setClassTeacherRemark(record.getConductRemark());
         conductRepository.save(conduct);
+        loggingService.logActivity(LogType.CONDUCT, logData, staffId, LogStatus.SUCCESS.name());
         return ResponseEntity.ok().build();
     }
 }
