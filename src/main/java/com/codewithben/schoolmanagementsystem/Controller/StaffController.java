@@ -1,10 +1,20 @@
 package com.codewithben.schoolmanagementsystem.Controller;
 
-import com.codewithben.schoolmanagementsystem.DTO.Academics.*;
+import com.codewithben.schoolmanagementsystem.Contants.LogType;
+import com.codewithben.schoolmanagementsystem.DTO.Staff.NewStaff;
+import com.codewithben.schoolmanagementsystem.Entity.Staffs;
 import com.codewithben.schoolmanagementsystem.Service.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.Map;
+
+@Builder
+@AllArgsConstructor
 @RestController
 @RequestMapping("/api/staff")
 public class StaffController {
@@ -12,17 +22,10 @@ public class StaffController {
 
     private final StaffService staffService;
 
-    private final StudentService studentService;
-
     private final ReportService reportService;
 
-    public StaffController(LevelService levelService, StaffService staffService, StudentService studentService,
-                           ReportService reportService) {
-        this.levelService = levelService;
-        this.staffService = staffService;
-        this.studentService = studentService;
-        this.reportService = reportService;
-    }
+    private final LoggingService loggingService;
+
 
     @GetMapping("/v1/total-staffs")
     public ResponseEntity<?> loadTotalStaffs(@RequestHeader("staffId") String staffId) {
@@ -55,11 +58,6 @@ public class StaffController {
         return levelService.loadStaffGrades(staffId);
     }
 
-    /*@GetMapping("/v1/print-student-list/{levelId}")
-    public ResponseEntity<?> getLevelStudents(@PathVariable String levelId) {
-
-        return studentService.getLevelStudents(levelId));
-    }*/
 
     @GetMapping("/v2/view-class-results")
     public ResponseEntity<?> viewClassSemesterResults(@RequestHeader("staffId") String staffId,
@@ -100,5 +98,38 @@ public class StaffController {
                                                @PathVariable String levelId) {
 
         return levelService.getLevelSubjects(levelId, staffId);
+    }
+
+    @PostMapping("/v1/add-new-staff")
+    public ResponseEntity<?> enrollNewStaff(@RequestHeader("staffId")String staffId,
+                                            @RequestBody NewStaff newStaff) {
+
+        String firstName = newStaff.getFirstName();
+        String lastName = newStaff.getLastName();
+        String gender = newStaff.getGender();
+        String dateOfBirth = newStaff.getDateOfBirth();
+        String email = newStaff.getEmail();
+        String password = newStaff.getPassword();
+        String phoneNumber = newStaff.getPhoneNumber();
+        List<String> role = newStaff.getRoles();
+
+        String logData = "First Name: " + firstName +
+                ", Last Name: " + lastName +
+                ", Gender: " + gender +
+                ", DOB: " + dateOfBirth +
+                ", Email: " + email +
+                ", Phone: " + phoneNumber +
+                ", Roles: " + role.toString();
+
+        Staffs staff = staffService.getStaffDetails(staffId);
+        if (staff == null) {
+            loggingService.logActivity(LogType.STAFF_ENROLLMENT, logData, staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                    "message", "Internal Server Error! Contact Developer"
+            ));
+        }
+
+        return staffService.addNewStaff(firstName, lastName, gender, dateOfBirth,
+                email, password, phoneNumber, role, staff.getInstitution(), logData, staffId);
     }
 }
