@@ -68,17 +68,48 @@ public class InstitutionService {
             ));
         }
 
-        Institution institution = staff.getInstitution();
+        if (gradingCriteria.getId() == 0) {
 
-        GradeSystem gradeSystem = new GradeSystem();
-        gradeSystem.setLowerRange(gradingCriteria.getLowerRange());
-        gradeSystem.setUpperRange(gradingCriteria.getUpperRange());
-        gradeSystem.setGrade(gradingCriteria.getGrade());
-        gradeSystem.setGradeDescription(gradingCriteria.getGradeDescription());
-        gradeSystem.setInstitution(institution);
-        gradeSystemRepository.save(gradeSystem);
+            GradeSystem criteria =
+                    gradeSystemRepository.findByGradeAndInstitution_InstitutionId(
+                            gradingCriteria.getGrade(),
+                            staff.getInstitution().getInstitutionId()
+                    ).orElse(null);
 
-        loggingService.logActivity(LogType.ADD_GRADING_CRITERIA, logData, staffId, "SUCCESS");
+            if (criteria != null) {
+                loggingService.logActivity(LogType.GRADING_CRITERIA, logData, staffId, "FAILED");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                        "message", "Criteria already exist"
+                ));
+            }
+
+            GradeSystem gradeSystem = new GradeSystem();
+            gradeSystem.setLowerRange(gradingCriteria.getLowerRange());
+            gradeSystem.setUpperRange(gradingCriteria.getUpperRange());
+            gradeSystem.setGrade(gradingCriteria.getGrade());
+            gradeSystem.setGradeDescription(gradingCriteria.getGradeDescription());
+            gradeSystem.setInstitution(staff.getInstitution());
+            gradeSystemRepository.save(gradeSystem);
+
+            loggingService.logActivity(LogType.GRADING_CRITERIA, logData, staffId, "SUCCESS");
+            return ResponseEntity.ok().build();
+        }
+
+        GradeSystem criteria = gradeSystemRepository.findById(gradingCriteria.getId()).orElse(null);
+        if (criteria == null) {
+            loggingService.logActivity(LogType.GRADING_CRITERIA, logData, staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Criteria do not exist on system"
+            ));
+        }
+
+        criteria.setLowerRange(gradingCriteria.getLowerRange());
+        criteria.setUpperRange(gradingCriteria.getUpperRange());
+        criteria.setGrade(gradingCriteria.getGrade());
+        criteria.setGradeDescription(gradingCriteria.getGradeDescription());
+        gradeSystemRepository.save(criteria);
+
+        loggingService.logActivity(LogType.GRADING_CRITERIA, logData, staffId, "SUCCESS");
         return ResponseEntity.ok().build();
     }
 }
