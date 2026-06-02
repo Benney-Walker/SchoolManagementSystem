@@ -1,6 +1,18 @@
 package com.codewithben.schoolmanagementsystem.DTO.Result;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class GradingCriteria {
+
+    private int id;
+
     private Double lowerRange;
 
     private Double upperRange;
@@ -8,27 +20,4 @@ public class GradingCriteria {
     private String grade;
 
     private String gradeDescription;
-
-    public GradingCriteria(Double lowerRange, Double upperRange, String grade, String gradeDescription) {
-        this.lowerRange = lowerRange;
-        this.upperRange = upperRange;
-        this.grade = grade;
-        this.gradeDescription = gradeDescription;
-    }
-
-    public Double getLowerRange() {
-        return lowerRange;
-    }
-
-    public Double getUpperRange() {
-        return upperRange;
-    }
-
-    public String getGrade() {
-        return grade;
-    }
-
-    public String getGradeDescription() {
-        return gradeDescription;
-    }
 }
