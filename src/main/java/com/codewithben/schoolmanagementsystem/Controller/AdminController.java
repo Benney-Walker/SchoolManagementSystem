@@ -10,15 +10,16 @@ import com.codewithben.schoolmanagementsystem.DTO.Subject.SubjectDTO;
 import com.codewithben.schoolmanagementsystem.Repository.LevelRepository;
 import com.codewithben.schoolmanagementsystem.Repository.SemesterRepository;
 import com.codewithben.schoolmanagementsystem.Service.*;
-import org.springframework.http.HttpStatus;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.lang.NonNull;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.util.Map;
 
+@AllArgsConstructor
+@Builder
 @RestController
 @RequestMapping("/api/admin")
 public class AdminController {
@@ -40,20 +41,7 @@ public class AdminController {
 
     private final LoggingService loggingService;
 
-    public AdminController(StaffService staffService, LevelService levelService, InstitutionService institutionService,
-                           StudentService studentService, LevelRepository levelRepository, SemesterRepository semesterRepository,
-                           ReportService reportService,
-                           JasperReportService jasperReportService, LoggingService loggingService) {
-        this.staffService = staffService;
-        this.levelService = levelService;
-        this.institutionService = institutionService;
-        this.studentService = studentService;
-        this.levelRepository = levelRepository;
-        this.semesterRepository = semesterRepository;
-        this.reportService = reportService;
-        this.jasperReportService = jasperReportService;
-        this.loggingService = loggingService;
-    }
+
 
     @PostMapping("/v1/reset-staff-password")
     public ResponseEntity<?> recoverStaffPassword(@RequestHeader("staffId") String staffId,
@@ -80,6 +68,12 @@ public class AdminController {
                                                 @RequestBody GradingCriteria gradingCriteria) {
 
         return institutionService.saveGradingCriteria(gradingCriteria, staffId);
+    }
+
+    @GetMapping("/v1/load-grading-criteria")
+    public ResponseEntity<?> loadAllGradingCriteria(@RequestHeader("staffId") String staffId) {
+
+        return institutionService.loadAllGradingCriteria(staffId);
     }
 
     @GetMapping("/v1/find-class-info/{levelId}")
