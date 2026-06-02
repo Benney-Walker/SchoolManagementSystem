@@ -143,4 +143,11 @@ public class StaffController {
 
         return conductService.getStudentsConduct(levelId, semesterId, staffId);
     }
+
+    @PutMapping("/v1/save-conduct-record")
+    public ResponseEntity<?> saveStudentConduct(@RequestHeader("staffId")String staffId,
+                                                @RequestBody StudentConductRecord record) {
+
+        return conductService.saveStudentConducts(staffId, record);
+    }
 }
