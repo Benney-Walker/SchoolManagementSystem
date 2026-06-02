@@ -79,7 +79,7 @@ public class AdminController {
     public ResponseEntity<?> setGradingCriteria(@RequestHeader("staffId") String staffId,
                                                 @RequestBody GradingCriteria gradingCriteria) {
 
-        return institutionService.setGradingCriteria(gradingCriteria, staffId);
+        return institutionService.saveGradingCriteria(gradingCriteria, staffId);
     }
 
     @GetMapping("/v1/find-class-info/{levelId}")

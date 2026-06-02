@@ -13,6 +13,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -54,7 +56,7 @@ public class InstitutionService {
         return ResponseEntity.status(HttpStatus.CONFLICT).body("Institution already exist");
     }
 
-    public ResponseEntity<?> setGradingCriteria(GradingCriteria gradingCriteria, String staffId) {
+    public ResponseEntity<?> saveGradingCriteria(GradingCriteria gradingCriteria, String staffId) {
         String logData = "Lower Range: " + gradingCriteria.getLowerRange() + " Higher Range: " + gradingCriteria.getUpperRange()
                 + " Grade: " + gradingCriteria.getGrade() + " Description: " + gradingCriteria.getGradeDescription();
 
