@@ -2,13 +2,12 @@ package com.codewithben.schoolmanagementsystem.Service;
 
 import com.codewithben.schoolmanagementsystem.Contants.LogType;
 import com.codewithben.schoolmanagementsystem.Contants.StudentStatus;
-import com.codewithben.schoolmanagementsystem.DTO.Account.*;
-import com.codewithben.schoolmanagementsystem.DTO.Institution.FetchFeesDetails;
+import com.codewithben.schoolmanagementsystem.DTO.Fees.*;
+import com.codewithben.schoolmanagementsystem.DTO.Report.GradeFeesReport;
 import com.codewithben.schoolmanagementsystem.Entity.*;
 import com.codewithben.schoolmanagementsystem.Repository.*;
 import com.codewithben.schoolmanagementsystem.Utility.UtilityClass;
 import jakarta.transaction.Transactional;
-import org.apache.juli.logging.Log;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;

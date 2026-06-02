@@ -1,6 +1,9 @@
 package com.codewithben.schoolmanagementsystem.Controller;
 
-import com.codewithben.schoolmanagementsystem.DTO.Academics.*;
+import com.codewithben.schoolmanagementsystem.DTO.Attendance.Attendance;
+import com.codewithben.schoolmanagementsystem.DTO.Result.SaveStudentScores;
+import com.codewithben.schoolmanagementsystem.DTO.Students.AddNewStudent;
+import com.codewithben.schoolmanagementsystem.DTO.Students.UpdateStudentPersonalData;
 import com.codewithben.schoolmanagementsystem.Service.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

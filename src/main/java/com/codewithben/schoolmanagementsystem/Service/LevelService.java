@@ -1,22 +1,23 @@
 package com.codewithben.schoolmanagementsystem.Service;
 
 import com.codewithben.schoolmanagementsystem.Contants.LogType;
-import com.codewithben.schoolmanagementsystem.DTO.Academics.LevelCaching;
-import com.codewithben.schoolmanagementsystem.DTO.Academics.SemesterCaching;
-import com.codewithben.schoolmanagementsystem.DTO.Institution.*;
+import com.codewithben.schoolmanagementsystem.DTO.Class.LevelCaching;
+import com.codewithben.schoolmanagementsystem.DTO.Semester.SemesterCaching;
+import com.codewithben.schoolmanagementsystem.DTO.Class.FindAndUpdateClassInfo;
+import com.codewithben.schoolmanagementsystem.DTO.Class.GradeInformation;
+import com.codewithben.schoolmanagementsystem.DTO.Semester.FindSemester;
+import com.codewithben.schoolmanagementsystem.DTO.Students.StudentRoaster;
+import com.codewithben.schoolmanagementsystem.DTO.Subject.SubjectsHolder;
 import com.codewithben.schoolmanagementsystem.Entity.*;
 import com.codewithben.schoolmanagementsystem.Repository.*;
 import com.codewithben.schoolmanagementsystem.Utility.UtilityClass;
 import jakarta.transaction.Transactional;
-import org.apache.juli.logging.Log;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;

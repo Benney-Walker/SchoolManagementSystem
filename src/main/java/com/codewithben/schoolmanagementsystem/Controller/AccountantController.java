@@ -1,8 +1,9 @@
 package com.codewithben.schoolmanagementsystem.Controller;
 
 import com.codewithben.schoolmanagementsystem.Contants.LogType;
-import com.codewithben.schoolmanagementsystem.DTO.Account.*;
-import com.codewithben.schoolmanagementsystem.DTO.Institution.FetchFeesDetails;
+import com.codewithben.schoolmanagementsystem.DTO.Fees.FetchFeesDetails;
+import com.codewithben.schoolmanagementsystem.DTO.Fees.NewFeesPaymentDTO;
+import com.codewithben.schoolmanagementsystem.DTO.Fees.StudentPaymentRecords;
 import com.codewithben.schoolmanagementsystem.Entity.Staffs;
 import com.codewithben.schoolmanagementsystem.Repository.StaffsRepository;
 import com.codewithben.schoolmanagementsystem.Service.FeesService;

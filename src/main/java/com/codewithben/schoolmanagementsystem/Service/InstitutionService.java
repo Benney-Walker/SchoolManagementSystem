@@ -1,7 +1,7 @@
 package com.codewithben.schoolmanagementsystem.Service;
 
 import com.codewithben.schoolmanagementsystem.Contants.LogType;
-import com.codewithben.schoolmanagementsystem.DTO.Academics.GradingCriteria;
+import com.codewithben.schoolmanagementsystem.DTO.Result.GradingCriteria;
 import com.codewithben.schoolmanagementsystem.Entity.GradeSystem;
 import com.codewithben.schoolmanagementsystem.Entity.Institution;
 import com.codewithben.schoolmanagementsystem.Entity.Staffs;

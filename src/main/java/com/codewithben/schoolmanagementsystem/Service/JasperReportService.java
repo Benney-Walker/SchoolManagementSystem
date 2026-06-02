@@ -1,6 +1,6 @@
 package com.codewithben.schoolmanagementsystem.Service;
 
-import com.codewithben.schoolmanagementsystem.DTO.Academics.GenerateStudentReport;
+import com.codewithben.schoolmanagementsystem.DTO.Report.GenerateStudentReport;
 import net.sf.jasperreports.engine.*;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import net.sf.jasperreports.engine.util.JRLoader;

@@ -1,13 +1,12 @@
 package com.codewithben.schoolmanagementsystem.Controller;
 
-import com.codewithben.schoolmanagementsystem.Contants.LogType;
-import com.codewithben.schoolmanagementsystem.DTO.Academics.*;
-import com.codewithben.schoolmanagementsystem.DTO.Institution.AddNewSemester;
-import com.codewithben.schoolmanagementsystem.DTO.Institution.FindAndUpdateClassInfo;
-import com.codewithben.schoolmanagementsystem.DTO.Institution.FindSemester;
-import com.codewithben.schoolmanagementsystem.DTO.Institution.FindStaffDTO;
-import com.codewithben.schoolmanagementsystem.Entity.Level;
-import com.codewithben.schoolmanagementsystem.Entity.Semester;
+import com.codewithben.schoolmanagementsystem.DTO.Result.GradingCriteria;
+import com.codewithben.schoolmanagementsystem.DTO.Semester.AddNewSemester;
+import com.codewithben.schoolmanagementsystem.DTO.Class.FindAndUpdateClassInfo;
+import com.codewithben.schoolmanagementsystem.DTO.Semester.FindSemester;
+import com.codewithben.schoolmanagementsystem.DTO.Staff.FindStaffDTO;
+import com.codewithben.schoolmanagementsystem.DTO.Subject.AddNewSubject;
+import com.codewithben.schoolmanagementsystem.DTO.Subject.SubjectDTO;
 import com.codewithben.schoolmanagementsystem.Repository.LevelRepository;
 import com.codewithben.schoolmanagementsystem.Repository.SemesterRepository;
 import com.codewithben.schoolmanagementsystem.Service.*;

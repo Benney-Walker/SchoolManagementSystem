@@ -1,14 +1,13 @@
 package com.codewithben.schoolmanagementsystem.Controller;
 
 import com.codewithben.schoolmanagementsystem.Contants.LogType;
-import com.codewithben.schoolmanagementsystem.DTO.Institution.InstitutionRegistrationDTO;
-import com.codewithben.schoolmanagementsystem.DTO.Institution.EnrollNewStaffDTO;
-import com.codewithben.schoolmanagementsystem.DTO.Institution.LoginRequest;
-import com.codewithben.schoolmanagementsystem.DTO.Institution.LoginResponse;
+import com.codewithben.schoolmanagementsystem.DTO.Auth.InstitutionRegistrationDTO;
+import com.codewithben.schoolmanagementsystem.DTO.Staff.NewPrincipal;
+import com.codewithben.schoolmanagementsystem.DTO.Auth.LoginRequest;
+import com.codewithben.schoolmanagementsystem.DTO.Auth.LoginResponse;
 import com.codewithben.schoolmanagementsystem.Entity.Institution;
 import com.codewithben.schoolmanagementsystem.Entity.Staffs;
 import com.codewithben.schoolmanagementsystem.Repository.InstitutiionRepository;
-import com.codewithben.schoolmanagementsystem.Repository.StaffsRepository;
 import com.codewithben.schoolmanagementsystem.Service.InstitutionService;
 import com.codewithben.schoolmanagementsystem.Service.LoggingService;
 import com.codewithben.schoolmanagementsystem.Service.StaffService;

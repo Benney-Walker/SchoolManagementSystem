@@ -1,13 +1,12 @@
 package com.codewithben.schoolmanagementsystem.Service;
 
 import com.codewithben.schoolmanagementsystem.Contants.LogType;
-import com.codewithben.schoolmanagementsystem.DTO.Academics.GenerateStudentReport;
-import com.codewithben.schoolmanagementsystem.DTO.Academics.SubjectReportDTO;
-import com.codewithben.schoolmanagementsystem.DTO.Academics.ViewClassSemesterReport;
-import com.codewithben.schoolmanagementsystem.DTO.Academics.ViewStudentsSubjectsResults;
+import com.codewithben.schoolmanagementsystem.DTO.Report.GenerateStudentReport;
+import com.codewithben.schoolmanagementsystem.DTO.Report.SubjectReportDTO;
+import com.codewithben.schoolmanagementsystem.DTO.Report.ViewClassSemesterReport;
+import com.codewithben.schoolmanagementsystem.DTO.Result.ViewStudentsSubjectsResults;
 import com.codewithben.schoolmanagementsystem.Entity.*;
 import com.codewithben.schoolmanagementsystem.Repository.*;
-import com.codewithben.schoolmanagementsystem.Utility.UtilityClass;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

@@ -3,11 +3,10 @@ package com.codewithben.schoolmanagementsystem.Service;
 import com.codewithben.schoolmanagementsystem.Contants.LogType;
 import com.codewithben.schoolmanagementsystem.Contants.StaffRoles;
 import com.codewithben.schoolmanagementsystem.Contants.StaffStatus;
-import com.codewithben.schoolmanagementsystem.DTO.Academics.PrintLevelSubjects;
-import com.codewithben.schoolmanagementsystem.DTO.Academics.SubjectDTO;
-import com.codewithben.schoolmanagementsystem.DTO.Institution.FindStaffDTO;
-import com.codewithben.schoolmanagementsystem.DTO.Institution.ViewStaffList;
-import com.codewithben.schoolmanagementsystem.DTO.Institution.StaffCaching;
+import com.codewithben.schoolmanagementsystem.DTO.Subject.SubjectDTO;
+import com.codewithben.schoolmanagementsystem.DTO.Staff.FindStaffDTO;
+import com.codewithben.schoolmanagementsystem.DTO.Staff.ViewStaffList;
+import com.codewithben.schoolmanagementsystem.DTO.Staff.StaffCaching;
 import com.codewithben.schoolmanagementsystem.Entity.*;
 import com.codewithben.schoolmanagementsystem.Repository.*;
 import com.codewithben.schoolmanagementsystem.Utility.UtilityClass;
@@ -48,12 +47,15 @@ public class StaffService {
     }
 
     public ResponseEntity<?> addNewStaff(String firstName, String surName, String gender, String dateOfBirth,
-                              String institutionId, String email, String password, String phoneNumber,
-                              List<String> staffRoles, Institution institution, String logData) {
+                                         String email, String password, String phoneNumber,
+                                         List<String> staffRoles, Institution institution, String logData, String staffId) {
+        String staffIdPlaceHolder = staffId == null ? "N/A" : staffId;
 
-        if (staffsRepository.existsByPhoneNumberAndInstitution_InstitutionId(phoneNumber, institutionId)) {
-            loggingService.logActivity(LogType.STAFF_ENROLLMENT, logData, "N/A", "FAILED");
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("Phone number already exist");
+        if (staffsRepository.existsByPhoneNumberAndInstitution_InstitutionId(phoneNumber, institution.getInstitutionId())) {
+            loggingService.logActivity(LogType.STAFF_ENROLLMENT, logData, staffIdPlaceHolder, "FAILED");
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                    "message", "Phone number already exist"
+            ));
         }
 
         String staffID = utilityClass.generateEntityId("STAFF");
@@ -76,7 +78,7 @@ public class StaffService {
 
         staff.setRoles(saveStaffRoles(staff, staffRoles));
         staffsRepository.save(staff);
-        loggingService.logActivity(LogType.STAFF_ENROLLMENT, logData, "N/A", "SUCCESS");
+        loggingService.logActivity(LogType.STAFF_ENROLLMENT, logData, staffIdPlaceHolder, "SUCCESS");
         return ResponseEntity.ok(staffID);
     }
 
@@ -323,15 +325,20 @@ public class StaffService {
 
     public ResponseEntity<?> resetStaffPassword(String newPasswordStaffId, String newPassword, String staffId) {
         String logData = "staff Id: " + newPasswordStaffId + " New Password: " + "***********";
+
         Staffs staff = staffsRepository.findByStaffId(newPasswordStaffId).orElse(null);
         if (staff == null) {
             loggingService.logActivity(LogType.PASSWORD_RESET, logData, staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid staffId");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Invalid Staff Id"
+            ));
         }
 
         if (bCryptPasswordEncoder.matches(newPassword, staff.getPassword())) {
             loggingService.logActivity(LogType.PASSWORD_RESET, logData, staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("You can't use old password");
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                    "message", "You can't use old password"
+            ));
         }
 
         staff.setPassword(bCryptPasswordEncoder.encode(newPassword));

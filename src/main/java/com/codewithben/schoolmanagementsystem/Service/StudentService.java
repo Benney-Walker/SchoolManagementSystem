@@ -3,9 +3,16 @@ package com.codewithben.schoolmanagementsystem.Service;
 import com.codewithben.schoolmanagementsystem.Contants.AttendanceStatus;
 import com.codewithben.schoolmanagementsystem.Contants.LogType;
 import com.codewithben.schoolmanagementsystem.Contants.StudentStatus;
-import com.codewithben.schoolmanagementsystem.DTO.Academics.*;
-import com.codewithben.schoolmanagementsystem.DTO.Institution.StudentAttendance;
-import com.codewithben.schoolmanagementsystem.DTO.Institution.StudentsHolder;
+import com.codewithben.schoolmanagementsystem.DTO.Attendance.AbsenteesView;
+import com.codewithben.schoolmanagementsystem.DTO.Attendance.StudentAttendance;
+import com.codewithben.schoolmanagementsystem.DTO.Report.StudentSubjectReport;
+import com.codewithben.schoolmanagementsystem.DTO.Result.SaveStudentScores;
+import com.codewithben.schoolmanagementsystem.DTO.Result.StudentResult;
+import com.codewithben.schoolmanagementsystem.DTO.Students.FindStudentDTO;
+import com.codewithben.schoolmanagementsystem.DTO.Students.StudentsHolder;
+import com.codewithben.schoolmanagementsystem.DTO.Students.StudentsScoresTable;
+import com.codewithben.schoolmanagementsystem.DTO.Students.UpdateStudentPersonalData;
+import com.codewithben.schoolmanagementsystem.DTO.Subject.SubjectScores;
 import com.codewithben.schoolmanagementsystem.Entity.*;
 import com.codewithben.schoolmanagementsystem.Entity.Attendance;
 import com.codewithben.schoolmanagementsystem.Repository.*;
@@ -291,19 +298,19 @@ public class StudentService {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Results not found");
         }
 
-        List<StudentSubjectResults> subjectResults = new ArrayList<>();
+        List<StudentSubjectReport> subjectResults = new ArrayList<>();
 
             List<SubjectScore> subjectScores = results.getSubjectScores();
 
             for (SubjectScore subjectScore : subjectScores) {
                 if (subjectScore.getStudent().getStudentId().equals(studentId)) {
-                    StudentSubjectResults studentSubjectResults = new StudentSubjectResults(
+                    StudentSubjectReport studentSubjectReport = new StudentSubjectReport(
                             subjectScore.getSubject().getSubjectName(),
                             String.valueOf(subjectScore.getTotalScore()),
                             subjectScore.getGrade(),
                             subjectScore.getGradeDescriptor()
                     );
-                    subjectResults.add(studentSubjectResults);
+                    subjectResults.add(studentSubjectReport);
                 }
             }
 
