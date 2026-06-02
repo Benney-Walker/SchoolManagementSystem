@@ -73,17 +73,17 @@ public class ConductService {
             String studentId = result.getStudent().getStudentId();
             String studentName = result.getStudent().getFirstName() + " " +
                     result.getStudent().getLastName();
-            String regular = conduct.getRegular().toString() == null ?
+            String regular = conduct.getRegular() == null ?
                     ConductRatings.GOOD.name() : conduct.getRegular().toString();
-            String punctual = conduct.getPunctual().toString() == null ?
+            String punctual = conduct.getPunctual() == null ?
                     ConductRatings.GOOD.name() : conduct.getPunctual().toString();
             String physicalAppearance = conduct.getPhysicalAppearance() == null ?
                     ConductRatings.GOOD.name() : conduct.getPhysicalAppearance().toString();
-            String social = conduct.getSocial().toString() == null ?
+            String social = conduct.getSocial() == null ?
                     ConductRatings.GOOD.name() : conduct.getSocial().toString();
-            String emotional = conduct.getEmotional().toString() == null ?
+            String emotional = conduct.getEmotional() == null ?
                     ConductRatings.GOOD.name() : conduct.getEmotional().toString();
-            String cognitiveSkills = conduct.getCognitiveSkills().toString() == null ?
+            String cognitiveSkills = conduct.getCognitiveSkills() == null ?
                     ConductRatings.GOOD.name() : conduct.getCognitiveSkills().toString();
             String conductRemark = conduct.getClassTeacherRemark() == null ?
                     "" : conduct.getClassTeacherRemark();
