@@ -14,6 +14,7 @@ import com.codewithben.schoolmanagementsystem.Repository.ResultsRepository;
 import com.codewithben.schoolmanagementsystem.Repository.SemesterRepository;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -42,7 +43,7 @@ public class ConductService {
         Level level = levelRepository.findByLevelID(levelId).orElse(null);
         if (level == null) {
             loggingService.logActivity(LogType.CONDUCT, logData, staffId, LogStatus.FAILED.name());
-            return ResponseEntity.ok(Map.of(
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Invalid class Id"
             ));
         }
@@ -50,7 +51,7 @@ public class ConductService {
         Semester semester = semesterRepository.findBySemesterID(semesterId).orElse(null);
         if (semester == null) {
             loggingService.logActivity(LogType.CONDUCT, logData, staffId, LogStatus.FAILED.name());
-            return ResponseEntity.ok(Map.of(
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Invalid semester Id"
             ));
         }
@@ -58,7 +59,7 @@ public class ConductService {
         List<Results> studentList = resultsRepository.findByLevel_LevelIDAndSemester_SemesterIDOrderByTotalScoreDesc(levelId, semesterId);
         if (studentList == null || studentList.isEmpty()) {
             loggingService.logActivity(LogType.CONDUCT, logData, staffId, LogStatus.FAILED.name());
-            return ResponseEntity.ok(Map.of(
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "No results found to contain conduct records"
             ));
         }
@@ -104,5 +105,54 @@ public class ConductService {
         }
 
         return ResponseEntity.ok(conductList);
+    }
+
+    public ResponseEntity<?> saveStudentConducts(String staffId, StudentConductRecord record) {
+
+        String logData
+                = "studentId= " + record.getStudentId() + " studentName= " + record.getStudentName() +
+                " semesterId= " + record.getSemesterId() + " regular= " + record.getRegular() +
+                " punctual= " + record.getPunctual() + " physical Appearance= " + record.getPhysicalAppearance() +
+                " social= " + record.getSocial() + " emotional= " + record.getEmotional() +
+                " cognitiveSkills= " + record.getCognitiveSkills() + " conductRemark= " + record.getConductRemark();
+
+        Results studentResult =
+                resultsRepository.findByStudent_StudentIdAndSemester_SemesterID(record.getStudentId(), record.getSemesterId()).orElse(null);
+        if (studentResult == null) {
+            loggingService.logActivity(LogType.CONDUCT, logData, staffId, LogStatus.FAILED.name());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "No semester result found for this student"
+            ));
+        }
+
+        Conduct conduct = studentResult.getConduct();
+        if (conduct == null) {
+
+            conduct = new Conduct();
+            conduct.setStudent(studentResult.getStudent());
+            conduct.setResults(studentResult);
+            conduct.setRegular(ConductRatings.valueOf(record.getRegular()));
+            conduct.setPunctual(ConductRatings.valueOf(record.getPunctual()));
+            conduct.setPhysicalAppearance(ConductRatings.valueOf(record.getPhysicalAppearance()));
+            conduct.setSocial(ConductRatings.valueOf(record.getSocial()));
+            conduct.setEmotional(ConductRatings.valueOf(record.getEmotional()));
+            conduct.setCognitiveSkills(ConductRatings.valueOf(record.getCognitiveSkills()));
+            conduct.setClassTeacherRemark(record.getConductRemark());
+            conductRepository.save(conduct);
+
+            studentResult.setConduct(conduct);
+            resultsRepository.save(studentResult);
+            return ResponseEntity.ok().build();
+        }
+
+        conduct.setRegular(ConductRatings.valueOf(record.getRegular()));
+        conduct.setPunctual(ConductRatings.valueOf(record.getPunctual()));
+        conduct.setPhysicalAppearance(ConductRatings.valueOf(record.getPhysicalAppearance()));
+        conduct.setSocial(ConductRatings.valueOf(record.getSocial()));
+        conduct.setEmotional(ConductRatings.valueOf(record.getEmotional()));
+        conduct.setCognitiveSkills(ConductRatings.valueOf(record.getCognitiveSkills()));
+        conduct.setClassTeacherRemark(record.getConductRemark());
+        conductRepository.save(conduct);
+        return ResponseEntity.ok().build();
     }
 }
