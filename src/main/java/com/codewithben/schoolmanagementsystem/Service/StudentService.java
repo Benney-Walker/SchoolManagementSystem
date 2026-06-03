@@ -3,7 +3,7 @@ package com.codewithben.schoolmanagementsystem.Service;
 import com.codewithben.schoolmanagementsystem.Contants.AttendanceStatus;
 import com.codewithben.schoolmanagementsystem.Contants.LogType;
 import com.codewithben.schoolmanagementsystem.Contants.StudentStatus;
-import com.codewithben.schoolmanagementsystem.DTO.Attendance.AbsenteesView;
+import com.codewithben.schoolmanagementsystem.DTO.Attendance.TodaysAbsentees;
 import com.codewithben.schoolmanagementsystem.DTO.Attendance.StudentAttendance;
 import com.codewithben.schoolmanagementsystem.DTO.Report.StudentSubjectReport;
 import com.codewithben.schoolmanagementsystem.DTO.Result.SaveStudentScores;
@@ -349,13 +349,17 @@ public class StudentService {
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staff == null) {
             loggingService.logActivity(LogType.COUNT_STUDENTS, "N/A", staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Could not count students");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Invalid staffId"
+            ));
         }
 
         List<Students> students = utilityClass.getActiveStudents(staff.getInstitution().getStudents());
         if (students == null || students.isEmpty()) {
             loggingService.logActivity(LogType.COUNT_STUDENTS, "N/A", staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Institution has no students");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Institution has no student"
+            ));
         }
 
         loggingService.logActivity(LogType.COUNT_STUDENTS, "N/A", staffId, "SUCCESS");
@@ -368,19 +372,21 @@ public class StudentService {
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staff == null) {
             loggingService.logActivity(LogType.ATTENDANCE_ABSENTEES, "N/A", staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Could not load absentees");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Invalid Staff Id"
+            ));
         }
 
         List<Level> levels = staff.getInstitution().getLevels();
         if (levels == null || levels.isEmpty()) {
             loggingService.logActivity(LogType.ATTENDANCE_ABSENTEES, "N/A", staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("Institution has no class");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Institution has no class yet"
+            ));
         }
 
         LocalDate currentDate = LocalDate.now();
-        List<AbsenteesView> absenteesViews = new ArrayList<>();
+        List<TodaysAbsentees> todaysAbsentees = new ArrayList<>();
 
         for (Level level : levels) {
 
@@ -397,23 +403,29 @@ public class StudentService {
 
             for (Attendance attendance : absentees) {
 
-                Students student = attendance.getStudent();
-                Level attendanceLevel = attendance.getLevel();
-                Staffs levelStaff = attendanceLevel.getStaff();
+                String studentId = attendance.getStudent().getStudentId();
+                String studentName = attendance.getStudent().getFirstName() +
+                        " " + attendance.getStudent().getLastName();
+                String className = attendance.getLevel().getLevelName();
+                String instructorName = level.getStaff().getFirstName() +
+                        " " + level.getStaff().getLastName();
+                String instructorId = level.getStaff().getStaffId();
 
-                AbsenteesView view = new AbsenteesView();
-                view.setStudentId(student.getStudentId());
-                view.setStudentName(student.getFirstName() + " " + student.getLastName());
-                view.setStudentGrade(attendanceLevel.getLevelName());
-                view.setInstructorName(levelStaff.getFirstName() + " " + levelStaff.getLastName());
-                view.setInstructorId(levelStaff.getStaffId());
+                TodaysAbsentees view = TodaysAbsentees.builder()
+                        .studentId(studentId)
+                        .studentName(studentName)
+                        .studentGrade(className)
+                        .instructorName(instructorName)
+                        .instructorId(instructorId)
+                        .build();
 
-                absenteesViews.add(view);
+
+                todaysAbsentees.add(view);
             }
         }
 
         loggingService.logActivity(LogType.ATTENDANCE_ABSENTEES, "N/A", staffId, "SUCCESS");
-        return ResponseEntity.ok(absenteesViews);
+        return ResponseEntity.ok(todaysAbsentees);
     }
 
     public ResponseEntity<?> updateStudentPersonalData(UpdateStudentPersonalData data, String staffId) {
