@@ -94,13 +94,17 @@ public class LevelService {
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staff == null) {
             loggingService.logActivity(LogType.FETCH_CLASSES, "N/A", staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Could not load classes");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Invalid staff Id"
+            ));
         }
 
         List<Level> levels = staff.getInstitution().getLevels();
         if (levels == null || levels.isEmpty()) {
             loggingService.logActivity(LogType.FETCH_CLASSES, "N/A", staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No classes found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Institution has no class yet"
+            ));
         }
 
         return ResponseEntity.ok(levels.stream().map(
@@ -118,13 +122,17 @@ public class LevelService {
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staff == null) {
             loggingService.logActivity(LogType.FETCH_SEMESTERS, "N/A", staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Could not load semesters");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Invalid staff Id"
+            ));
         }
 
         List<Semester> semesters = staff.getInstitution().getSemester();
         if (semesters == null || semesters.isEmpty()) {
             loggingService.logActivity(LogType.FETCH_SEMESTERS, "N/A", staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No semesters found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "No semesters found"
+            ));
         }
 
         return ResponseEntity.ok(semesters.stream().map(
@@ -181,13 +189,17 @@ public class LevelService {
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staff == null) {
             loggingService.logActivity(LogType.FETCH_CLASSES, "N/A", staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid staff Id");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Invalid staff Id"
+            ));
         }
 
         List<Level> levels = staff.getLevels();
         if (levels == null || levels.isEmpty()) {
             loggingService.logActivity(LogType.FETCH_CLASSES, "N/A", staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No class assigned to your account");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "No class is assigned to your account"
+            ));
         }
 
         List<GradeInformation> gradesInformation = getGradesInformation(levels);
