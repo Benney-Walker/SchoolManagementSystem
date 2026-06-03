@@ -29,13 +29,19 @@ public class LoggingService {
 
     public void logActivity(LogType actionType, String actionData, String staffId, String status) {
 
+        Staffs staff = staffService.getStaffDetails(staffId);
+        if (staff == null) {
+            return;
+        }
+
         try {
             Logs log = new Logs();
             log.setActionDate(LocalDate.now());
             log.setActionTime(LocalTime.now());
             log.setActionType(actionType);
             log.setActionData(actionData);
-            log.setCreatedBy(staffId);
+            log.setCreatedBy(staff);
+            log.setInstitution(staff.getInstitution());
             log.setStatus(LogStatus.valueOf(status));
 
             logsRepository.save(log);
