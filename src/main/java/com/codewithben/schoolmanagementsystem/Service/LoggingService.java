@@ -25,11 +25,11 @@ public class LoggingService {
 
     private final LogsRepository logsRepository;
 
-    private final StaffService staffService;
+    private final StaffsRepository staffsRepository;
 
     public void logActivity(LogType actionType, String actionData, String staffId, String status) {
 
-        Staffs staff = staffService.getStaffDetails(staffId);
+        Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staff == null) {
             return;
         }
@@ -52,7 +52,7 @@ public class LoggingService {
 
     public ResponseEntity<?> getRecentActivity(String staffId) {
 
-        Staffs staff = staffService.getStaffDetails(staffId);
+        Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staff == null) {
             logActivity(LogType.LOGS, "N/A", staffId, "FAILED");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
