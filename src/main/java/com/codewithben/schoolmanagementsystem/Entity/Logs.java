@@ -20,7 +20,7 @@ public class Logs {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long actionId;
+    private int actionId;
 
     private LocalDate actionDate;
 
@@ -32,7 +32,9 @@ public class Logs {
     @Column(length = 5000)
     private String actionData;
 
-    private String createdBy;
+    @ManyToOne
+    @JoinColumn(name = "Staff_StaffId")
+    private Staffs createdBy;
 
     @Enumerated(EnumType.STRING)
     private LogStatus status;
