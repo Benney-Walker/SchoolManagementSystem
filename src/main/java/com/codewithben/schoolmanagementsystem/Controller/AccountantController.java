@@ -8,10 +8,12 @@ import com.codewithben.schoolmanagementsystem.Entity.Staffs;
 import com.codewithben.schoolmanagementsystem.Repository.StaffsRepository;
 import com.codewithben.schoolmanagementsystem.Service.FeesService;
 import com.codewithben.schoolmanagementsystem.Service.LoggingService;
+import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+@AllArgsConstructor
 @RestController
 @RequestMapping("/api/finance")
 public class AccountantController {
@@ -20,13 +22,6 @@ public class AccountantController {
     private final LoggingService loggingService;
 
     private final StaffsRepository staffsRepository;
-
-    public AccountantController(FeesService feesService, LoggingService loggingService, StaffsRepository staffsRepository) {
-
-        this.feesService = feesService;
-        this.loggingService = loggingService;
-        this.staffsRepository = staffsRepository;
-    }
 
     @PostMapping("/v1/add-new-fees")
     public ResponseEntity<?> addNewFees(@RequestHeader("staffId") String staffId,
