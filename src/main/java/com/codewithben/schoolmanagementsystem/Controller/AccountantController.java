@@ -148,11 +148,9 @@ public class AccountantController {
 
     @GetMapping("/v1/recent-fees-transactions")
     public ResponseEntity<?> getRecentPayment(@RequestHeader("staffId") String staffId) {
-        Staffs staff = getValidatedStaff(staffId);
-        if (staff == null)
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid staff Id");
 
-        return feesService.getRecentPayments(staffId, staff.getInstitution());
+
+        return feesService.getRecentPayments(staffId);
     }
 
     private Staffs getValidatedStaff(String staffId) {
