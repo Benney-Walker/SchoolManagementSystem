@@ -119,20 +119,16 @@ public class AccountantController {
 
     @GetMapping("/v1/total-fees")
     public ResponseEntity<?> totalSemesterFees(@RequestHeader("staffId") String staffId) {
-        Staffs staff = getValidatedStaff(staffId);
-        if (staff == null)
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid staff Id");
 
-        return feesService.getTotalSemesterFees(staffId, staff.getInstitution());
+
+        return feesService.getTotalSemesterFees(staffId);
     }
 
     @GetMapping("/v1/fees-paid")
     public ResponseEntity<?> totalAmountPaid(@RequestHeader("staffId") String staffId) {
-        Staffs staff = getValidatedStaff(staffId);
-        if (staff == null)
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid staff Id");
 
-        return feesService.getTotalFeesPaid(staffId, staff.getInstitution());
+
+        return feesService.getTotalFeesPaid(staffId);
     }
 
     @GetMapping("/v1/fetch-fees-details/{semesterId}/{levelId}")
