@@ -202,20 +202,26 @@ public class FeesService {
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staff == null) {
             loggingService.logActivity(LogType.FETCH_PAYMENTS_REPORTS, "N/A", staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid staff id");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "invalid staff Id"
+            ));
         }
         //Get institution from staff
         Institution institution = staff.getInstitution();
         if (institution == null) {
             loggingService.logActivity(LogType.FETCH_PAYMENTS_REPORTS, "N/A", staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Unknown institution");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Institution not found"
+            ));
         }
 
         //Retrieve all classes
         List<Level> levels = institution.getLevels();
         if (levels == null || levels.isEmpty()) {
             loggingService.logActivity(LogType.FETCH_PAYMENTS_REPORTS, "N/A", staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Institution has no grades");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Institution has no class yet"
+            ));
         }
 
         List<ClassFeesSummary> classFeesSummaryList = new ArrayList<>();
@@ -674,25 +680,31 @@ public class FeesService {
         return ResponseEntity.ok(feesSummaryTables);
     }
 
-    public ResponseEntity<?> getTotalSemesterFees(String staffId, Institution institution) {
+    public ResponseEntity<?> getTotalSemesterFees(String staffId) {
 
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staff == null) {
             loggingService.logActivity(LogType.FETCH_TOTAL_FEES, "N/A", staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid staff id");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Invalid staff Id"
+            ));
         }
 
         //Get current Semester
-        String currentSemesterId = utilityClass.getCurrentSemesterId(institution.getInstitutionId());
+        String currentSemesterId = utilityClass.getCurrentSemesterId(staff.getInstitution().getInstitutionId());
         if (currentSemesterId == null || currentSemesterId.isEmpty()) {
             loggingService.logActivity(LogType.FETCH_TOTAL_FEES, "N/A", staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Current semester not added. Contact admin");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Current semester not added to system"
+            ));
         }
 
-        List<Level> levels = institution.getLevels();
+        List<Level> levels = staff.getInstitution().getLevels();
         if (levels == null || levels.isEmpty()) {
             loggingService.logActivity(LogType.FETCH_TOTAL_FEES, "N/A", staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Institution has no grades yet");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Institution has no class yet"
+            ));
         }
         double totalSemesterFees = 0;
         for (Level level : levels) {
@@ -706,25 +718,31 @@ public class FeesService {
         return ResponseEntity.ok(totalSemesterFees);
     }
 
-    public ResponseEntity<?> getTotalFeesPaid(String staffId, Institution institution) {
+    public ResponseEntity<?> getTotalFeesPaid(String staffId) {
 
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staff == null) {
             loggingService.logActivity(LogType.FETCH_TOTAL_FEES_PAID, "N/A", staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid staff id");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Invalid staff Id"
+            ));
         }
 
         //Get current Semester
-        String currentSemesterId = utilityClass.getCurrentSemesterId(institution.getInstitutionId());
+        String currentSemesterId = utilityClass.getCurrentSemesterId(staff.getInstitution().getInstitutionId());
         if (currentSemesterId == null || currentSemesterId.isEmpty()) {
             loggingService.logActivity(LogType.FETCH_TOTAL_FEES_PAID, "N/A", staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Current semester not added. Contact admin");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Current semester not added to system"
+            ));
         }
 
-        List<Level> levels = institution.getLevels();
+        List<Level> levels = staff.getInstitution().getLevels();
         if (levels == null || levels.isEmpty()) {
             loggingService.logActivity(LogType.FETCH_TOTAL_FEES_PAID, "N/A", staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Institution has no grades yet");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Institution has no class yet"
+            ));
         }
 
         double totalAmountPaid = 0;
@@ -737,19 +755,31 @@ public class FeesService {
         return ResponseEntity.ok(totalAmountPaid);
     }
 
-    public ResponseEntity<?> getRecentPayments(String staffId, Institution institution) {
+    public ResponseEntity<?> getRecentPayments(String staffId) {
 
-        String currentSemesterId = utilityClass.getCurrentSemesterId(institution.getInstitutionId());
+        Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
+        if (staff == null) {
+            loggingService.logActivity(LogType.FETCH_PAYMENTS_REPORTS, "N/A", staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Invalid staff Id"
+            ));
+        }
+
+        String currentSemesterId = utilityClass.getCurrentSemesterId(staff.getInstitution().getInstitutionId());
         if (currentSemesterId == null || currentSemesterId.isEmpty()) {
             loggingService.logActivity(LogType.FETCH_PAYMENTS_REPORTS, "N/A", staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Current semester not added. Contact admin");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Current semester not added to system"
+            ));
         }
 
         List<FeesReport> feesReports = feesReportRepository
-                .findByInstitution_InstitutionIdOrderByDateOfPaymentDesc(institution.getInstitutionId());
+                .findByInstitution_InstitutionIdOrderByDateOfPaymentDesc(staff.getInstitution().getInstitutionId());
         if (feesReports == null || feesReports.isEmpty()) {
             loggingService.logActivity(LogType.FETCH_PAYMENTS_REPORTS, "N/A", staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Institution has no payment records yet");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "'message", "No recent payments found"
+            ));
         }
 
         List<RecentPaymentTable> recentPaymentTables = new ArrayList<>();
