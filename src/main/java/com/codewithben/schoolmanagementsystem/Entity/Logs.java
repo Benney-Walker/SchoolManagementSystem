@@ -38,6 +38,8 @@ public class Logs {
     private LogStatus status;
 
     @ManyToOne
+    @JoinColumn(name = "Institution_InstitutionId")
+    private Institution institution;
 
 
 }
