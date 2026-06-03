@@ -180,10 +180,18 @@ public class StaffService {
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staff == null) {
             loggingService.logActivity(LogType.COUNT_STAFFS, "N/A", staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid staff Id");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Invalid Staff Id"
+            ));
         }
 
-        List<Staffs> staffs = staff.getInstitution().getStaff();
+        List<Staffs> staffs = getActiveStaff(staff.getInstitution());
+        if (staffs == null) {
+            loggingService.logActivity(LogType.COUNT_STAFFS, "N/A", staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Institution has no staff"
+            ));
+        }
 
         loggingService.logActivity(LogType.COUNT_STAFFS, "N/A", staffId, "SUCCESS");
         return ResponseEntity.ok(staffs.size());
@@ -194,10 +202,18 @@ public class StaffService {
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staff == null) {
             loggingService.logActivity(LogType.COUNT_STAFFS, "N/A", staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid staff Id");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message",  "Invalid Staff Id"
+            ));
         }
 
-        List<Staffs> staffs = staff.getInstitution().getStaff();
+        List<Staffs> staffs = getActiveStaff(staff.getInstitution());
+        if (staffs == null) {
+            loggingService.logActivity(LogType.COUNT_STAFFS, "N/A", staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message",  "Institution has no staff"
+            ));
+        }
 
         int staffCount = 0;
         for (Staffs teachingStaff : staffs) {
@@ -343,7 +359,9 @@ public class StaffService {
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staff == null) {
             loggingService.logActivity(LogType.STAFF_LIST, "N/A", staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Could not load staff list");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Invalid staff Id"
+            ));
         }
 
         List<Staffs> staffs = staff.getInstitution().getStaff();
@@ -356,11 +374,14 @@ public class StaffService {
                 roles.add(staffRole.getStaffRole().name());
             }
 
-            StaffCaching foundStaff = new StaffCaching(
-                    staffMember.getFirstName() + " " + staffMember.getLastName(),
-                    staffMember.getStaffId(),
-                    roles
-            );
+            StaffCaching foundStaff = StaffCaching.builder()
+                    .staffName(
+                            staffMember.getFirstName() + " " + staffMember.getLastName()
+                    )
+                    .staffId(staffMember.getStaffId())
+                    .staffRoles(roles)
+                    .build();
+
 
             staffList.add(foundStaff);
         }
@@ -388,10 +409,18 @@ public class StaffService {
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staff == null) {
             loggingService.logActivity(LogType.STAFF_LIST, "N/A", staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid staff Id");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Invalid staff Id"
+            ));
         }
 
         List<Staffs> staffs = staff.getInstitution().getStaff();
+        if (staffs == null || staffs.isEmpty()) {
+            loggingService.logActivity(LogType.STAFF_LIST, "N/A", staffId, "FAILED");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Institution has no staff"
+            ));
+        }
 
         List<ViewStaffList> viewStaffLists = new ArrayList<>();
 
@@ -420,5 +449,23 @@ public class StaffService {
 
     public Staffs getStaffDetails(String staffId) {
         return staffsRepository.findByStaffId(staffId).orElse(null);
+    }
+
+    private List<Staffs> getActiveStaff(Institution institution) {
+        List<Staffs> staffList = institution.getStaff();
+        if (staffList == null || staffList.isEmpty()) {
+            return null;
+        }
+
+        List<Staffs> activeStaffList = new ArrayList<>();
+        //Retrieve active staffs
+        for (Staffs staff : staffList) {
+
+            if (staff.getStaffStatus().equals(StaffStatus.ACTIVE)) {
+                activeStaffList.add(staff);
+            }
+        }
+
+        return activeStaffList;
     }
 }
