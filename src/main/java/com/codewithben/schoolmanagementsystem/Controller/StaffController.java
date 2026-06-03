@@ -90,7 +90,7 @@ public class StaffController {
         return levelService.loadSemesterCaching(staffId);
     }
 
-    @GetMapping("/v1/load-levels")
+    @GetMapping("/v1/load-classes")
     public ResponseEntity<?> loadGradesCache(@RequestHeader("staffId") String staffId) {
 
         return levelService.loadLevelInfo(staffId);
