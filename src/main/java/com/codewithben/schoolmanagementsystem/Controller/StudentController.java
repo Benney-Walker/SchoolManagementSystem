@@ -5,20 +5,18 @@ import com.codewithben.schoolmanagementsystem.DTO.Result.SaveStudentScores;
 import com.codewithben.schoolmanagementsystem.DTO.Students.AddNewStudent;
 import com.codewithben.schoolmanagementsystem.DTO.Students.UpdateStudentPersonalData;
 import com.codewithben.schoolmanagementsystem.Service.*;
+import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 
+@AllArgsConstructor
 @RestController
 @RequestMapping("/api/student")
 public class StudentController {
 
     private final StudentService studentService;
-
-    public StudentController(StudentService studentService) {
-        this.studentService = studentService;
-    }
 
 
     @GetMapping("/v1/absent-students")

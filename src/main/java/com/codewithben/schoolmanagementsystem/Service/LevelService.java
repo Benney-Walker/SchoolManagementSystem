@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@AllArgsConstructor
 @Service
 public class LevelService {
     private final StaffsRepository staffsRepository;
@@ -36,16 +37,6 @@ public class LevelService {
 
     private final LoggingService loggingService;
 
-    public LevelService(StaffsRepository staffsRepository, LevelRepository levelRepository,  UtilityClass utilityClass,
-                        InstitutiionRepository institutiionRepository, SemesterRepository semesterRepository,
-                        LoggingService loggingService) {
-        this.staffsRepository = staffsRepository;
-        this.levelRepository = levelRepository;
-        this.utilityClass = utilityClass;
-        this.institutiionRepository = institutiionRepository;
-        this.semesterRepository = semesterRepository;
-        this.loggingService = loggingService;
-    }
 
     @Transactional
     public ResponseEntity<?> addNewClass(String className, String selectedStaff, String staffId) {

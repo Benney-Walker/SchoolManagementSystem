@@ -1,4 +1,4 @@
-package com.codewithben.schoolmanagementsystem.DTO.Students;
+package com.codewithben.schoolmanagementsystem.DTO.Attendance;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,18 +9,16 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class StudentRoaster {
+public class TodaysAbsentees {
     private String studentId;
 
     private String studentName;
 
-    private String studentGender;
+    private String studentGrade;
 
-    private String homeTown;
+    private String instructorName;
 
-    private String guardianName;
-
-    private String guardianContact;
+    private String instructorId;
 
 
 }

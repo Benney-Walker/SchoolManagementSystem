@@ -18,6 +18,7 @@ import com.codewithben.schoolmanagementsystem.Entity.Attendance;
 import com.codewithben.schoolmanagementsystem.Repository.*;
 import com.codewithben.schoolmanagementsystem.Utility.UtilityClass;
 import jakarta.transaction.Transactional;
+import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -29,6 +30,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+@AllArgsConstructor
 @Service
 public class StudentService {
     private final StaffsRepository staffsRepository;
@@ -54,24 +56,6 @@ public class StudentService {
     private final AttendanceRepository attendanceRepository;
 
     private final LoggingService loggingService;
-
-    public StudentService(StaffsRepository staffsRepository, LevelRepository levelRepository, StudentsRepository studentsRepository,
-                          UtilityClass utilityClass, SubjectsRepository subjectsRepository, SemesterRepository semesterRepository,
-                          ResultsRepository resultsRepository, InstitutiionRepository institutionRepository, SubjectScoreRepository subjectScoreRepository,
-                          GradeSystemRepository gradeSystemRepository,  AttendanceRepository attendanceRepository, LoggingService loggingService) {
-        this.staffsRepository = staffsRepository;
-        this.levelRepository = levelRepository;
-        this.studentsRepository = studentsRepository;
-        this.utilityClass = utilityClass;
-        this.subjectsRepository = subjectsRepository;
-        this.semesterRepository = semesterRepository;
-        this.resultsRepository = resultsRepository;
-        this.institutionRepository = institutionRepository;
-        this.subjectScoreRepository = subjectScoreRepository;
-        this.gradeSystemRepository = gradeSystemRepository;
-        this.attendanceRepository = attendanceRepository;
-        this.loggingService = loggingService;
-    }
 
     //Method for adding new student
     @Transactional

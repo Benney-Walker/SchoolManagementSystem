@@ -16,6 +16,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+@AllArgsConstructor
 @Service
 public class FeesService {
     private final FeesRepository feesRepository;
@@ -36,19 +37,6 @@ public class FeesService {
 
     private final LoggingService loggingService;
 
-    public FeesService(FeesRepository feesRepository, StudentsRepository studentsRepository, FeesReportRepository feesReportRepository,
-                       SemesterRepository semesterRepository, LevelRepository levelRepository,  StaffsRepository staffsRepository, UtilityClass utilityClass,
-                       InstitutiionRepository institutionRepository, LoggingService loggingService) {
-        this.feesRepository = feesRepository;
-        this.studentsRepository = studentsRepository;
-        this.feesReportRepository = feesReportRepository;
-        this.semesterRepository = semesterRepository;
-        this.levelRepository = levelRepository;
-        this.staffsRepository = staffsRepository;
-        this.utilityClass = utilityClass;
-        this.institutionRepository = institutionRepository;
-        this.loggingService = loggingService;
-    }
 
     // Displays student Fees
     public ResponseEntity<?> findStudentFeesPaymentDetails(String studentId, String semesterId, String levelId, String staffId) {

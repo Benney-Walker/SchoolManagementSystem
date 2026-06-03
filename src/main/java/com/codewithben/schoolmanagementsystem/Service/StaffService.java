@@ -10,6 +10,7 @@ import com.codewithben.schoolmanagementsystem.DTO.Staff.StaffCaching;
 import com.codewithben.schoolmanagementsystem.Entity.*;
 import com.codewithben.schoolmanagementsystem.Repository.*;
 import com.codewithben.schoolmanagementsystem.Utility.UtilityClass;
+import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.*;
 
+@AllArgsConstructor
 @Service
 public class StaffService {
     private final StaffsRepository staffsRepository;
@@ -34,17 +36,6 @@ public class StaffService {
 
     private final LoggingService loggingService;
 
-    public StaffService(StaffsRepository staffsRepository, SubjectsRepository subjectsRepository, LevelRepository levelRepository,
-                        UtilityClass utilityClass, StaffRolesEntityRepo staffRolesEntityRepo,
-                        BCryptPasswordEncoder bCryptPasswordEncoder, LoggingService loggingService) {
-        this.staffsRepository = staffsRepository;
-        this.subjectsRepository = subjectsRepository;
-        this.levelRepository = levelRepository;
-        this.utilityClass = utilityClass;
-        this.bCryptPasswordEncoder = bCryptPasswordEncoder;
-        this.staffRolesEntityRepo = staffRolesEntityRepo;
-        this.loggingService = loggingService;
-    }
 
     public ResponseEntity<?> addNewStaff(String firstName, String surName, String gender, String dateOfBirth,
                                          String email, String password, String phoneNumber,

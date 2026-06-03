@@ -1,28 +1,17 @@
 package com.codewithben.schoolmanagementsystem.DTO.Class;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class LevelCaching {
     String levelId;
 
     String levelName;
 
-    public LevelCaching(String levelId, String levelName) {
-        this.levelId = levelId;
-        this.levelName = levelName;
-    }
-
-    public String getLevelId() {
-        return levelId;
-    }
-
-    public void setLevelId(String levelId) {
-        this.levelId = levelId;
-    }
-
-    public String getLevelName() {
-        return levelName;
-    }
-
-    public void setLevelName(String levelName) {
-        this.levelName = levelName;
-    }
 }

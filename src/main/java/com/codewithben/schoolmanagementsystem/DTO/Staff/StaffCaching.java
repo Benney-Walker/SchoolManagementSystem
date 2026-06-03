@@ -1,7 +1,16 @@
 package com.codewithben.schoolmanagementsystem.DTO.Staff;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.util.List;
 
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class StaffCaching {
     private String staffName;
 
@@ -9,33 +18,5 @@ public class StaffCaching {
 
     private List<String> staffRoles;
 
-    public StaffCaching(String staffName, String staffId, List<String> staffRoles) {
-        this.staffName = staffName;
-        this.staffId = staffId;
-        this.staffRoles = staffRoles;
-    }
 
-    public String getStaffName() {
-        return staffName;
-    }
-
-    public void setStaffName(String staffName) {
-        this.staffName = staffName;
-    }
-
-    public String getStaffId() {
-        return staffId;
-    }
-
-    public void setStaffId(String staffId) {
-        this.staffId = staffId;
-    }
-
-    public List<String> getStaffRoles() {
-        return staffRoles;
-    }
-
-    public void setStaffRoles(List<String> staffRoles) {
-        this.staffRoles = staffRoles;
-    }
 }

@@ -6,26 +6,21 @@ import com.codewithben.schoolmanagementsystem.Entity.Logs;
 import com.codewithben.schoolmanagementsystem.Repository.LogsRepository;
 import com.codewithben.schoolmanagementsystem.Repository.StaffsRepository;
 import com.codewithben.schoolmanagementsystem.Utility.UtilityClass;
+import lombok.AllArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
 
+@AllArgsConstructor
 @Service
 public class LoggingService {
 
     private final LogsRepository logsRepository;
 
-    private final UtilityClass utilityClass;
-
-    private final StaffsRepository staffsRepository;
-
-    public LoggingService(LogsRepository logsRepository, UtilityClass utilityClass, StaffsRepository staffsRepository) {
-        this.logsRepository = logsRepository;
-        this.utilityClass = utilityClass;
-        this.staffsRepository = staffsRepository;
-    }
+    private final StaffService staffService;
 
     public void logActivity(LogType actionType, String actionData, String staffId, String status) {
 
