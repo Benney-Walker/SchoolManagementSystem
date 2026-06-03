@@ -25,7 +25,7 @@ public class StudentController {
         return studentService.findTodaysAbsentees(staffId);
     }
 
-    @GetMapping("/v1/total-students/{staffId}")
+    @GetMapping("/v1/total-students")
     public ResponseEntity<?> loadTotalStudents(@RequestHeader("staffId") String staffId) {
 
         return studentService.countTotalStudents(staffId);
