@@ -48,5 +48,6 @@ public enum LogType {
     COUNT_STUDENTS,
     FETCH_CLASSES,
     PROMOTION,
-    CONDUCT
+    CONDUCT,
+    LOGS
 }
