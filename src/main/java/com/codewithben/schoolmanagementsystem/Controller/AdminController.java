@@ -65,7 +65,7 @@ public class AdminController {
         LocalDate endDate = LocalDate.parse(addNewSemester.getEndDate());
         String academicYear = addNewSemester.getAcademicYear();
 
-        return levelService.addNewSemester(semesterName, startDate, endDate, academicYear, staffId);
+        return classService.addNewSemester(semesterName, startDate, endDate, academicYear, staffId);
     }
 
     @PostMapping("/v1/new-grading-criteria")
@@ -92,14 +92,14 @@ public class AdminController {
     public ResponseEntity<?> findClassInfo(@RequestHeader("staffId") String staffId,
                                            @PathVariable String levelId) {
 
-        return levelService.findClassInfo(levelId, staffId);
+        return classService.findClassInfo(levelId, staffId);
     }
 
     @PutMapping("/v1/update-class-info")
     public ResponseEntity<?> updateClassInfo(@RequestHeader("staffId") String staffId,
                                              @RequestBody FindAndUpdateClassInfo updateInfo) {
 
-        return levelService.updateClassInfo(updateInfo, staffId);
+        return classService.updateClassInfo(updateInfo, staffId);
     }
 
     @PutMapping("/v1/update-staff-info")
@@ -112,14 +112,14 @@ public class AdminController {
     @GetMapping("/v1/search-semester/{semesterId}")
     public ResponseEntity<?> searchSemesterInfo(@RequestHeader("staffId") String staffId,
                                                 @PathVariable String semesterId) {
-        return levelService.findSemesterInfo(semesterId, staffId);
+        return classService.findSemesterInfo(semesterId, staffId);
     }
 
     @PutMapping("/v1/update-semester-info")
     public ResponseEntity<?> updateSemesterInfo(@RequestHeader("staffId") String staffId,
                                                 @RequestBody FindSemester updateInfo) {
 
-        return levelService.updateSemesterInfo(updateInfo, staffId);
+        return classService.updateSemesterInfo(updateInfo, staffId);
     }
 
     @PostMapping("/v1/add-new-class")
@@ -127,7 +127,7 @@ public class AdminController {
                                          @RequestParam String gradeName,
                                          @RequestParam String instructorId) {
 
-        return levelService.addNewClass(gradeName, instructorId, staffId);
+        return classService.addNewClass(gradeName, instructorId, staffId);
     }
 
     @PostMapping("/v1/add-subject")
@@ -136,7 +136,7 @@ public class AdminController {
         String subjectName = addNewSubject.getSubjectName();
         String levelId = addNewSubject.getGradeId();
 
-        return staffService.addNewSubjects(subjectName, levelId, staffId);
+        return subjectsService.addNewSubjects(subjectName, levelId, staffId);
 
     }
 
@@ -144,21 +144,21 @@ public class AdminController {
     public ResponseEntity<?> loadSubjectData(@RequestHeader("staffId") String staffId,
                                              @PathVariable String subjectId) {
 
-        return staffService.loadSubjectData(subjectId, staffId);
+        return subjectsService.loadSubjectData(subjectId, staffId);
     }
 
     @PutMapping("/v1/update-subject-details")
     public ResponseEntity<?> updateSubjectData(@RequestHeader("staffId") String staffId,
                                                @RequestBody SubjectDTO subjectDTO) {
 
-        return staffService.updateSubjectData(subjectDTO, staffId);
+        return subjectsService.updateSubjectData(subjectDTO, staffId);
     }
 
     @DeleteMapping("/v1/delete-subject/{subjectId}")
     public ResponseEntity<?> deleteSubjectData(@RequestHeader("staffId") String staffId,
                                                @PathVariable String subjectId) {
 
-        return staffService.deleteSubjectData(subjectId, staffId);
+        return subjectsService.deleteSubjectData(subjectId, staffId);
     }
 
     @GetMapping(
