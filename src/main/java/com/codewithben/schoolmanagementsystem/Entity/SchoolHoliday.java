@@ -28,5 +28,7 @@ public class SchoolHoliday {
     @JoinColumn(name = "Semester_semesterId")
     private Semester semester;
 
-    private boolean isActive;
+    @ManyToOne
+    @JoinColumn(name = "Institution_InstitutionId")
+    private Institution institution;
 }
