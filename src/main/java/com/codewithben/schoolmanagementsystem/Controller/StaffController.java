@@ -1,6 +1,6 @@
 package com.codewithben.schoolmanagementsystem.Controller;
 
-import com.codewithben.schoolmanagementsystem.Contants.LogType;
+import com.codewithben.schoolmanagementsystem.Constants.LogType;
 import com.codewithben.schoolmanagementsystem.DTO.Conduct.StudentConductRecord;
 import com.codewithben.schoolmanagementsystem.DTO.Staff.NewStaff;
 import com.codewithben.schoolmanagementsystem.Entity.Staffs;
@@ -19,7 +19,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/staff")
 public class StaffController {
-    private final LevelService levelService;
+    private final ClassService classService;
 
     private final StaffService staffService;
 

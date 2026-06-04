@@ -1,6 +1,8 @@
 package com.codewithben.schoolmanagementsystem.Service;
 
-import com.codewithben.schoolmanagementsystem.Contants.LogType;
+import com.codewithben.schoolmanagementsystem.Constants.LogAction;
+import com.codewithben.schoolmanagementsystem.Constants.LogStatus;
+import com.codewithben.schoolmanagementsystem.Constants.LogType;
 import com.codewithben.schoolmanagementsystem.DTO.Class.LevelCaching;
 import com.codewithben.schoolmanagementsystem.DTO.Semester.SemesterCaching;
 import com.codewithben.schoolmanagementsystem.DTO.Class.FindAndUpdateClassInfo;
@@ -25,7 +27,7 @@ import java.util.stream.Collectors;
 
 @AllArgsConstructor
 @Service
-public class LevelService {
+public class ClassService {
     private final StaffsRepository staffsRepository;
 
     private final LevelRepository levelRepository;

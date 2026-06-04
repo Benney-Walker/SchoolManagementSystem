@@ -26,7 +26,7 @@ import java.time.LocalDate;
 public class AdminController {
     private final StaffService staffService;
 
-    private final LevelService levelService;
+    private final ClassService classService;
 
     private final InstitutionService institutionService;
 

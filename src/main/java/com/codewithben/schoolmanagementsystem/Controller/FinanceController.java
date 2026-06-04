@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 @AllArgsConstructor
 @RestController
 @RequestMapping("/api/finance")
-public class AccountantController {
+public class FinanceController {
     private final FeesService feesService;
 
     private final LoggingService loggingService;
