@@ -1,6 +1,8 @@
 package com.codewithben.schoolmanagementsystem.Service;
 
-import com.codewithben.schoolmanagementsystem.Contants.LogType;
+import com.codewithben.schoolmanagementsystem.Constants.LogAction;
+import com.codewithben.schoolmanagementsystem.Constants.LogStatus;
+import com.codewithben.schoolmanagementsystem.Constants.LogType;
 import com.codewithben.schoolmanagementsystem.DTO.Result.GradingCriteria;
 import com.codewithben.schoolmanagementsystem.Entity.GradeSystem;
 import com.codewithben.schoolmanagementsystem.Entity.Institution;
@@ -48,11 +50,11 @@ public class InstitutionService {
             institution.setInstitutionName(institutionName);
             institutiionRepository.save(institution);
 
-            loggingService.logActivity(LogType.SUBSCRIPTION, logData, "N/A", "SUCCESS");
+            loggingService.logActivity(LogType.INSTITUTION, LogAction.CREATE, "N/A", "N/A", LogStatus.SUCCESS);
             return ResponseEntity.ok(id);
         }
 
-        loggingService.logActivity(LogType.SUBSCRIPTION, logData, "N/A", "FAILED");
+        loggingService.logActivity(LogType.INSTITUTION, LogAction.CREATE, "N/A", "N/A", LogStatus.FAILED);
         return ResponseEntity.status(HttpStatus.CONFLICT).body("Institution already exist");
     }
 
@@ -62,62 +64,43 @@ public class InstitutionService {
 
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if(staff == null){
-            loggingService.logActivity(LogType.GRADING_CRITERIA, logData, staffId, "FAILED");
+            loggingService.logActivity(LogType.GRADE, LogAction.CREATE, logData, staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Invalid Staff Id"
             ));
         }
 
-        if (gradingCriteria.getId() == 0) {
+        GradeSystem criteria =
+                gradeSystemRepository.findByGradeAndInstitution_InstitutionId(
+                        gradingCriteria.getGrade(),
+                        staff.getInstitution().getInstitutionId()
+                ).orElse(null);
 
-            GradeSystem criteria =
-                    gradeSystemRepository.findByGradeAndInstitution_InstitutionId(
-                            gradingCriteria.getGrade(),
-                            staff.getInstitution().getInstitutionId()
-                    ).orElse(null);
-
-            if (criteria != null) {
-                loggingService.logActivity(LogType.GRADING_CRITERIA, logData, staffId, "FAILED");
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                        "message", "Criteria already exist"
-                ));
-            }
-
-            GradeSystem gradeSystem = new GradeSystem();
-            gradeSystem.setLowerRange(gradingCriteria.getLowerRange());
-            gradeSystem.setUpperRange(gradingCriteria.getUpperRange());
-            gradeSystem.setGrade(gradingCriteria.getGrade());
-            gradeSystem.setGradeDescription(gradingCriteria.getGradeDescription());
-            gradeSystem.setInstitution(staff.getInstitution());
-            gradeSystemRepository.save(gradeSystem);
-
-            loggingService.logActivity(LogType.GRADING_CRITERIA, logData, staffId, "SUCCESS");
-            return ResponseEntity.ok().build();
-        }
-
-        GradeSystem criteria = gradeSystemRepository.findById(gradingCriteria.getId()).orElse(null);
-        if (criteria == null) {
-            loggingService.logActivity(LogType.GRADING_CRITERIA, logData, staffId, "FAILED");
+        if (criteria != null) {
+            loggingService.logActivity(LogType.GRADE, LogAction.CREATE, logData, staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "Criteria do not exist on system"
+                    "message", "Criteria already exist"
             ));
         }
 
-        criteria.setLowerRange(gradingCriteria.getLowerRange());
-        criteria.setUpperRange(gradingCriteria.getUpperRange());
-        criteria.setGrade(gradingCriteria.getGrade());
-        criteria.setGradeDescription(gradingCriteria.getGradeDescription());
-        gradeSystemRepository.save(criteria);
+        GradeSystem gradeSystem = new GradeSystem();
+        gradeSystem.setLowerRange(gradingCriteria.getLowerRange());
+        gradeSystem.setUpperRange(gradingCriteria.getUpperRange());
+        gradeSystem.setGrade(gradingCriteria.getGrade());
+        gradeSystem.setGradeDescription(gradingCriteria.getGradeDescription());
+        gradeSystem.setInstitution(staff.getInstitution());
+        gradeSystemRepository.save(gradeSystem);
 
-        loggingService.logActivity(LogType.GRADING_CRITERIA, logData, staffId, "SUCCESS");
+        loggingService.logActivity(LogType.GRADE, LogAction.CREATE, logData, staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok().build();
+
     }
 
     public ResponseEntity<?> loadAllGradingCriteria(String staffId) {
 
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if(staff == null){
-            loggingService.logActivity(LogType.GRADING_CRITERIA, "N/A", staffId, "FAILED");
+            loggingService.logActivity(LogType.GRADE, LogAction.READ, "N/A", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Invalid Staff Id"
             ));
@@ -126,7 +109,7 @@ public class InstitutionService {
         List<GradeSystem> gradingList =
                 gradeSystemRepository.findAllByInstitution_InstitutionId(staff.getInstitution().getInstitutionId());
         if(gradingList == null || gradingList.isEmpty()){
-            loggingService.logActivity(LogType.GRADING_CRITERIA, "N/A", staffId, "FAILED");
+            loggingService.logActivity(LogType.GRADE, LogAction.READ, "N/A", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Institution has no grading criteria set"
             ));
@@ -147,6 +130,7 @@ public class InstitutionService {
             gradingCriteriaList.add(gradingCriteria);
         }
 
+        loggingService.logActivity(LogType.GRADE, LogAction.READ, "N/A", staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok(gradingCriteriaList);
     }
 

@@ -1,8 +1,9 @@
 package com.codewithben.schoolmanagementsystem.Service;
 
-import com.codewithben.schoolmanagementsystem.Contants.HolidayType;
-import com.codewithben.schoolmanagementsystem.Contants.LogStatus;
-import com.codewithben.schoolmanagementsystem.Contants.LogType;
+import com.codewithben.schoolmanagementsystem.Constants.HolidayType;
+import com.codewithben.schoolmanagementsystem.Constants.LogAction;
+import com.codewithben.schoolmanagementsystem.Constants.LogStatus;
+import com.codewithben.schoolmanagementsystem.Constants.LogType;
 import com.codewithben.schoolmanagementsystem.DTO.Holiday.Holiday;
 import com.codewithben.schoolmanagementsystem.Entity.SchoolHoliday;
 import com.codewithben.schoolmanagementsystem.Entity.Semester;
@@ -37,7 +38,7 @@ public class HolidayService {
 
     public ResponseEntity<?> addOrUpdateHoliday(String staffId, Holiday holiday) {
         String logData
-                = "Holiday Name= " + holiday.getHolidayName() +
+                =" Holiday Name= " + holiday.getHolidayName() +
                 " Start Date= " + holiday.getStartDate() +
                 " End Date= " + holiday.getEndDate() +
                 " Semester Name= " + holiday.getSemesterName() +
@@ -45,7 +46,7 @@ public class HolidayService {
 
         Semester semester = semesterRepository.findBySemesterID(holiday.getSemesterId()).orElse(null);
         if (semester == null) {
-            loggingService.logActivity(LogType.HOLIDAY, logData, staffId, "FAILED");
+            loggingService.logActivity(LogType.SCHOOL_HOLIDAY, LogAction.CREATE, logData, staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Invalid semester Id"
             ));
@@ -69,11 +70,11 @@ public class HolidayService {
                 existedHoliday.setSemester(semester);
                 existedHoliday.setInstitution(semester.getInstitution());
 
-                loggingService.logActivity(LogType.HOLIDAY, logData, staffId, LogStatus.SUCCESS.name());
+                loggingService.logActivity(LogType.SCHOOL_HOLIDAY, LogAction.CREATE, logData, staffId, LogStatus.SUCCESS);
                 schoolHolidayRepository.save(existedHoliday);
             }
 
-            loggingService.logActivity(LogType.HOLIDAY, logData, staffId, "FAILED");
+            loggingService.logActivity(LogType.SCHOOL_HOLIDAY, LogAction.CREATE, logData, staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
                     "message", "Holiday already exists"
             ));
@@ -81,7 +82,7 @@ public class HolidayService {
 
         SchoolHoliday schoolHoliday = schoolHolidayRepository.findByHolidayId(holiday.getHolidayId()).orElse(null);
         if (schoolHoliday == null) {
-            loggingService.logActivity(LogType.HOLIDAY, logData, staffId, "FAILED");
+            loggingService.logActivity(LogType.SCHOOL_HOLIDAY, LogAction.UPDATE, logData, staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Invalid holiday Id"
             ));
@@ -94,7 +95,7 @@ public class HolidayService {
         schoolHoliday.setInstitution(semester.getInstitution());
         schoolHolidayRepository.save(schoolHoliday);
 
-        loggingService.logActivity(LogType.HOLIDAY, logData, staffId, LogStatus.SUCCESS.name());
+        loggingService.logActivity(LogType.SCHOOL_HOLIDAY, LogAction.UPDATE, logData, staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok().build();
     }
 
@@ -102,7 +103,7 @@ public class HolidayService {
 
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staff == null) {
-            loggingService.logActivity(LogType.HOLIDAY, "N/A", staffId, "FAILED");
+            loggingService.logActivity(LogType.SCHOOL_HOLIDAY, LogAction.READ, "N/A", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Invalid staff Id"
             ));
@@ -115,7 +116,7 @@ public class HolidayService {
         List<SchoolHoliday> semesterHolidays = schoolHolidayRepository
                 .findBySemester_SemesterID(currentSemesterId);
         if (semesterHolidays == null || semesterHolidays.isEmpty()) {
-            loggingService.logActivity(LogType.HOLIDAY, "N/A", staffId, "FAILED");
+            loggingService.logActivity(LogType.SCHOOL_HOLIDAY, LogAction.READ, "N/A", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "School has no holidays"
             ));
@@ -138,7 +139,7 @@ public class HolidayService {
             holidayList.add(holiday);
         }
 
-        loggingService.logActivity(LogType.HOLIDAY, "N/A", staffId, LogStatus.SUCCESS.name());
+        loggingService.logActivity(LogType.SCHOOL_HOLIDAY, LogAction.READ, "N/A", staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok(holidayList);
     }
 }

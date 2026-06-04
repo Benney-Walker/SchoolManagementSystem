@@ -1,8 +1,6 @@
 package com.codewithben.schoolmanagementsystem.Service;
 
-import com.codewithben.schoolmanagementsystem.Contants.LogType;
-import com.codewithben.schoolmanagementsystem.Contants.StaffRoles;
-import com.codewithben.schoolmanagementsystem.Contants.StaffStatus;
+import com.codewithben.schoolmanagementsystem.Constants.*;
 import com.codewithben.schoolmanagementsystem.DTO.Subject.SubjectDTO;
 import com.codewithben.schoolmanagementsystem.DTO.Staff.FindStaffDTO;
 import com.codewithben.schoolmanagementsystem.DTO.Staff.ViewStaffList;
@@ -24,9 +22,7 @@ import java.util.*;
 public class StaffService {
     private final StaffsRepository staffsRepository;
 
-    private final SubjectsRepository subjectsRepository;
-
-    private final LevelRepository levelRepository;
+    private final InstitutiionRepository institutiionRepository;
 
     private final UtilityClass utilityClass;
 
@@ -43,9 +39,16 @@ public class StaffService {
         String staffIdPlaceHolder = staffId == null ? "N/A" : staffId;
 
         if (staffsRepository.existsByPhoneNumberAndInstitution_InstitutionId(phoneNumber, institution.getInstitutionId())) {
-            loggingService.logActivity(LogType.STAFF_ENROLLMENT, logData, staffIdPlaceHolder, "FAILED");
+            loggingService.logActivity(LogType.STAFF, LogAction.CREATE, "Phone number already exist", "", LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
                     "message", "Phone number already exist"
+            ));
+        }
+
+        if (staffsRepository.existsByFirstNameAndLastName(firstName, surName)) {
+            loggingService.logActivity(LogType.STAFF, LogAction.CREATE, "Staff already exist", "", LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                    "message", "Staff already exist"
             ));
         }
 
@@ -97,7 +100,7 @@ public class StaffService {
 
         Staffs staff = staffsRepository.findByStaffId(instructorId).orElse(null);
         if (staff == null) {
-            loggingService.logActivity(LogType.FETCH_STAFF_DETAILS, logData, staffId, "FAILED");
+            loggingService.logActivity(LogType.STAFF, LogAction.READ, "Invalid staff Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid staff Id");
         }
 
@@ -122,7 +125,7 @@ public class StaffService {
         staffData.setStaffStatus(staff.getStaffStatus().name());
         staffData.setDateOfRegistration(staff.getDateOfRegistration().toString());
 
-        loggingService.logActivity(LogType.FETCH_STAFF_DETAILS, logData, staffId, "SUCCESS");
+        loggingService.logActivity(LogType.STAFF, LogAction.READ, "N/A", staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok(staffData);
     }
 
@@ -135,7 +138,7 @@ public class StaffService {
 
         Staffs staff = staffsRepository.findByStaffId(updateInfo.getStaffId()).orElse(null);
         if (staff == null) {
-            loggingService.logActivity(LogType.UPDATE_STAFF_DETAILS, logData, staffId, "FAILED");
+            loggingService.logActivity(LogType.STAFF, LogAction.UPDATE, "Invalid staff Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid Staff Id");
         }
 
@@ -152,34 +155,38 @@ public class StaffService {
         staff.setStaffStatus(StaffStatus.valueOf(updateInfo.getStaffStatus()));
         staffsRepository.save(staff);
 
-        loggingService.logActivity(LogType.UPDATE_STAFF_DETAILS, logData, staffId, "SUCCESS");
+        loggingService.logActivity(LogType.STAFF, LogAction.UPDATE, "N/A", staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok().build();
     }
 
     private List<StaffRolesEntity> updateStaffRoles(Staffs staff, List<String> staffRoles) {
-        List<StaffRolesEntity> existingRoles = staffRolesEntityRepo.findByStaff_StaffId(staff.getStaffId());
-        if (existingRoles != null && !existingRoles.isEmpty()) {
-            staffRolesEntityRepo.deleteAll(existingRoles);
+        try {
+            List<StaffRolesEntity> existingRoles = staffRolesEntityRepo.findByStaff_StaffId(staff.getStaffId());
+            if (existingRoles != null && !existingRoles.isEmpty()) {
+                staffRolesEntityRepo.deleteAll(existingRoles);
+            }
+
+            List<StaffRolesEntity> newRoles = new ArrayList<>();
+            for (String staffRole : staffRoles) {
+                StaffRolesEntity findStaff = new StaffRolesEntity();
+                findStaff.setStaff(staff);
+                findStaff.setStaffRole(StaffRoles.valueOf(staffRole));
+                staffRolesEntityRepo.save(findStaff);
+
+                newRoles.add(findStaff);
+            }
+
+            return newRoles;
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException(e);
         }
-
-        List<StaffRolesEntity> newRoles = new ArrayList<>();
-        for (String staffRole : staffRoles) {
-            StaffRolesEntity findStaff = new StaffRolesEntity();
-            findStaff.setStaff(staff);
-            findStaff.setStaffRole(StaffRoles.valueOf(staffRole));
-            staffRolesEntityRepo.save(findStaff);
-
-            newRoles.add(findStaff);
-        }
-
-        return newRoles;
     }
 
     public ResponseEntity<?> countTotalStaffs(String staffId) {
 
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staff == null) {
-            loggingService.logActivity(LogType.COUNT_STAFFS, "N/A", staffId, "FAILED");
+            loggingService.logActivity(LogType.STAFF, LogAction.READ, "Invalid staff Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Invalid Staff Id"
             ));
@@ -187,13 +194,13 @@ public class StaffService {
 
         List<Staffs> staffs = getActiveStaff(staff.getInstitution());
         if (staffs == null) {
-            loggingService.logActivity(LogType.COUNT_STAFFS, "N/A", staffId, "FAILED");
+            loggingService.logActivity(LogType.STAFF, LogAction.READ, "Institution has no staff", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Institution has no staff"
             ));
         }
 
-        loggingService.logActivity(LogType.COUNT_STAFFS, "N/A", staffId, "SUCCESS");
+        loggingService.logActivity(LogType.STAFF, LogAction.READ, "N/A", staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok(staffs.size());
     }
 
@@ -201,7 +208,7 @@ public class StaffService {
 
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staff == null) {
-            loggingService.logActivity(LogType.COUNT_STAFFS, "N/A", staffId, "FAILED");
+            loggingService.logActivity(LogType.STAFF, LogAction.READ, "Invalid Staff Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message",  "Invalid Staff Id"
             ));
@@ -209,7 +216,7 @@ public class StaffService {
 
         List<Staffs> staffs = getActiveStaff(staff.getInstitution());
         if (staffs == null) {
-            loggingService.logActivity(LogType.COUNT_STAFFS, "N/A", staffId, "FAILED");
+            loggingService.logActivity(LogType.STAFF, LogAction.READ, "Institution has no staff", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message",  "Institution has no staff"
             ));
@@ -223,111 +230,8 @@ public class StaffService {
             }
         }
 
-        loggingService.logActivity(LogType.COUNT_STAFFS, "N/A", staffId, "SUCCESS");
+        loggingService.logActivity(LogType.STAFF, LogAction.READ, "N/A", staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok(staffCount);
-    }
-
-
-    public ResponseEntity<?> addNewSubjects(String subjectName, String levelId, String staffId) {
-        String logData = "Subject Name: " + subjectName + " Class Id: " + levelId;
-
-        Level level = levelRepository.findByLevelID(levelId).orElse(null);
-        if (level == null) {
-            loggingService.logActivity(LogType.NEW_SUBJECT, logData, staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "Invalid Class Id"
-            ));
-        }
-
-        Subjects  subject = subjectsRepository.findBySubjectNameAndLevel_LevelID(subjectName, levelId).orElse(null);
-        if (subject != null) {
-            loggingService.logActivity(LogType.NEW_SUBJECT, logData, staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
-                    "message", "Subject already exists"
-            ));
-        }
-
-        Subjects subjects = new Subjects();
-        String subjectId = utilityClass.generateEntityId("SUBJECT");
-        subjects.setSubjectId(subjectId);
-        subjects.setSubjectName(subjectName.toUpperCase());
-        subjects.setLevel(level);
-        subjectsRepository.saveAndFlush(subjects);
-
-        //Add subject to Level Subjects
-        List<Subjects> levelSubjects = level.getSubjects();
-        if (levelSubjects == null) {
-            levelSubjects = new ArrayList<>();
-        }
-        levelSubjects.add(subjects);
-        level.setSubjects(levelSubjects);
-        levelRepository.save(level);
-
-        loggingService.logActivity(LogType.NEW_SUBJECT, logData, staffId, "SUCCESS");
-        return ResponseEntity.ok().build();
-    }
-
-    public ResponseEntity<?> loadSubjectData(String subjectId, String staffId) {
-        String logData = "Subject Id: " + subjectId;
-
-        Subjects subject = subjectsRepository.findBySubjectId(subjectId).orElse(null);
-        if (subject == null) {
-            loggingService.logActivity(LogType.FIND_SUBJECT_DATA, logData, staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "Subject not found"
-            ));
-        }
-
-        loggingService.logActivity(LogType.FIND_SUBJECT_DATA, logData, staffId, "SUCCESS");
-        return ResponseEntity.ok( new SubjectDTO(
-                        subject.getSubjectId(),
-                        subject.getSubjectName(),
-                        subject.getLevel().getLevelID()
-                ));
-    }
-
-    public ResponseEntity<?> updateSubjectData(SubjectDTO subjectDTO, String staffId) {
-        String logData = "Subject Id: " + subjectDTO.getSubjectId() + " Subject Name: " + subjectDTO.getSubjectName() +
-                " Class Id: " + subjectDTO.getLevelId();
-
-        Subjects subject = subjectsRepository.findBySubjectId(subjectDTO.getSubjectId()).orElse(null);
-        if (subject == null) {
-            loggingService.logActivity(LogType.UPDATE_SUBJECT_DATA, logData, staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "Subject not found"
-            ));
-        }
-
-        Level level = levelRepository.findByLevelID(subjectDTO.getLevelId()).orElse(null);
-        if (level == null) {
-            loggingService.logActivity(LogType.UPDATE_SUBJECT_DATA, logData, staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "Level not found"
-            ));
-        }
-
-        subject.setSubjectName(subjectDTO.getSubjectName());
-        subject.setLevel(level);
-        subjectsRepository.save(subject);
-
-        loggingService.logActivity(LogType.UPDATE_SUBJECT_DATA, logData, staffId, "SUCCESS");
-        return ResponseEntity.ok().build();
-    }
-
-    public ResponseEntity<?> deleteSubjectData(String subjectId, String staffId) {
-        String logData = "Subject Id: " + subjectId;
-
-        Subjects subject = subjectsRepository.findBySubjectId(subjectId).orElse(null);
-        if (subject == null) {
-            loggingService.logActivity(LogType.DELETE_SUBJECT, logData, staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "Subject do not exist"
-            ));
-        }
-
-        subjectsRepository.delete(subject);
-        loggingService.logActivity(LogType.DELETE_SUBJECT, logData, staffId, "FAILED");
-        return ResponseEntity.ok().build();
     }
 
     public ResponseEntity<?> resetStaffPassword(String newPasswordStaffId, String newPassword, String staffId) {
@@ -335,14 +239,14 @@ public class StaffService {
 
         Staffs staff = staffsRepository.findByStaffId(newPasswordStaffId).orElse(null);
         if (staff == null) {
-            loggingService.logActivity(LogType.PASSWORD_RESET, logData, staffId, "FAILED");
+            loggingService.logActivity(LogType.STAFF, LogAction.RESET, "Invalid Staff Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Invalid Staff Id"
             ));
         }
 
         if (bCryptPasswordEncoder.matches(newPassword, staff.getPassword())) {
-            loggingService.logActivity(LogType.PASSWORD_RESET, logData, staffId, "FAILED");
+            loggingService.logActivity(LogType.STAFF, LogAction.RESET, "You can't use old password", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
                     "message", "You can't use old password"
             ));
@@ -351,14 +255,14 @@ public class StaffService {
         staff.setPassword(bCryptPasswordEncoder.encode(newPassword));
         staffsRepository.save(staff);
 
-        loggingService.logActivity(LogType.PASSWORD_RESET, logData, staffId, "SUCCESS");
+        loggingService.logActivity(LogType.STAFF, LogAction.RESET, "N/A", staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok().build();
     }
 
     public ResponseEntity<?> loadAllStaffInfo(String staffId) {
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staff == null) {
-            loggingService.logActivity(LogType.STAFF_LIST, "N/A", staffId, "FAILED");
+            loggingService.logActivity(LogType.STAFF, LogAction.READ, "Invalid staff Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Invalid staff Id"
             ));
@@ -386,7 +290,7 @@ public class StaffService {
             staffList.add(foundStaff);
         }
 
-        loggingService.logActivity(LogType.STAFF_LIST, "N/A", staffId, "SUCCESS");
+        loggingService.logActivity(LogType.STAFF, LogAction.READ, "N/A", staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok(getFinalStaffList(staffList));
     }
 
@@ -408,7 +312,7 @@ public class StaffService {
 
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staff == null) {
-            loggingService.logActivity(LogType.STAFF_LIST, "N/A", staffId, "FAILED");
+            loggingService.logActivity(LogType.STAFF, LogAction.READ, "Invalid staff Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Invalid staff Id"
             ));
@@ -416,7 +320,7 @@ public class StaffService {
 
         List<Staffs> staffs = staff.getInstitution().getStaff();
         if (staffs == null || staffs.isEmpty()) {
-            loggingService.logActivity(LogType.STAFF_LIST, "N/A", staffId, "FAILED");
+            loggingService.logActivity(LogType.STAFF, LogAction.READ, "Institution has no staff", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Institution has no staff"
             ));
@@ -443,7 +347,7 @@ public class StaffService {
             viewStaffLists.add(newStaff);
         }
 
-        loggingService.logActivity(LogType.STAFF_LIST, "N/A", staffId, "SUCCESS");
+        loggingService.logActivity(LogType.STAFF, LogAction.READ, "N/A", staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok(viewStaffLists);
     }
 

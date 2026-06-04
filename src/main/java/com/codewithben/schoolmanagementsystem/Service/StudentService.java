@@ -1,13 +1,8 @@
 package com.codewithben.schoolmanagementsystem.Service;
 
-import com.codewithben.schoolmanagementsystem.Contants.AttendanceStatus;
-import com.codewithben.schoolmanagementsystem.Contants.LogType;
-import com.codewithben.schoolmanagementsystem.Contants.StudentStatus;
+import com.codewithben.schoolmanagementsystem.Constants.*;
 import com.codewithben.schoolmanagementsystem.DTO.Attendance.TodaysAbsentees;
 import com.codewithben.schoolmanagementsystem.DTO.Attendance.StudentAttendance;
-import com.codewithben.schoolmanagementsystem.DTO.Report.StudentSubjectReport;
-import com.codewithben.schoolmanagementsystem.DTO.Result.SaveStudentScores;
-import com.codewithben.schoolmanagementsystem.DTO.Result.StudentResult;
 import com.codewithben.schoolmanagementsystem.DTO.Students.FindStudentDTO;
 import com.codewithben.schoolmanagementsystem.DTO.Students.StudentsHolder;
 import com.codewithben.schoolmanagementsystem.DTO.Students.StudentsScoresTable;
@@ -61,32 +56,27 @@ public class StudentService {
     @Transactional
     public ResponseEntity<?> addNewStudent(String firstName, String lastName, String gender, LocalDate dateOfBirth, String hometown,
                                 String parentName, String parentContact, String levelId, String staffId) {
-        String logData = "First Name: " + firstName +
-                ", Last Name: " + lastName +
-                ", Gender: " + gender +
-                ", DOB: " + dateOfBirth +
-                ", Hometown: " + hometown +
-                ", Parent: " + parentName +
-                ", Guardian Contact: " + parentContact +
-                ", Level ID: " + levelId;
+
+        if (parentContact.length() != 10) {
+            loggingService.logActivity(LogType.STUDENT, LogAction.UPDATE, "Invalid parent phone number", staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid parent phone number");
+        }
 
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staff == null) {
-            loggingService.logActivity(LogType.NEW_STUDENT, logData, staffId, "FAILED");
+            loggingService.logActivity(LogType.STUDENT, LogAction.CREATE, "Invalid staff Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Could not save student");
         }
 
-        Institution institution = staff.getInstitution();
-
         Level level = levelRepository.findByLevelID(levelId).orElse(null);
         if (level == null) {
-            loggingService.logActivity(LogType.NEW_STUDENT, logData, staffId, "FAILED");
+            loggingService.logActivity(LogType.STUDENT, LogAction.CREATE, "Invalid Class Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Selected class not found");
         }
 
         Students student = studentsRepository.findByFirstNameAndLastName(firstName, lastName).orElse(null);
         if (student == null) {
-            String studentId = utilityClass.generateEntityId("STUDENT");//This line gets student id
+            String studentId = utilityClass.generateEntityId("STUDENT");
 
             //Saving new student
             student = new Students();
@@ -100,7 +90,7 @@ public class StudentService {
             student.setParentPhoneNumber(parentContact);
             student.setLevel(level);
             student.setRegistrationDate(LocalDate.now());
-            student.setInstitution(institution);
+            student.setInstitution(staff.getInstitution());
             student.setStudentStatus(StudentStatus.ACTIVE);
             studentsRepository.saveAndFlush(student);
 
@@ -114,203 +104,20 @@ public class StudentService {
             levelRepository.save(level);
 
             //Adding student to institution
-            List<Students> students = institution.getStudents();
+            List<Students> students = staff.getInstitution().getStudents();
             if (students == null) {
                 students = new ArrayList<>();
             }
             students.add(student);
-            institution.setStudents(students);
-            institutionRepository.save(institution);
+            staff.getInstitution().setStudents(students);
+            institutionRepository.save(staff.getInstitution());
+
+            loggingService.logActivity(LogType.STUDENT, LogAction.CREATE, "N/A", staffId, LogStatus.SUCCESS);
             return ResponseEntity.ok(studentId);
         }
 
-        loggingService.logActivity(LogType.NEW_STUDENT, logData, staffId, "SUCCESS");
+        loggingService.logActivity(LogType.STUDENT, LogAction.CREATE, "Student already exist", staffId, LogStatus.FAILED);
         return ResponseEntity.status(HttpStatus.CONFLICT).body("Student already exist");
-    }
-
-    @Transactional
-    public ResponseEntity<?> addStudentSubjectScores(SaveStudentScores scores, String staffId, String subjectId, String semesterId) {
-        String logData = "Student ID: " + scores.getStudentId() +
-                ", Ex1: " + scores.getProjectScore() +
-                ", Class Test: " + scores.getClassTest1Score() +
-                ", Ex2: " + scores.getGroupWorkScore() +
-                ", Project: " + scores.getClassTest2Score() +
-                ", Class Score: " + scores.getClassScore() +
-                ", Exam Score: " + scores.getExamScore() +
-                ", Calculated Exam: " + scores.getCalculatedExamScore();
-
-        Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
-
-        Students student = studentsRepository.findByStudentId(scores.getStudentId()).orElse(null);
-        if (student == null) {
-            loggingService.logActivity(LogType.SAVE_SCORES, logData, staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "Student not found"
-            ));
-        }
-
-        List<GradeSystem> gradeSystem = gradeSystemRepository.findAllByInstitution_InstitutionId(
-                student.getInstitution().getInstitutionId()
-        );
-
-        if (gradeSystem == null || gradeSystem.isEmpty()) {
-            loggingService.logActivity(LogType.SAVE_SCORES, logData, staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "Grade information not found"
-            ));
-        }
-
-        Subjects subject = subjectsRepository.findBySubjectId(subjectId).orElse(null);
-        if (subject == null) {
-            loggingService.logActivity(LogType.SAVE_SCORES, logData, staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "Invalid subject ID"
-            ));
-        }
-
-        Semester semester = semesterRepository.findBySemesterID(semesterId).orElse(null);
-        if (semester == null) {
-            loggingService.logActivity(LogType.SAVE_SCORES, logData, staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "Invalid semester ID"
-            ));
-        }
-
-
-        // Get or create Results for this student + semester + level
-        Results result = resultsRepository
-                .findByStudent_StudentIdAndSemester_SemesterID(
-                        student.getStudentId(), semesterId)
-                .orElse(null);
-
-        if (result == null) {
-            result = new Results();
-            result.setStudent(student);
-            result.setLevel(subject.getLevel());
-            result.setSemester(semester);
-            result.setCreatedAt(LocalDate.now());
-            result.setTotalScore(0.0);
-            result.setAverageScore(0.0);
-            result.setUpdatedBy(staff);
-        }
-
-        // Check if score already exists
-        SubjectScore subjectScore = subjectScoreRepository
-                .findByStudent_StudentIdAndSubject_SubjectIdAndResults_ResultId(
-                        student.getStudentId(),
-                        subject.getSubjectId(),
-                        result.getResultId()
-                ).orElse(new SubjectScore());
-
-        double classScore = Double.parseDouble(scores.getClassScore());
-        double calculatedExamScore = Double.parseDouble(scores.getCalculatedExamScore());
-        double totalScore =  classScore + calculatedExamScore;
-
-        subjectScore.setSubject(subject);
-        subjectScore.setStudent(student);
-        subjectScore.setResults(result);
-        subjectScore.setProjectWork(Double.parseDouble(scores.getProjectScore()));
-        subjectScore.setClassTest1(Double.parseDouble(scores.getClassTest1Score()));
-        subjectScore.setGroupWork(Double.parseDouble(scores.getGroupWorkScore()));
-        subjectScore.setClassTest2(Double.parseDouble(scores.getClassTest2Score()));
-        subjectScore.setClassScore(classScore);
-        subjectScore.setExamScore(Double.parseDouble(scores.getExamScore()));
-        subjectScore.setCalculatedExamScore(calculatedExamScore);
-        subjectScore.setGrade(
-                utilityClass.extractGrade(totalScore, student.getInstitution().getInstitutionId())
-        );
-        subjectScore.setGradeDescriptor(
-                utilityClass.extractDescription(totalScore, student.getInstitution().getInstitutionId())
-        );
-        subjectScore.setTotalScore(totalScore);
-
-        subjectScoreRepository.save(subjectScore);
-
-        //Add scores to results
-        List<SubjectScore> resultsScores = result.getSubjectScores();
-        if (resultsScores == null || resultsScores.isEmpty()) {
-            resultsScores = new ArrayList<>();
-        }
-        resultsScores.add(subjectScore);
-        result.setSubjectScores(resultsScores);
-        resultsRepository.save(result);
-
-        updateResultTotals(result, staff, subject);
-
-        loggingService.logActivity(LogType.SAVE_SCORES, logData, staffId, "SUCCESS");
-        return ResponseEntity.ok().build();
-    }
-
-    private void updateResultTotals(Results result, Staffs staff, Subjects subject) {
-        List<SubjectScore> scores = subjectScoreRepository.findByResults_ResultId(result.getResultId());
-
-        double total = 0.0;
-        if (scores == null || scores.isEmpty()) {
-            result.setTotalScore(0.0);
-            result.setAverageScore(0.0);
-        } else {
-
-            for(SubjectScore score : scores) {
-                total += score.getTotalScore();
-            }
-
-            result.setTotalScore(total);
-            result.setAverageScore(total / scores.size());
-        }
-
-        result.setUpdatedAt(LocalDate.now());
-        result.setUpdatedBy(staff);
-        resultsRepository.save(result);
-
-        utilityClass.reArrangePositions(subject, result.getSemester());
-    }
-
-    public ResponseEntity<?> findStudentResults(String studentId, String semesterId, String levelId, String staffId) {
-        String logData = "Student Id: " + " Semester Id: " + semesterId + " class Id: " + levelId;
-
-        Students student = studentsRepository.findByStudentId(studentId).orElse(null);
-        if (student == null) {
-            loggingService.logActivity(LogType.RESULTS, logData, staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Student not found");
-        }
-
-        Results results = resultsRepository.findByStudent_StudentIdAndSemester_SemesterID(
-                studentId, semesterId
-        ).orElse(null);
-        if (results == null) {
-            loggingService.logActivity(LogType.RESULTS, logData, staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Results not found");
-        }
-
-        List<StudentSubjectReport> subjectResults = new ArrayList<>();
-
-            List<SubjectScore> subjectScores = results.getSubjectScores();
-
-            for (SubjectScore subjectScore : subjectScores) {
-                if (subjectScore.getStudent().getStudentId().equals(studentId)) {
-                    StudentSubjectReport studentSubjectReport = new StudentSubjectReport(
-                            subjectScore.getSubject().getSubjectName(),
-                            String.valueOf(subjectScore.getTotalScore()),
-                            subjectScore.getGrade(),
-                            subjectScore.getGradeDescriptor()
-                    );
-                    subjectResults.add(studentSubjectReport);
-                }
-            }
-
-        String studentID = results.getStudent().getStudentId();
-        String studentName = student.getFirstName() + " " + student.getLastName();
-        String semesterName = results.getSemester().getSemesterName();
-        String levelName = results.getLevel().getLevelName();
-        Double totalScore = results.getTotalScore();
-        Double averageScore = results.getAverageScore();
-        String position = results.getPosition();
-
-        loggingService.logActivity(LogType.RESULTS, logData, staffId, "SUCCESS");
-        return ResponseEntity.ok(new StudentResult(
-                studentID, studentName, levelName, semesterName, totalScore,
-                averageScore, position, subjectResults
-        ));
     }
 
     public ResponseEntity<?> findStudent(String studentId, String staffId) {
@@ -318,11 +125,11 @@ public class StudentService {
 
         Students student = studentsRepository.findByStudentId(studentId).orElse(null);
         if (student == null) {
-            loggingService.logActivity(LogType.FETCH_STUDENT_DETAILS, logData, staffId, "FAILED");
+            loggingService.logActivity(LogType.STUDENT, LogAction.READ, "Invalid Student Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Student not found");
         }
 
-        loggingService.logActivity(LogType.FETCH_STUDENT_DETAILS, logData, staffId, "SUCCESS");
+        loggingService.logActivity(LogType.STUDENT, LogAction.READ, "N/A", staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok(getStudentData(student));
     }
 
@@ -348,30 +155,30 @@ public class StudentService {
     public ResponseEntity<?> countTotalStudents(String staffId) {
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staff == null) {
-            loggingService.logActivity(LogType.COUNT_STUDENTS, "N/A", staffId, "FAILED");
+            loggingService.logActivity(LogType.STUDENT, LogAction.READ, "Invalid staff Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "Invalid staffId"
+                    "message", "Invalid staff Id"
             ));
         }
 
         List<Students> students = utilityClass.getActiveStudents(staff.getInstitution().getStudents());
         if (students == null || students.isEmpty()) {
-            loggingService.logActivity(LogType.COUNT_STUDENTS, "N/A", staffId, "FAILED");
+            loggingService.logActivity(LogType.STUDENT, LogAction.READ, "Institution has no students", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Institution has no student"
             ));
         }
 
-        loggingService.logActivity(LogType.COUNT_STUDENTS, "N/A", staffId, "SUCCESS");
+        loggingService.logActivity(LogType.STUDENT, LogAction.READ, "N/A", staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok(students.size());
     }
 
     //This loads all the absentees for the day
-    public ResponseEntity<?> findTodaysAbsentees(String staffId) {
+    public ResponseEntity<?> getAbsentees(String staffId) {
 
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staff == null) {
-            loggingService.logActivity(LogType.ATTENDANCE_ABSENTEES, "N/A", staffId, "FAILED");
+            loggingService.logActivity(LogType.STUDENT, LogAction.READ, "Invalid staff Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Invalid Staff Id"
             ));
@@ -379,7 +186,7 @@ public class StudentService {
 
         List<Level> levels = staff.getInstitution().getLevels();
         if (levels == null || levels.isEmpty()) {
-            loggingService.logActivity(LogType.ATTENDANCE_ABSENTEES, "N/A", staffId, "FAILED");
+            loggingService.logActivity(LogType.STUDENT, LogAction.READ, "Institution has no classes yet", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Institution has no class yet"
             ));
@@ -424,147 +231,89 @@ public class StudentService {
             }
         }
 
-        loggingService.logActivity(LogType.ATTENDANCE_ABSENTEES, "N/A", staffId, "SUCCESS");
+        loggingService.logActivity(LogType.STUDENT, LogAction.READ, "N/A", staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok(todaysAbsentees);
     }
 
     public ResponseEntity<?> updateStudentPersonalData(UpdateStudentPersonalData data, String staffId) {
-        String logData = "Student ID: " + data.getStudentId() +
-                ", First Name: " + data.getFirstName() +
-                ", Last Name: " + data.getLastName() +
-                ", Gender: " + data.getGender() +
-                ", DOB: " + data.getDateOfBirth() +
-                ", Parent: " + data.getParentName() +
-                ", Parent Phone: " + data.getParentPhoneNumber() +
-                ", Grade ID: " + data.getGradeId() +
-                ", Status: " + data.getStatus() +
-                ", Hometown: " + data.getHomeTown();
-
-        if (data.getParentPhoneNumber().length() != 10) {
-            loggingService.logActivity(LogType.UPDATE_STUDENT_DETAILS, logData, staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid parent phone number");
-        }
 
         Students student = studentsRepository.findByStudentId(data.getStudentId()).orElse(null);
         if (student == null) {
-            loggingService.logActivity(LogType.UPDATE_STUDENT_DETAILS, logData, staffId, "FAILED");
+            loggingService.logActivity(LogType.STUDENT, LogAction.UPDATE, "Invalid student Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Student not found");
+        }
+
+        if (data.getParentPhoneNumber().length() != 10) {
+            loggingService.logActivity(LogType.STUDENT, LogAction.UPDATE, "Invalid parent phone number", staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid parent phone number");
         }
 
         Level level = levelRepository.findByLevelID(data.getGradeId()).orElse(null);
         if (level == null) {
-            loggingService.logActivity(LogType.UPDATE_STUDENT_DETAILS, logData, staffId, "FAILED");
+            loggingService.logActivity(LogType.STUDENT, LogAction.UPDATE, "Invalid class Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Class not found");
         }
 
-        student.setFirstName(data.getFirstName());
-        student.setLastName(data.getLastName());
-        student.setGender(data.getGender());
-        student.setParentName(data.getParentName());
-        student.setParentPhoneNumber(data.getParentPhoneNumber());
-        student.setStudentStatus(StudentStatus.valueOf(data.getStatus()));
-        student.setLevel(level);
-        student.setDateOfBirth(LocalDate.parse(data.getDateOfBirth()));
-        student.setHomeTown(data.getHomeTown());
-        studentsRepository.save(student);
+        try {
+            student.setFirstName(data.getFirstName());
+            student.setLastName(data.getLastName());
+            student.setGender(data.getGender());
+            student.setParentName(data.getParentName());
+            student.setParentPhoneNumber(data.getParentPhoneNumber());
+            student.setStudentStatus(StudentStatus.valueOf(data.getStatus()));
+            student.setLevel(level);
+            student.setDateOfBirth(LocalDate.parse(data.getDateOfBirth()));
+            student.setHomeTown(data.getHomeTown());
+            studentsRepository.save(student);
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException(e);
+        }
 
-        loggingService.logActivity(LogType.UPDATE_STUDENT_DETAILS, logData, staffId, "SUCCESS");
+        loggingService.logActivity(LogType.STUDENT, LogAction.UPDATE, "N/A", staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok().build();
     }
 
-    public ResponseEntity<?> getSubjectStudents(String subjectId, String staffId) {
-        String logData = "Subject Id: " + subjectId;
-
-        Subjects subject = subjectsRepository.findBySubjectId(subjectId).orElse(null);
-        if (subject == null) {
-            loggingService.logActivity(LogType.FETCH_STUDENTS, logData, staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "Subject not found"
-            ));
-        }
-
-        //Gets the active students
-        List<Students> students =
-                utilityClass.getActiveStudents(subject.getLevel().getStudents());
-
-        if (students == null || students.isEmpty()) {
-            loggingService.logActivity(LogType.FETCH_STUDENTS, logData, staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "Class has no students"
-            ));
-        }
-
-        String subjectName = subject.getSubjectName();
-        List<StudentsScoresTable> subjectStudents = new ArrayList<>();
-        for (Students student : students) {
-            String studentId = student.getStudentId();
-            String studentName = student.getFirstName() + " " + student.getLastName();
-
-            StudentsScoresTable scoresTable = new StudentsScoresTable();
-
-            // Check if student has scores for this subject
-            SubjectScore score = subjectScoreRepository.findByStudent_StudentIdAndSubject_SubjectId(
-                    studentId, subjectId
-            ).orElse(null);
-
-            if (score == null) {
-
-                scoresTable.setStudentId(studentId);
-                scoresTable.setStudentName(studentName);
-                scoresTable.setClassTest1Score("0");
-                scoresTable.setClassTest2Score("0");
-                scoresTable.setProjectScore("0");
-                scoresTable.setGroupWorkScore("0");
-                scoresTable.setClassScore("0");
-                scoresTable.setExamScore("0");
-                scoresTable.setCalculatedExamScore("0");
-
-            } else {
-
-                scoresTable.setStudentId(studentId);
-                scoresTable.setStudentName(studentName);
-                scoresTable.setClassTest1Score(
-                        String.valueOf(score.getClassTest1())
-                );
-                scoresTable.setClassTest2Score(
-                        String.valueOf(score.getClassTest2())
-                );
-                scoresTable.setGroupWorkScore(
-                        String.valueOf(score.getGroupWork())
-                );
-                scoresTable.setProjectScore(
-                        String.valueOf(score.getProjectWork())
-                );
-                scoresTable.setClassScore(
-                        String.valueOf(score.getClassScore())
-                );
-                scoresTable.setExamScore(
-                        String.valueOf(score.getExamScore())
-                );
-                scoresTable.setCalculatedExamScore(
-                        String.valueOf(score.getCalculatedExamScore())
-                );
-
-            }
-
-            subjectStudents.add(scoresTable);
-        }
-
-        loggingService.logActivity(LogType.FETCH_STUDENTS, logData, staffId, "SUCCESS");
-        return ResponseEntity.ok(
-                new SubjectScores(subjectName, subjectId, subjectStudents)
-        );
-    }
-
     public ResponseEntity<?> loadStudentForAttendance(String levelId, String attendanceDate, String staffId) {
-        String logData = "Class Id: " + levelId + " Attendance date: " + attendanceDate;
+
+        LocalDate selectedDate = LocalDate.parse(attendanceDate, DateTimeFormatter.ISO_DATE);
 
         Level level = levelRepository.findByLevelID(levelId).orElse(null);
         if (level == null) {
-            loggingService.logActivity(LogType.FETCH_STUDENTS, logData, staffId, "FAILED");
+            loggingService.logActivity(LogType.ATTENDANCE, LogAction.READ, "Invalid class Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Invalid class Id"
             ));
+        }
+
+        String currentSemesterId = utilityClass.getCurrentSemesterId(
+                level.getInstitution().getInstitutionId()
+        );
+        Semester semester = semesterRepository.findBySemesterID(currentSemesterId).orElse(null);
+        if (semester == null) {
+            loggingService.logActivity(LogType.ATTENDANCE, LogAction.CREATE, "Current term not added to system", staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                    "message", "Current term not added to system"
+            ));
+        }
+
+        if (!utilityClass.isSchoolDay(selectedDate)) {
+            loggingService.logActivity(LogType.ATTENDANCE, LogAction.CREATE, "Attendance can't be marked on weekends", staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                    "message", "Attendance can't be marked on weekends"
+            ));
+        }
+
+        List<SchoolHoliday> holidays = semester.getSchoolHoliday();
+        if (holidays != null && !holidays.isEmpty()) {
+            for (SchoolHoliday holiday : holidays) {
+
+                if (!selectedDate.isBefore(holiday.getStartDate()) && !selectedDate.isAfter(holiday.getEndDate())) {
+                    loggingService.logActivity(LogType.ATTENDANCE, LogAction.CREATE, "Today is holiday", staffId, LogStatus.FAILED);
+                    return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                            "message", "Today is holiday"
+                    ));
+                }
+            }
         }
 
         LocalDate date = LocalDate.parse(attendanceDate, DateTimeFormatter.ISO_DATE);
@@ -597,7 +346,7 @@ public class StudentService {
             ));
         }
 
-        loggingService.logActivity(LogType.FETCH_STUDENTS, logData, staffId, "SUCCESS");
+        loggingService.logActivity(LogType.ATTENDANCE, LogAction.READ, "N/A", staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok(attendanceList);
     }
 
@@ -607,7 +356,7 @@ public class StudentService {
         //Check if date is accepted for attendance
         LocalDate selectedDate = LocalDate.parse(date, DateTimeFormatter.ISO_DATE);
         if (!utilityClass.isSchoolDay(selectedDate)) {
-            loggingService.logActivity(LogType.ATTENDANCE, logData, staffId, "FAILED");
+            loggingService.logActivity(LogType.ATTENDANCE, LogAction.CREATE, "Attendance can't be marked on weekends", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
                     "message", "Attendance can't be marked on weekends"
             ));
@@ -615,7 +364,7 @@ public class StudentService {
 
         Students student = studentsRepository.findByStudentId(studentId).orElse(null);
         if (student == null) {
-            loggingService.logActivity(LogType.ATTENDANCE, logData, staffId, "FAILED");
+            loggingService.logActivity(LogType.ATTENDANCE, LogAction.CREATE, "Invalid student Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Invalid student Id"
             ));
@@ -626,9 +375,9 @@ public class StudentService {
         );
         Semester semester = semesterRepository.findBySemesterID(currentSemesterId).orElse(null);
         if (semester == null) {
-            loggingService.logActivity(LogType.ATTENDANCE, logData, staffId, "FAILED");
+            loggingService.logActivity(LogType.ATTENDANCE, LogAction.CREATE, "Current term not added to system", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
-                    "message", "Internal server error! Please try again"
+                    "message", "Current term not added to system"
             ));
         }
 
@@ -637,8 +386,8 @@ public class StudentService {
             for (SchoolHoliday holiday : holidays) {
 
                 if (!selectedDate.isBefore(holiday.getStartDate()) && !selectedDate.isAfter(holiday.getEndDate())) {
-                    loggingService.logActivity(LogType.ATTENDANCE, logData, staffId, "FAILED");
-                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                    loggingService.logActivity(LogType.ATTENDANCE, LogAction.CREATE, "Today is holiday", staffId, LogStatus.FAILED);
+                    return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
                             "message", "Today is holiday"
                     ));
                 }
@@ -647,7 +396,7 @@ public class StudentService {
 
         Level level = levelRepository.findByLevelID(levelId).orElse(null);
         if (level == null) {
-            loggingService.logActivity(LogType.ATTENDANCE, logData, staffId, "FAILED");
+            loggingService.logActivity(LogType.ATTENDANCE, LogAction.CREATE, "Invalid student Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Invalid level Id"
             ));
@@ -655,9 +404,9 @@ public class StudentService {
 
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staff == null) {
-            loggingService.logActivity(LogType.ATTENDANCE, logData, staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
-                    "message", "Server error! Please try again"
+            loggingService.logActivity(LogType.ATTENDANCE, LogAction.CREATE, "Invalid staff Id", staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Invalid staff Id"
             ));
         }
 
@@ -683,7 +432,7 @@ public class StudentService {
         todaysAttendance.setStatus(AttendanceStatus.valueOf(status));
         attendanceRepository.save(todaysAttendance);
 
-        loggingService.logActivity(LogType.ATTENDANCE, logData, staffId, "SUCCESS");
+        loggingService.logActivity(LogType.ATTENDANCE, LogAction.CREATE, "N/A", staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok().build();
     }
 
@@ -693,7 +442,7 @@ public class StudentService {
 
         Level level = levelRepository.findByLevelID(levelId).orElse(null);
         if (level == null) {
-            loggingService.logActivity(LogType.FETCH_STUDENTS, logData, staffId, "FAILED");
+            loggingService.logActivity(LogType.STUDENT, LogAction.READ, "Invalid class Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Invalid class Id"
             ));
@@ -701,7 +450,7 @@ public class StudentService {
 
         List<Students> levelStudents = utilityClass.getActiveStudents(level.getStudents());
         if (levelStudents == null || levelStudents.isEmpty()) {
-            loggingService.logActivity(LogType.FETCH_STUDENTS, logData, staffId, "FAILED");
+            loggingService.logActivity(LogType.STUDENT, LogAction.READ, "Class has no students", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Class has no students"
             ));
@@ -716,7 +465,7 @@ public class StudentService {
             studentsHolders.add(stu);
         }
 
-        loggingService.logActivity(LogType.FETCH_STUDENTS, logData, staffId, "SUCCESS");
+        loggingService.logActivity(LogType.STUDENT, LogAction.READ, "Invalid class Id", staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok(studentsHolders);
     }
 
