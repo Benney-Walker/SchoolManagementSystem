@@ -90,7 +90,7 @@ public class LevelService {
         ));
     }
 
-    public ResponseEntity<?> loadLevelInfo(String staffId) {
+    public ResponseEntity<?> loadClassesForCache(String staffId) {
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staff == null) {
             loggingService.logActivity(LogType.FETCH_CLASSES, "N/A", staffId, "FAILED");
