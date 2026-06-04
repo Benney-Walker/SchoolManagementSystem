@@ -1,6 +1,8 @@
 package com.codewithben.schoolmanagementsystem.Utility;
 
-import com.codewithben.schoolmanagementsystem.Contants.LogType;
+import com.codewithben.schoolmanagementsystem.Constants.LogAction;
+import com.codewithben.schoolmanagementsystem.Constants.LogStatus;
+import com.codewithben.schoolmanagementsystem.Constants.LogType;
 import com.codewithben.schoolmanagementsystem.Service.LoggingService;
 import org.springframework.context.ApplicationListener;
 import org.springframework.security.authentication.event.AbstractAuthenticationFailureEvent;
@@ -22,10 +24,11 @@ public class AuthenticationFailureListener implements ApplicationListener<Abstra
         System.out.println(username);
 
         loggingService.logActivity(
-                LogType.LOGIN,
+                LogType.STAFF,
+                LogAction.LOGIN,
                 "N/A",
                 username,
-                "FAILED"
+                LogStatus.FAILED
         );
     }
 }
