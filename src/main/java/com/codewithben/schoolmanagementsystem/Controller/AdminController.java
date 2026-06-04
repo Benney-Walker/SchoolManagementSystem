@@ -81,6 +81,13 @@ public class AdminController {
         return institutionService.loadAllGradingCriteria(staffId);
     }
 
+    @PutMapping("/v1/update-grading-criteria")
+    public ResponseEntity<?> updateGradingCriteria(@RequestHeader("staffId") String staffId,
+                                                   @RequestBody GradingCriteria gradingCriteria) {
+
+        return institutionService.updateGradingCriteria(gradingCriteria, staffId);
+    }
+
     @GetMapping("/v1/find-class-info/{levelId}")
     public ResponseEntity<?> findClassInfo(@RequestHeader("staffId") String staffId,
                                            @PathVariable String levelId) {
