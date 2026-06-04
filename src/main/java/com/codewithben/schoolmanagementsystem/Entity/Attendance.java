@@ -1,6 +1,6 @@
 package com.codewithben.schoolmanagementsystem.Entity;
 
-import com.codewithben.schoolmanagementsystem.Contants.AttendanceStatus;
+import com.codewithben.schoolmanagementsystem.Constants.AttendanceStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
