@@ -1,5 +1,6 @@
 package com.codewithben.schoolmanagementsystem.Controller;
 
+import com.codewithben.schoolmanagementsystem.DTO.Holiday.Holiday;
 import com.codewithben.schoolmanagementsystem.DTO.Result.GradingCriteria;
 import com.codewithben.schoolmanagementsystem.DTO.Semester.AddNewSemester;
 import com.codewithben.schoolmanagementsystem.DTO.Class.FindAndUpdateClassInfo;
@@ -40,6 +41,8 @@ public class AdminController {
     private final JasperReportService jasperReportService;
 
     private final LoggingService loggingService;
+
+    private final HolidayService holidayService;
 
 
 
@@ -164,5 +167,25 @@ public class AdminController {
     public ResponseEntity<?> getRecentActivities(@RequestHeader("staffId") String staffId) {
 
         return loggingService.getRecentActivity(staffId);
+    }
+
+    @PostMapping("/v1/add-holiday")
+    public ResponseEntity<?> addNewHoliday(@RequestHeader("staffId")String staffId,
+                                           @RequestBody Holiday holiday) {
+
+        return holidayService.addOrUpdateHoliday(staffId, holiday);
+    }
+
+    @GetMapping("/v1/load-holidays")
+    public ResponseEntity<?> loadHolidays(@RequestHeader("staffId") String staffId) {
+
+        return holidayService.loadAllHolidays(staffId);
+    }
+
+    @PutMapping("/v1/update-holiday")
+    public ResponseEntity<?> updateHoliday(@RequestHeader("staffId")String staffId,
+                                           @RequestBody Holiday holiday) {
+
+        return holidayService.addOrUpdateHoliday(staffId, holiday);
     }
 }
