@@ -1,8 +1,16 @@
 package com.codewithben.schoolmanagementsystem.Entity;
 
-import com.codewithben.schoolmanagementsystem.Contants.StaffRoles;
+import com.codewithben.schoolmanagementsystem.Constants.StaffRoles;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 @Entity
 public class StaffRolesEntity {
 
@@ -17,34 +25,4 @@ public class StaffRolesEntity {
     @Enumerated(EnumType.STRING)
     private StaffRoles staffRole;
 
-    public StaffRolesEntity() {}
-
-    public StaffRolesEntity(Staffs staff, StaffRoles staffRole) {
-        this.staff = staff;
-        this.staffRole = staffRole;
-    }
-
-    public int getRoleId() {
-        return roleId;
-    }
-
-    public void setRoleId(int roleId) {
-        this.roleId = roleId;
-    }
-
-    public Staffs getStaff() {
-        return staff;
-    }
-
-    public void setStaff(Staffs staff) {
-        this.staff = staff;
-    }
-
-    public StaffRoles getStaffRole() {
-        return staffRole;
-    }
-
-    public void setStaffRole(StaffRoles staffRole) {
-        this.staffRole = staffRole;
-    }
 }
