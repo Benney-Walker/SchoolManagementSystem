@@ -93,7 +93,13 @@ public class StaffController {
     @GetMapping("/v1/load-levels")
     public ResponseEntity<?> loadGradesCache(@RequestHeader("staffId") String staffId) {
 
-        return levelService.loadLevelInfo(staffId);
+        return levelService.loadClassesForCache(staffId);
+    }
+
+    @GetMapping("/v2/load-classes")
+    public ResponseEntity<?> loadClassesForCache(@RequestHeader("staffId") String staffId) {
+
+        return levelService.loadClassesForCache(staffId);
     }
 
     @GetMapping("/v1/load-subjects/{levelId}")
