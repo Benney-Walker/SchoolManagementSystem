@@ -1,6 +1,6 @@
 package com.codewithben.schoolmanagementsystem.Controller;
 
-import com.codewithben.schoolmanagementsystem.Contants.LogType;
+import com.codewithben.schoolmanagementsystem.Constants.LogType;
 import com.codewithben.schoolmanagementsystem.DTO.Fees.FetchFeesDetails;
 import com.codewithben.schoolmanagementsystem.DTO.Fees.NewFeesPaymentDTO;
 import com.codewithben.schoolmanagementsystem.DTO.Fees.StudentPaymentRecords;
@@ -22,6 +22,7 @@ public class FinanceController {
     private final LoggingService loggingService;
 
     private final StaffsRepository staffsRepository;
+
 
     @PostMapping("/v1/add-new-fees")
     public ResponseEntity<?> addNewFees(@RequestHeader("staffId") String staffId,
@@ -90,33 +91,6 @@ public class FinanceController {
         return feesService.loadClassFeesSummary(staffId);
     }
 
-    @GetMapping("/v1/fully-paid-students")
-    public ResponseEntity<?> getFullyPaidStudents(@RequestHeader("staffId") String staffId) {
-        Staffs staff = getValidatedStaff(staffId);
-        if (staff == null)
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid staff Id");
-
-        return feesService.getFullyPaidStudents(staffId, staff.getInstitution());
-    }
-
-    @GetMapping("/v1/partially-paid-students")
-    public ResponseEntity<?> getPartiallyPaidStudents(@RequestHeader("staffId") String staffId) {
-        Staffs staff = getValidatedStaff(staffId);
-        if (staff == null)
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid staff Id");
-
-        return feesService.getPartiallyPaidStudents(staffId, staff.getInstitution());
-    }
-
-    @GetMapping("/v1/not-paid-students")
-    public ResponseEntity<?> getNotPaidStudents(@RequestHeader("staffId") String staffId) {
-        Staffs staff = getValidatedStaff(staffId);
-        if (staff == null)
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid staff Id");
-
-        return feesService.getNotPaidStudents(staffId, staff.getInstitution());
-    }
-
     @GetMapping("/v1/total-fees")
     public ResponseEntity<?> totalSemesterFees(@RequestHeader("staffId") String staffId) {
 
@@ -151,14 +125,5 @@ public class FinanceController {
 
 
         return feesService.getRecentPayments(staffId);
-    }
-
-    private Staffs getValidatedStaff(String staffId) {
-        Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
-        if (staff == null) {
-            loggingService.logActivity(LogType.FETCH_REPORT, "N/A", staffId, "FAILED");
-            return null;
-        }
-        return staff;
     }
 }
