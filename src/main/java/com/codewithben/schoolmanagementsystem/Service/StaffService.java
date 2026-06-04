@@ -35,8 +35,6 @@ public class StaffService {
 
     public ResponseEntity<?> addNewStaff(String staffId, String firstName, String surName, String gender, String dateOfBirth,
                                          String email, String password, String phoneNumber,
-                                         List<String> staffRoles, Institution institution, String logData, String staffId) {
-        String staffIdPlaceHolder = staffId == null ? "N/A" : staffId;
                                          List<String> staffRoles) {
 
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
@@ -87,6 +85,18 @@ public class StaffService {
         return ResponseEntity.ok(staffID);
     }
 
+    public ResponseEntity<?> addNewPrincipal(String institutionId, String firstName, String surName, String gender, String dateOfBirth,
+                                         String email, String password, String phoneNumber,
+                                         List<String> staffRoles) {
+
+        Institution institution = institutiionRepository.findByInstitutionId(institutionId).orElse(null);
+        if (institution == null) {
+            loggingService.logActivity(LogType.STAFF, LogAction.CREATE, "Invalid institution Id", "", LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                    "message", "Invalid institution Id"
+            ));
+        }
+
 
         if (staffsRepository.existsByPhoneNumberAndInstitution_InstitutionId(phoneNumber, institution.getInstitutionId())) {
             loggingService.logActivity(LogType.STAFF, LogAction.CREATE, "Phone number already exist", "", LogStatus.FAILED);
@@ -103,26 +113,27 @@ public class StaffService {
         }
 
         String staffID = utilityClass.generateEntityId("STAFF");
-        Staffs staff = new Staffs();
-        staff.setStaffId(staffID);
-        staff.setFirstName(firstName);
-        staff.setLastName(surName);
-        staff.setGender(gender);
-        staff.setStatus("NULL");
-        staff.setDateOfBirth(LocalDate.parse(dateOfBirth));
-        staff.setEmail(email);
+        Staffs newPrincipal = new Staffs();
+        newPrincipal.setStaffId(staffID);
+        newPrincipal.setFirstName(firstName.toUpperCase());
+        newPrincipal.setLastName(surName.toUpperCase());
+        newPrincipal.setGender(gender.toUpperCase());
+        newPrincipal.setStatus("NULL");
+        newPrincipal.setDateOfBirth(LocalDate.parse(dateOfBirth));
+        newPrincipal.setEmail(email);
 
         String hashedPassword = bCryptPasswordEncoder.encode(password);
-        staff.setPassword(hashedPassword);
-        staff.setPhoneNumber(phoneNumber);
-        staff.setDateOfRegistration(LocalDate.now());
-        staff.setStaffStatus(StaffStatus.ACTIVE);
-        staff.setInstitution(institution);
-        staffsRepository.save(staff);
+        newPrincipal.setPassword(hashedPassword);
+        newPrincipal.setPhoneNumber(phoneNumber);
+        newPrincipal.setDateOfRegistration(LocalDate.now());
+        newPrincipal.setStaffStatus(StaffStatus.ACTIVE);
+        newPrincipal.setInstitution(institution);
+        staffsRepository.save(newPrincipal);
 
-        staff.setRoles(saveStaffRoles(staff, staffRoles));
-        staffsRepository.save(staff);
-        loggingService.logActivity(LogType.STAFF_ENROLLMENT, logData, staffIdPlaceHolder, "SUCCESS");
+        newPrincipal.setRoles(saveStaffRoles(newPrincipal, staffRoles));
+        staffsRepository.save(newPrincipal);
+
+        loggingService.logActivity(LogType.STAFF, LogAction.CREATE, "New Subscription", "", LogStatus.SUCCESS);
         return ResponseEntity.ok(staffID);
     }
 
@@ -192,9 +203,9 @@ public class StaffService {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid Staff Id");
         }
 
-        staff.setFirstName(updateInfo.getFirstName());
-        staff.setLastName(updateInfo.getSurname());
-        staff.setGender(updateInfo.getGender());
+        staff.setFirstName(updateInfo.getFirstName().toUpperCase());
+        staff.setLastName(updateInfo.getSurname().toUpperCase());
+        staff.setGender(updateInfo.getGender().toUpperCase());
         staff.setDateOfBirth(LocalDate.parse(updateInfo.getDateOfBirth()));
         staff.setEmail(updateInfo.getEmail());
         staff.setPhoneNumber(updateInfo.getPhoneNumber());
