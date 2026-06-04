@@ -13,4 +13,8 @@ public interface SemesterRepository extends JpaRepository<Semester, Long> {
     Optional<Semester> findBySemesterID(String semesterId);
 
     List<Semester> findByInstitution_InstitutionId(String institutionId);
+
+    Optional<Semester> findBySemesterNameAndAcademicYearAndInstitution_InstitutionId(
+            String semesterName, String academicYear, String institutionId
+    );
 }
