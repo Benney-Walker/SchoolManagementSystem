@@ -5,6 +5,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import org.apache.tomcat.util.net.openssl.ciphers.Authentication;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
@@ -12,10 +13,12 @@ import java.util.List;
 
 @Component
 public class JwtUtility {
-    private String jwtSecret =
-            "Hi_Sis_Justina_I_just_wish_time_travel_exit";
 
-    private int jwtExpirationInMs = 86400000;
+    @Value("${jwt.secret}")
+    private String jwtSecret;
+
+    @Value("${jwt.expiration}")
+    private int jwtExpirationInMs;
 
     public String generateToken(String username, List<String> roles) {
         return Jwts.builder()
