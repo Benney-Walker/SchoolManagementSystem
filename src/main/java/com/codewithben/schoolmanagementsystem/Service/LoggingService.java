@@ -1,13 +1,13 @@
 package com.codewithben.schoolmanagementsystem.Service;
 
-import com.codewithben.schoolmanagementsystem.Contants.LogStatus;
-import com.codewithben.schoolmanagementsystem.Contants.LogType;
+import com.codewithben.schoolmanagementsystem.Constants.LogAction;
+import com.codewithben.schoolmanagementsystem.Constants.LogStatus;
+import com.codewithben.schoolmanagementsystem.Constants.LogType;
 import com.codewithben.schoolmanagementsystem.DTO.Logs.LogsDTO;
 import com.codewithben.schoolmanagementsystem.Entity.Logs;
 import com.codewithben.schoolmanagementsystem.Entity.Staffs;
 import com.codewithben.schoolmanagementsystem.Repository.LogsRepository;
 import com.codewithben.schoolmanagementsystem.Repository.StaffsRepository;
-import com.codewithben.schoolmanagementsystem.Utility.UtilityClass;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,22 +27,27 @@ public class LoggingService {
 
     private final StaffsRepository staffsRepository;
 
-    public void logActivity(LogType actionType, String actionData, String staffId, String status) {
-
-        Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
-        if (staff == null) {
-            return;
-        }
+    public void logActivity(LogType type, LogAction action, String actionData, String staffId, LogStatus status) {
 
         try {
+            Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
             Logs log = new Logs();
+
+            if (staff == null) {
+                log.setCreatedBy(null);
+                log.setInstitution(null);
+            } else {
+                log.setCreatedBy(staff);
+                log.setInstitution(staff.getInstitution());
+            }
+
             log.setActionDate(LocalDate.now());
             log.setActionTime(LocalTime.now());
-            log.setActionType(actionType);
+            log.setType(type);
+            log.setAction(action);
             log.setActionData(actionData);
-            log.setCreatedBy(staff);
-            log.setInstitution(staff.getInstitution());
-            log.setStatus(LogStatus.valueOf(status));
+            log.setStatus(status);
+
 
             logsRepository.save(log);
         } catch (IllegalArgumentException e) {
@@ -54,15 +59,17 @@ public class LoggingService {
 
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staff == null) {
-            logActivity(LogType.LOGS, "N/A", staffId, "FAILED");
+            logActivity(LogType.LOG, LogAction.READ,"N/A", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Invalid staff Id"
             ));
         }
 
-        List<Logs> recentLogs = logsRepository.findByInstitution_InstitutionId(staff.getInstitution().getInstitutionId());
+        List<Logs> recentLogs = logsRepository.findByInstitution_InstitutionIdAndActionDateOrderByActionIdDesc(
+                staff.getInstitution().getInstitutionId(), LocalDate.now()
+        );
         if (recentLogs == null || recentLogs.isEmpty()) {
-            logActivity(LogType.LOGS, "N/A", staffId, "FAILED");
+            logActivity(LogType.LOG, LogAction.READ,"N/A", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "No recent logs found"
             ));
@@ -72,7 +79,7 @@ public class LoggingService {
         int count = 0;
         //Retrieve logs
         for (Logs log : recentLogs) {
-            if (count >= 10) {
+            if (count >= 15) {
                 break;
             }
 
@@ -80,7 +87,7 @@ public class LoggingService {
                     .id(log.getActionId())
                     .time(log.getActionTime().toString())
                     .date(log.getActionDate().toString())
-                    .type(log.getActionType().name())
+                    .type(log.getType().name())
                     .message(log.getActionData())
                     .status(log.getStatus().name())
                     .createdBy(log.getCreatedBy().getFirstName() +
@@ -91,6 +98,7 @@ public class LoggingService {
             count++;
         }
 
+        logActivity(LogType.LOG, LogAction.READ,"N/A", staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok(logList);
     }
 }
