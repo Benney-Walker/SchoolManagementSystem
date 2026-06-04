@@ -237,17 +237,6 @@ public class ReportService {
         return generateStudentReports;
     }
 
-    private String getPromotionGradeName(String promotionGradeId) {
-        String nextGrade = "-";
-        if (!promotionGradeId.equals("no_promotion")) {
-            Level promotionGrade = levelRepository.findByLevelID(promotionGradeId).orElse(null);
-            if (promotionGrade != null) {
-                nextGrade = promotionGrade.getLevelName();
-            }
-        }
-        return nextGrade;
-    }
-
     private String getResumingDate(Level level, Semester semester) {
         List<Semester> nextSemester = semesterRepository
                 .findByInstitution_InstitutionId(level.getInstitution().getInstitutionId());
