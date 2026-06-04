@@ -49,5 +49,6 @@ public enum LogType {
     FETCH_CLASSES,
     PROMOTION,
     CONDUCT,
-    LOGS
+    LOGS,
+    HOLIDAY
 }
