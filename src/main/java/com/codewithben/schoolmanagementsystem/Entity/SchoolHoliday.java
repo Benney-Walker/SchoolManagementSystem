@@ -1,6 +1,6 @@
 package com.codewithben.schoolmanagementsystem.Entity;
 
-import com.codewithben.schoolmanagementsystem.Contants.HolidayType;
+import com.codewithben.schoolmanagementsystem.Constants.HolidayType;
 import jakarta.persistence.*;
 import lombok.*;
 
