@@ -58,7 +58,7 @@ public class StaffController {
     @GetMapping("/v1/load-staff-grades")
     public ResponseEntity<?> loadStaffGrades(@RequestHeader("staffId") String staffId) {
 
-        return levelService.loadStaffGrades(staffId);
+        return classService.loadStaffClasses(staffId);
     }
 
 
@@ -87,26 +87,26 @@ public class StaffController {
     @GetMapping("/v1/load-semesters")
     public ResponseEntity<?> loadSemesterCaching(@RequestHeader("staffId") String staffId) {
 
-        return levelService.loadSemesterCaching(staffId);
+        return classService.loadSemesterCaching(staffId);
     }
 
     @GetMapping("/v1/load-levels")
     public ResponseEntity<?> loadGradesCache(@RequestHeader("staffId") String staffId) {
 
-        return levelService.loadClassesForCache(staffId);
+        return classService.loadClassesForCache(staffId);
     }
 
     @GetMapping("/v2/load-classes")
     public ResponseEntity<?> loadClassesForCache(@RequestHeader("staffId") String staffId) {
 
-        return levelService.loadClassesForCache(staffId);
+        return classService.loadClassesForCache(staffId);
     }
 
     @GetMapping("/v1/load-subjects/{levelId}")
     public ResponseEntity<?> loadGradeSubjects(@RequestHeader("staffId") String staffId,
                                                @PathVariable String levelId) {
 
-        return levelService.getLevelSubjects(levelId, staffId);
+        return classService.getClassSubjects(levelId, staffId);
     }
 
     @PostMapping("/v1/add-new-staff")
@@ -122,24 +122,8 @@ public class StaffController {
         String phoneNumber = newStaff.getPhoneNumber();
         List<String> role = newStaff.getRoles();
 
-        String logData = "First Name: " + firstName +
-                ", Last Name: " + lastName +
-                ", Gender: " + gender +
-                ", DOB: " + dateOfBirth +
-                ", Email: " + email +
-                ", Phone: " + phoneNumber +
-                ", Roles: " + role.toString();
-
-        Staffs staff = staffService.getStaffDetails(staffId);
-        if (staff == null) {
-            loggingService.logActivity(LogType.STAFF_ENROLLMENT, logData, staffId, "FAILED");
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
-                    "message", "Internal Server Error! Contact Developer"
-            ));
-        }
-
-        return staffService.addNewStaff(firstName, lastName, gender, dateOfBirth,
-                email, password, phoneNumber, role, staff.getInstitution(), logData, staffId);
+        return staffService.addNewStaff(staffId, firstName, lastName, gender, dateOfBirth,
+                email, password, phoneNumber, role);
     }
 
     @GetMapping("/v1/conduct-records")
