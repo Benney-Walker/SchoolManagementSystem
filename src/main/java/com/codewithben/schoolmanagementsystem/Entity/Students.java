@@ -1,11 +1,17 @@
 package com.codewithben.schoolmanagementsystem.Entity;
 
-import com.codewithben.schoolmanagementsystem.Contants.StudentStatus;
+import com.codewithben.schoolmanagementsystem.Constants.StudentStatus;
 import jakarta.persistence.*;
+import lombok.*;
 
 import java.time.LocalDate;
 import java.util.List;
 
+@Getter
+@Setter
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @Entity
 public class Students {
 
@@ -63,138 +69,5 @@ public class Students {
     @OneToMany(mappedBy = "student")
     private List<Attendance> attendance;
 
-    public String getStudentId() {
-        return studentId;
-    }
 
-    public void setStudentId(String studentId) {
-        this.studentId = studentId;
-    }
-
-    public String getFirstName() {
-        return firstName;
-    }
-
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
-
-    public String getLastName() {
-        return lastName;
-    }
-
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
-    }
-
-    public String getGender() {
-        return gender;
-    }
-
-    public void setGender(String gender) {
-        this.gender = gender;
-    }
-
-    public LocalDate getDateOfBirth() {
-        return dateOfBirth;
-    }
-
-    public void setDateOfBirth(LocalDate dateOfBirth) {
-        this.dateOfBirth = dateOfBirth;
-    }
-
-    public String getHomeTown() {
-        return homeTown;
-    }
-
-    public void setHomeTown(String homeTown) {
-        this.homeTown = homeTown;
-    }
-
-    public Institution getInstitution() {
-        return institution;
-    }
-
-    public void setInstitution(Institution institution) {
-        this.institution = institution;
-    }
-
-    public String getParentName() {
-
-        return parentName;
-    }
-
-    public void setParentName(String parentName) {
-
-        this.parentName = parentName;
-    }
-
-    public String getParentPhoneNumber() {
-
-        return parentPhoneNumber;
-    }
-
-    public void setParentPhoneNumber(String parentPhoneNumber) {
-
-        this.parentPhoneNumber = parentPhoneNumber;
-    }
-
-    public LocalDate getRegistrationDate() {
-        return registrationDate;
-    }
-
-    public void setRegistrationDate(LocalDate registrationDate) {
-        this.registrationDate = registrationDate;
-    }
-
-    public Level getLevel() {
-
-        return level;
-    }
-
-    public void setLevel(Level levelId) {
-        this.level = levelId;
-    }
-
-    public List<FeesReport> getFeesReport() {
-        return feesReport;
-    }
-
-    public void setFeesReport(List<FeesReport> feesReport) {
-        this.feesReport = feesReport;
-    }
-
-    public List<Results> getResults() {
-
-        return results;
-    }
-
-    public void setResults(List<Results> results) {
-
-        this.results = results;
-    }
-
-    public List<SubjectScore> getSubjectScore() {
-        return subjectScore;
-    }
-
-    public void setSubjectScore(List<SubjectScore> subjectScore) {
-        this.subjectScore = subjectScore;
-    }
-
-    public StudentStatus getStudentStatus() {
-        return studentStatus;
-    }
-
-    public void setStudentStatus(StudentStatus studentStatus) {
-        this.studentStatus = studentStatus;
-    }
-
-    public List<Attendance> getAttendance() {
-        return attendance;
-    }
-
-    public void setAttendance(List<Attendance> attendance) {
-        this.attendance = attendance;
-    }
 }
