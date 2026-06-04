@@ -18,11 +18,12 @@ public class StudentController {
 
     private final StudentService studentService;
 
+    private final ScoresService scoresService;
 
     @GetMapping("/v1/absent-students")
     public ResponseEntity<?> getAbsentees(@RequestHeader("staffId") String staffId) {
 
-        return studentService.findTodaysAbsentees(staffId);
+        return studentService.getAbsentees(staffId);
     }
 
     @GetMapping("/v1/total-students")
@@ -60,14 +61,14 @@ public class StudentController {
                                                @RequestParam String semesterId,
                                                @RequestParam String classId) {
 
-        return studentService.findStudentResults(studentId, semesterId, classId, staffId);
+        return scoresService.findStudentResults(studentId, semesterId, classId, staffId);
     }
 
     @GetMapping("/v1/load-subject-students/{subjectId}")
     public ResponseEntity<?> getSubjectStudents(@RequestHeader("staffId")String staffId,
                                                 @PathVariable String subjectId) {
 
-        return studentService.getSubjectStudents(subjectId, staffId);
+        return scoresService.loadStudentsForScores(subjectId, staffId);
     }
 
     @PostMapping("/v1/save-subject-scores")
@@ -76,7 +77,7 @@ public class StudentController {
                                                @RequestHeader("semesterId") String semesterId,
                                                @RequestBody SaveStudentScores score) {
 
-        return studentService.addStudentSubjectScores(score, staffId, subjectId, semesterId);
+        return scoresService.addStudentSubjectScores(score, staffId, subjectId, semesterId);
     }
 
     @PutMapping("/v1/update-student-data")
