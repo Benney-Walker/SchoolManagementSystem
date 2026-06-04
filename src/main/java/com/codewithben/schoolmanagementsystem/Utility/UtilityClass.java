@@ -1,13 +1,12 @@
 package com.codewithben.schoolmanagementsystem.Utility;
 
-import com.codewithben.schoolmanagementsystem.Contants.StudentStatus;
+import com.codewithben.schoolmanagementsystem.Constants.StudentStatus;
 import com.codewithben.schoolmanagementsystem.Entity.*;
 import com.codewithben.schoolmanagementsystem.Repository.EntityID_generationRepository;
 import com.codewithben.schoolmanagementsystem.Repository.GradeSystemRepository;
 import com.codewithben.schoolmanagementsystem.Repository.InstitutiionRepository;
 import com.codewithben.schoolmanagementsystem.Repository.ResultsRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
 import java.time.DayOfWeek;
