@@ -33,10 +33,60 @@ public class StaffService {
     private final LoggingService loggingService;
 
 
-    public ResponseEntity<?> addNewStaff(String firstName, String surName, String gender, String dateOfBirth,
+    public ResponseEntity<?> addNewStaff(String staffId, String firstName, String surName, String gender, String dateOfBirth,
                                          String email, String password, String phoneNumber,
                                          List<String> staffRoles, Institution institution, String logData, String staffId) {
         String staffIdPlaceHolder = staffId == null ? "N/A" : staffId;
+                                         List<String> staffRoles) {
+
+        Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
+        if (staff == null) {
+            loggingService.logActivity(LogType.STAFF, LogAction.CREATE, "Invalid newStaff Id", staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                    "message", "Invalid newStaff Id"
+            ));
+        }
+
+
+        if (staffsRepository.existsByPhoneNumberAndInstitution_InstitutionId(phoneNumber, staff.getInstitution().getInstitutionId())) {
+            loggingService.logActivity(LogType.STAFF, LogAction.CREATE, "Phone number already exist", staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                    "message", "Phone number already exist"
+            ));
+        }
+
+        if (staffsRepository.existsByFirstNameAndLastName(firstName, surName)) {
+            loggingService.logActivity(LogType.STAFF, LogAction.CREATE, "Staff already exist", staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                    "message", "Staff already exist"
+            ));
+        }
+
+        String staffID = utilityClass.generateEntityId("STAFF");
+        Staffs newStaff = new Staffs();
+        newStaff.setStaffId(staffID);
+        newStaff.setFirstName(firstName.toUpperCase());
+        newStaff.setLastName(surName.toUpperCase());
+        newStaff.setGender(gender.toUpperCase());
+        newStaff.setStatus("NULL");
+        newStaff.setDateOfBirth(LocalDate.parse(dateOfBirth));
+        newStaff.setEmail(email);
+
+        String hashedPassword = bCryptPasswordEncoder.encode(password);
+        newStaff.setPassword(hashedPassword);
+        newStaff.setPhoneNumber(phoneNumber);
+        newStaff.setDateOfRegistration(LocalDate.now());
+        newStaff.setStaffStatus(StaffStatus.ACTIVE);
+        newStaff.setInstitution(staff.getInstitution());
+        staffsRepository.save(newStaff);
+
+        newStaff.setRoles(saveStaffRoles(newStaff, staffRoles));
+        staffsRepository.save(newStaff);
+
+        loggingService.logActivity(LogType.STAFF, LogAction.CREATE, "N/A", staffId, LogStatus.SUCCESS);
+        return ResponseEntity.ok(staffID);
+    }
+
 
         if (staffsRepository.existsByPhoneNumberAndInstitution_InstitutionId(phoneNumber, institution.getInstitutionId())) {
             loggingService.logActivity(LogType.STAFF, LogAction.CREATE, "Phone number already exist", "", LogStatus.FAILED);
