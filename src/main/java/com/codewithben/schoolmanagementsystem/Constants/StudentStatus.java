@@ -1,4 +1,4 @@
-package com.codewithben.schoolmanagementsystem.Contants;
+package com.codewithben.schoolmanagementsystem.Constants;
 
 public enum StudentStatus {
     ACTIVE,
