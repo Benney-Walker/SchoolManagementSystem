@@ -162,7 +162,15 @@ public class ClassService {
             ));
         }
 
-        Institution institution = staffs.getInstitution();
+        Semester semester = semesterRepository.findBySemesterNameAndAcademicYearAndInstitution_InstitutionId(
+                semesterName, academicYear, staff.getInstitution().getInstitutionId()
+        ).orElse(null);
+        if (semester != null) {
+            loggingService.logActivity(LogType.TERM, LogAction.CREATE, logData, staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                    "message", "Term already exists"
+            ));
+        }
 
 
         semester = new Semester();
