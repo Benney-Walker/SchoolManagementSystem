@@ -11,6 +11,7 @@ import com.codewithben.schoolmanagementsystem.Repository.GradeSystemRepository;
 import com.codewithben.schoolmanagementsystem.Repository.InstitutiionRepository;
 import com.codewithben.schoolmanagementsystem.Repository.StaffsRepository;
 import com.codewithben.schoolmanagementsystem.Utility.UtilityClass;
+import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+@AllArgsConstructor
 @Service
 public class InstitutionService {
     private final UtilityClass utilityClass;
@@ -31,15 +33,6 @@ public class InstitutionService {
 
     private final LoggingService loggingService;
 
-    public InstitutionService(UtilityClass utilityClass, InstitutiionRepository institutiionRepository,
-                              GradeSystemRepository gradeSystemRepository,  StaffsRepository staffsRepository,
-                              LoggingService loggingService) {
-        this.utilityClass = utilityClass;
-        this.institutiionRepository = institutiionRepository;
-        this.gradeSystemRepository = gradeSystemRepository;
-        this.staffsRepository = staffsRepository;
-        this.loggingService = loggingService;
-    }
 
     public ResponseEntity<?> addNewInstitution(String institutionName, String logData) {
         Institution institution = institutiionRepository.findByInstitutionName(institutionName).orElse(null);
