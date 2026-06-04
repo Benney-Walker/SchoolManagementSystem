@@ -134,5 +134,26 @@ public class InstitutionService {
         return ResponseEntity.ok(gradingCriteriaList);
     }
 
+    public ResponseEntity<?> updateGradingCriteria(GradingCriteria gradingCriteria, String staffId) {
 
+        String logData = "Lower Range: " + gradingCriteria.getLowerRange() + " Higher Range: " + gradingCriteria.getUpperRange()
+                + " Grade: " + gradingCriteria.getGrade() + " Description: " + gradingCriteria.getGradeDescription();
+
+        GradeSystem criteria = gradeSystemRepository.findById(gradingCriteria.getId()).orElse(null);
+        if (criteria == null) {
+            loggingService.logActivity(LogType.GRADE, LogAction.CREATE, logData, staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Criteria do not exist on system"
+            ));
+        }
+
+        criteria.setLowerRange(gradingCriteria.getLowerRange());
+        criteria.setUpperRange(gradingCriteria.getUpperRange());
+        criteria.setGrade(gradingCriteria.getGrade());
+        criteria.setGradeDescription(gradingCriteria.getGradeDescription());
+        gradeSystemRepository.save(criteria);
+
+        loggingService.logActivity(LogType.GRADE, LogAction.CREATE, logData, staffId, LogStatus.SUCCESS);
+        return ResponseEntity.ok().build();
+    }
 }
