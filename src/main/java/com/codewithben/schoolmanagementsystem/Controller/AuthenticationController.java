@@ -1,6 +1,8 @@
 package com.codewithben.schoolmanagementsystem.Controller;
 
-import com.codewithben.schoolmanagementsystem.Contants.LogType;
+import com.codewithben.schoolmanagementsystem.Constants.LogAction;
+import com.codewithben.schoolmanagementsystem.Constants.LogStatus;
+import com.codewithben.schoolmanagementsystem.Constants.LogType;
 import com.codewithben.schoolmanagementsystem.DTO.Auth.InstitutionRegistrationDTO;
 import com.codewithben.schoolmanagementsystem.DTO.Staff.NewPrincipal;
 import com.codewithben.schoolmanagementsystem.DTO.Auth.LoginRequest;
@@ -12,6 +14,7 @@ import com.codewithben.schoolmanagementsystem.Service.InstitutionService;
 import com.codewithben.schoolmanagementsystem.Service.LoggingService;
 import com.codewithben.schoolmanagementsystem.Service.StaffService;
 import com.codewithben.schoolmanagementsystem.Utility.JwtUtility;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -34,9 +37,10 @@ public class AuthenticationController {
 
     private final JwtUtility jwtUtility;
 
-    private final String subscriptionCode = "SC1547863";
-
     private final LoggingService loggingService;
+
+    @Value("${subscription.code}")
+    private String subscriptionCode;
 
     public AuthenticationController(InstitutionService institutionService, StaffService staffService,
                                     InstitutiionRepository institutiionRepository, AuthenticationManager authenticationManager,
@@ -55,7 +59,7 @@ public class AuthenticationController {
 
         if (!data.getSubscriptionCode().equals(subscriptionCode)) {
 
-            loggingService.logActivity(LogType.SUBSCRIPTION, logData, "N/A", "FAILED");
+            loggingService.logActivity(LogType.INSTITUTION, LogAction.CREATE, logData, "N/A", LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.CONFLICT).body("Invalid subscription code");
         }
 
@@ -63,7 +67,7 @@ public class AuthenticationController {
     }
 
     @PostMapping("/v1/enroll-new-staff")
-    public ResponseEntity<?> enrollNewStaff(@RequestBody NewPrincipal newPrincipal) {
+    public ResponseEntity<?> newPrincipal(@RequestBody NewPrincipal newPrincipal) {
         String firstName = newPrincipal.getFirstName();
         String lastName = newPrincipal.getLastName();
         String gender = newPrincipal.getGender();
@@ -74,26 +78,17 @@ public class AuthenticationController {
         List<String> role = newPrincipal.getRoles();
         String institutionID = newPrincipal.getInstitutionId();
 
-        String logData = "First Name: " + firstName +
-                ", Last Name: " + lastName +
-                ", Gender: " + gender +
-                ", DOB: " + dateOfBirth +
-                ", Email: " + email +
-                ", Phone: " + phoneNumber +
-                ", Roles: " + role.toString() +
-                ", Institution ID: " + institutionID;
-
         Institution institution = institutiionRepository.findByInstitutionId(institutionID).orElse(null);
         if (institution == null) {
 
-            loggingService.logActivity(LogType.STAFF_ENROLLMENT, logData, "N/A", "FAILED");
+            loggingService.logActivity(LogType.STAFF, LogAction.CREATE, "Invalid institution Id", "N/A", LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
                     "message", "Invalid institution ID"
             ));
         }
 
-        return staffService.addNewStaff(firstName, lastName, gender, dateOfBirth,
-                    email, password, phoneNumber, role, institution, logData, null);
+        return staffService.addNewStaff( "", firstName, lastName, gender, dateOfBirth,
+                    email, password, phoneNumber, role);
     }
 
     @PostMapping("/v1/staff-login")
