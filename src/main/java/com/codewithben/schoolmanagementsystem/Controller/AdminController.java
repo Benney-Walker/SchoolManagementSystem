@@ -178,6 +178,25 @@ public class AdminController {
         return loggingService.getRecentActivity(staffId);
     }
 
+    @GetMapping("/v1/get-staff-logs")
+    public ResponseEntity<?> getStaffLogs(@RequestHeader("staffId") String staffId,
+                                          @RequestParam String selectedStaff,
+                                          @RequestParam String fromDate,
+                                          @RequestParam String toDate) {
+
+         return loggingService.getStaffLogsBetween(
+                 staffId, selectedStaff, LocalDate.parse(fromDate), LocalDate.parse(toDate)
+         );
+    }
+
+    @GetMapping("/v1/get-timely-logs")
+    public ResponseEntity<?> getTimelyLogs(@RequestHeader("staffId") String staffId,
+                                           @RequestParam String fromDate,
+                                           @RequestParam String toDate) {
+
+        return loggingService.getLogsBetween(staffId, LocalDate.parse(fromDate), LocalDate.parse(toDate));
+    }
+
     @PostMapping("/v1/add-holiday")
     public ResponseEntity<?> addNewHoliday(@RequestHeader("staffId")String staffId,
                                            @RequestBody Holiday holiday) {
