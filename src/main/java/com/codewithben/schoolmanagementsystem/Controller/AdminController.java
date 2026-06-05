@@ -180,12 +180,12 @@ public class AdminController {
 
     @GetMapping("/v1/get-staff-logs")
     public ResponseEntity<?> getStaffLogs(@RequestHeader("staffId") String staffId,
-                                          @RequestParam String selectedStaff,
+                                          @RequestParam String selectedStaffId,
                                           @RequestParam String fromDate,
                                           @RequestParam String toDate) {
 
          return loggingService.getStaffLogsBetween(
-                 staffId, selectedStaff, LocalDate.parse(fromDate), LocalDate.parse(toDate)
+                 staffId, selectedStaffId, LocalDate.parse(fromDate), LocalDate.parse(toDate)
          );
     }
 
