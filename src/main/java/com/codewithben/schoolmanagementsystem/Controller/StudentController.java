@@ -20,6 +20,8 @@ public class StudentController {
 
     private final ScoresService scoresService;
 
+    private final ResultsService resultsService;
+
     @GetMapping("/v1/absent-students")
     public ResponseEntity<?> getAbsentees(@RequestHeader("staffId") String staffId) {
 
@@ -61,7 +63,7 @@ public class StudentController {
                                                @RequestParam String semesterId,
                                                @RequestParam String classId) {
 
-        return scoresService.findStudentResults(studentId, semesterId, classId, staffId);
+        return resultsService.findStudentResults(studentId, semesterId, classId, staffId);
     }
 
     @GetMapping("/v1/load-subject-students/{subjectId}")

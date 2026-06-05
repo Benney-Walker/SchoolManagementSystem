@@ -172,6 +172,8 @@ public class AdminController {
         return reportService.getClassBulkReport(staffId, levelId, semesterId);
     }
 
+
+
     @GetMapping("/v1/recent-logs")
     public ResponseEntity<?> getRecentActivities(@RequestHeader("staffId") String staffId) {
 
