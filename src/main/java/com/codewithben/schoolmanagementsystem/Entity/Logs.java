@@ -40,7 +40,7 @@ public class Logs {
 
     @ManyToOne
     @JoinColumn(name = "Staff_StaffId")
-    private Staffs createdBy;
+    private Staffs staff;
 
     @Enumerated(EnumType.STRING)
     private LogStatus status;

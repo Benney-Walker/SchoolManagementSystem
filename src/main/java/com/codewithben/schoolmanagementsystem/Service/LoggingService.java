@@ -74,7 +74,7 @@ public class LoggingService {
 
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staff == null) {
-            logActivity(LogType.LOG, LogAction.READ,"N/A", staffId, LogStatus.FAILED);
+            logGeneralActivity(LogType.LOG, LogAction.READ,"N/A", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Invalid staff Id"
             ));
@@ -84,7 +84,7 @@ public class LoggingService {
                 staff.getInstitution().getInstitutionId(), LocalDate.now()
         );
         if (recentLogs == null || recentLogs.isEmpty()) {
-            logActivity(LogType.LOG, LogAction.READ,"N/A", staffId, LogStatus.FAILED);
+            logGeneralActivity(LogType.LOG, LogAction.READ,"N/A", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "No recent logs found"
             ));
@@ -105,8 +105,8 @@ public class LoggingService {
                     .type(log.getType().name())
                     .message(log.getActionData())
                     .status(log.getStatus().name())
-                    .createdBy(log.getCreatedBy().getFirstName() +
-                            " " + log.getCreatedBy().getLastName())
+                    .createdBy(log.getStaff().getFirstName() +
+                            " " + log.getStaff().getLastName())
                     .build();
 
             logList.add(logsDTO);
