@@ -27,27 +27,22 @@ public class LoggingService {
 
     private final StaffsRepository staffsRepository;
 
-    public void logActivity(LogType type, LogAction action, String actionData, String staffId, LogStatus status) {
+    public void logGeneralActivity(LogType type, LogAction action, String message, String staffId, LogStatus status) {
 
         try {
             Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
-            Logs log = new Logs();
-
             if (staff == null) {
-                log.setCreatedBy(null);
-                log.setInstitution(null);
-            } else {
-                log.setCreatedBy(staff);
-                log.setInstitution(staff.getInstitution());
+                throw new RuntimeException("Could not log activity! Contact developer!");
             }
-
+            Logs log = new Logs();
+            log.setStaff(staff);
+            log.setInstitution(staff.getInstitution());
             log.setActionDate(LocalDate.now());
             log.setActionTime(LocalTime.now());
             log.setType(type);
             log.setAction(action);
-            log.setActionData(actionData);
+            log.setActionData(message);
             log.setStatus(status);
-
 
             logsRepository.save(log);
         } catch (IllegalArgumentException e) {
