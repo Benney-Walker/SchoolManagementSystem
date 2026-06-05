@@ -154,54 +154,6 @@ public class ScoresService {
         return ResponseEntity.ok().build();
     }
 
-    public ResponseEntity<?> findStudentResults(String studentId, String semesterId, String levelId, String staffId) {
-        String logData = "Student Id: " + " Semester Id: " + semesterId + " class Id: " + levelId;
-
-        Students student = studentsRepository.findByStudentId(studentId).orElse(null);
-        if (student == null) {
-            loggingService.logGeneralActivity(LogType.RESULT, LogAction.READ,"Invalid student Id", staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Student not found");
-        }
-
-        Results results = resultsRepository.findByStudent_StudentIdAndSemester_SemesterID(
-                studentId, semesterId
-        ).orElse(null);
-        if (results == null) {
-            loggingService.logGeneralActivity(LogType.RESULT, LogAction.READ,"No result available for filter", staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Results not found");
-        }
-
-        List<StudentSubjectReport> subjectResults = new ArrayList<>();
-
-        List<SubjectScore> subjectScores = results.getSubjectScores();
-
-        for (SubjectScore subjectScore : subjectScores) {
-            if (subjectScore.getStudent().getStudentId().equals(studentId)) {
-                StudentSubjectReport studentSubjectReport = new StudentSubjectReport(
-                        subjectScore.getSubject().getSubjectName(),
-                        String.valueOf(subjectScore.getTotalScore()),
-                        subjectScore.getGrade(),
-                        subjectScore.getGradeDescriptor()
-                );
-                subjectResults.add(studentSubjectReport);
-            }
-        }
-
-        String studentID = results.getStudent().getStudentId();
-        String studentName = student.getFirstName() + " " + student.getLastName();
-        String semesterName = results.getSemester().getSemesterName();
-        String levelName = results.getLevel().getLevelName();
-        Double totalScore = results.getTotalScore();
-        Double averageScore = results.getAverageScore();
-        String position = results.getPosition();
-
-        loggingService.logGeneralActivity(LogType.RESULT, LogAction.READ,"N/A", staffId, LogStatus.SUCCESS);
-        return ResponseEntity.ok(new StudentResult(
-                studentID, studentName, levelName, semesterName, totalScore,
-                averageScore, position, subjectResults
-        ));
-    }
-
     public ResponseEntity<?> loadStudentsForScores(String subjectId, String staffId) {
         String logData = "Subject Id: " + subjectId;
 
