@@ -18,4 +18,8 @@ public interface ResultsRepository extends JpaRepository<Results, Long> {
     List<Results> findByLevel_LevelIDAndSemester_SemesterIDOrderByTotalScoreDesc(
             String levelId, String semesterId
     );
+
+    List<Results> findByLevel_LevelIDAndSemester_SemesterID(
+            String levelId, String semesterId
+    );
 }
