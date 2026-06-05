@@ -25,6 +25,8 @@ public class StaffController {
 
     private final ReportService reportService;
 
+    private final ResultsService resultsService;
+
     private final LoggingService loggingService;
 
     private final ConductService conductService;
@@ -67,7 +69,16 @@ public class StaffController {
                                                       @RequestParam String levelId,
                                                       @RequestParam String semesterId) {
 
-        return reportService.viewClassSemesterReport(levelId, semesterId, staffId);
+        return resultsService.viewClassSemesterReport(levelId, semesterId, staffId);
+    }
+
+    @GetMapping("/v1/view-sba")
+    public ResponseEntity<?> viewSba(@RequestHeader("staffId") String staffId,
+                                     @RequestParam String classId,
+                                     @RequestParam String subjectId,
+                                     @RequestParam String semesterId) {
+
+        return resultsService.viewSba(staffId, classId, semesterId, subjectId);
     }
 
     @PostMapping("/v1/promote-student/{studentId}/{levelId}")
