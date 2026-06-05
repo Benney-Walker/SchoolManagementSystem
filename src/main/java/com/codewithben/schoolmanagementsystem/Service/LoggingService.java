@@ -4,6 +4,7 @@ import com.codewithben.schoolmanagementsystem.Constants.LogAction;
 import com.codewithben.schoolmanagementsystem.Constants.LogStatus;
 import com.codewithben.schoolmanagementsystem.Constants.LogType;
 import com.codewithben.schoolmanagementsystem.DTO.Logs.LogsDTO;
+import com.codewithben.schoolmanagementsystem.Entity.Institution;
 import com.codewithben.schoolmanagementsystem.Entity.Logs;
 import com.codewithben.schoolmanagementsystem.Entity.Staffs;
 import com.codewithben.schoolmanagementsystem.Repository.LogsRepository;
@@ -46,6 +47,25 @@ public class LoggingService {
 
             logsRepository.save(log);
         } catch (IllegalArgumentException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void logNewSubscription(LogType type, LogAction action, String message, LogStatus status, Institution institution) {
+        try {
+            Logs log = new Logs();
+            log.setStaff(null);
+            log.setInstitution(institution);
+            log.setActionDate(LocalDate.now());
+            log.setActionTime(LocalTime.now());
+            log.setType(type);
+            log.setAction(action);
+            log.setActionData(message);
+            log.setStatus(status);
+
+            logsRepository.save(log);
+        } catch (RuntimeException e) {
+
             throw new RuntimeException(e);
         }
     }
