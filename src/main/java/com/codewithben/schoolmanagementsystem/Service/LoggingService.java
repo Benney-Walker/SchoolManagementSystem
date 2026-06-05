@@ -113,7 +113,91 @@ public class LoggingService {
             count++;
         }
 
-        logActivity(LogType.LOG, LogAction.READ,"N/A", staffId, LogStatus.SUCCESS);
+        logGeneralActivity(LogType.LOG, LogAction.READ,"N/A", staffId, LogStatus.SUCCESS);
+        return ResponseEntity.ok(logList);
+    }
+
+    public ResponseEntity<?> getStaffLogsBetween(String staffId, String selectedStaff, LocalDate from, LocalDate to) {
+
+        Staffs staff = staffsRepository.findByStaffId(selectedStaff).orElse(null);
+        if (staff == null) {
+            logGeneralActivity(LogType.LOG, LogAction.READ,"Invalid staff Id", staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Invalid staff Id"
+            ));
+        }
+
+        List<Logs> staffLogsList = logsRepository
+                .findByStaff_StaffIdAndActionDateBetweenOrderByActionIdDesc(
+                        selectedStaff, from, to
+                );
+
+        if (staffLogsList == null || staffLogsList.isEmpty()) {
+            logGeneralActivity(LogType.LOG, LogAction.READ,"Staff has no logs today", staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Staff has no logs today"
+            ));
+        }
+
+        List<LogsDTO> logsList = new ArrayList<>();
+        for (Logs log : staffLogsList) {
+
+            LogsDTO staffLog = LogsDTO.builder()
+                    .id(log.getActionId())
+                    .time(log.getActionTime().toString())
+                    .date(log.getActionDate().toString())
+                    .type(log.getType().name())
+                    .message(log.getActionData())
+                    .status(log.getStatus().name())
+                    .createdBy(log.getStaff().getFirstName())
+                    .build();
+            logsList.add(staffLog);
+        }
+
+        logGeneralActivity(LogType.LOG, LogAction.READ,"N/A", staffId, LogStatus.SUCCESS);
+        return ResponseEntity.ok(logsList);
+    }
+
+    public ResponseEntity<?> getLogsBetween(String staffId, LocalDate from, LocalDate to) {
+
+        Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
+        if (staff == null) {
+            logGeneralActivity(LogType.LOG, LogAction.READ,"N/A", staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Invalid staff Id"
+            ));
+        }
+
+        List<Logs> logsList = logsRepository.findByInstitution_InstitutionIdAndActionDateBetweenOrderByActionIdDesc(
+                staff.getInstitution().getInstitutionId(), from, to
+        );
+
+        if (logsList == null || logsList.isEmpty()) {
+            logGeneralActivity(LogType.LOG, LogAction.READ,"N/A", staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "No logs found"
+            ));
+        }
+
+        List<LogsDTO> logList = new ArrayList<>();
+        //Retrieve logs
+        for (Logs log : logsList) {
+
+            LogsDTO logsDTO = LogsDTO.builder()
+                    .id(log.getActionId())
+                    .time(log.getActionTime().toString())
+                    .date(log.getActionDate().toString())
+                    .type(log.getType().name())
+                    .message(log.getActionData())
+                    .status(log.getStatus().name())
+                    .createdBy(log.getStaff().getFirstName() +
+                            " " + log.getStaff().getLastName())
+                    .build();
+
+            logList.add(logsDTO);
+        }
+
+        logGeneralActivity(LogType.LOG, LogAction.READ,"N/A", staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok(logList);
     }
 }
