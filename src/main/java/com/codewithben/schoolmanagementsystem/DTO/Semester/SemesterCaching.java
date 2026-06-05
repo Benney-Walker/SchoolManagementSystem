@@ -15,6 +15,4 @@ public class SemesterCaching {
     String semesterName;
 
     String academicYear;
-
-
 }

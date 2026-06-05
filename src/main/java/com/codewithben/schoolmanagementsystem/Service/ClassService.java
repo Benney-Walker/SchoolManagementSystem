@@ -109,15 +109,18 @@ public class ClassService {
             ));
         }
 
-        return ResponseEntity.ok(levels.stream().map(
-                loadInfo -> {
-                    String levelName = loadInfo.getLevelName();
-                    String levelID = loadInfo.getLevelID();
+        List<LevelCaching> classesList = new ArrayList<>();
+        for (Level level : levels) {
+            LevelCaching levelCaching = LevelCaching.builder()
+                    .levelId(level.getLevelID())
+                    .levelName(level.getLevelName())
+                    .build();
 
-                    loggingService.logGeneralActivity(LogType.CLASS, LogAction.READ, "N/A", staffId, LogStatus.SUCCESS);
-                    return new LevelCaching(levelID, levelName);
-                }
-        ).collect(Collectors.toList()));
+            classesList.add(levelCaching);
+        }
+
+        loggingService.logGeneralActivity(LogType.CLASS, LogAction.READ, "N/A", staffId, LogStatus.SUCCESS);
+        return ResponseEntity.ok(classesList);
     }
 
     public ResponseEntity<?> loadSemesterCaching(String staffId) {
@@ -131,22 +134,25 @@ public class ClassService {
 
         List<Semester> semesters = staff.getInstitution().getSemester();
         if (semesters == null || semesters.isEmpty()) {
-            loggingService.logGeneralActivity(LogType.TERM, LogAction.READ, "N/A", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.TERM, LogAction.READ, "No semesters found", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "No semesters found"
             ));
         }
 
-        return ResponseEntity.ok(semesters.stream().map(
-                loadInfo -> {
-                    String semesterId = loadInfo.getSemesterID();
-                    String semesterName = loadInfo.getSemesterName();
-                    String academicYear = loadInfo.getAcademicYear();
+        //Retrieve semesters
+        List<SemesterCaching> semesterList = new ArrayList<>();
+        for (Semester semester : semesters) {
+            SemesterCaching semesterCaching = SemesterCaching.builder()
+                    .semesterId(semester.getSemesterID())
+                    .semesterName(semester.getSemesterName())
+                    .academicYear(semester.getAcademicYear())
+                    .build();
+            semesterList.add(semesterCaching);
+        }
 
-                    loggingService.logGeneralActivity(LogType.TERM, LogAction.READ, "N/A", staffId, LogStatus.SUCCESS);
-                    return new SemesterCaching(semesterId, semesterName, academicYear);
-                }
-        ).collect(Collectors.toList()));
+        loggingService.logGeneralActivity(LogType.TERM, LogAction.READ, "N/A", staffId, LogStatus.SUCCESS);
+        return ResponseEntity.ok(semesterList);
     }
 
     public ResponseEntity<?> addNewSemester(String semesterName, LocalDate startDate, LocalDate endDate,
