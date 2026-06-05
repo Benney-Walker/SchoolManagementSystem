@@ -59,7 +59,7 @@ public class AuthenticationController {
 
         if (!data.getSubscriptionCode().equals(subscriptionCode)) {
 
-            loggingService.logActivity(LogType.INSTITUTION, LogAction.CREATE, logData, "N/A", LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.INSTITUTION, LogAction.CREATE, logData, "N/A", LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.CONFLICT).body("Invalid subscription code");
         }
 
@@ -81,13 +81,13 @@ public class AuthenticationController {
         Institution institution = institutiionRepository.findByInstitutionId(institutionID).orElse(null);
         if (institution == null) {
 
-            loggingService.logActivity(LogType.STAFF, LogAction.CREATE, "Invalid institution Id", "N/A", LogStatus.FAILED);
+            loggingService.logNewSubscription(LogType.STAFF, LogAction.CREATE, "Invalid institution Id", LogStatus.FAILED, null);
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
                     "message", "Invalid institution ID"
             ));
         }
 
-        return staffService.addNewStaff( "", firstName, lastName, gender, dateOfBirth,
+        return staffService.addNewPrincipal(institution, firstName, lastName, gender, dateOfBirth,
                     email, password, phoneNumber, role);
     }
 

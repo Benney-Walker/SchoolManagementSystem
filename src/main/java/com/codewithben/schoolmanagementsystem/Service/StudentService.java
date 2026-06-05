@@ -5,9 +5,7 @@ import com.codewithben.schoolmanagementsystem.DTO.Attendance.TodaysAbsentees;
 import com.codewithben.schoolmanagementsystem.DTO.Attendance.StudentAttendance;
 import com.codewithben.schoolmanagementsystem.DTO.Students.FindStudentDTO;
 import com.codewithben.schoolmanagementsystem.DTO.Students.StudentsHolder;
-import com.codewithben.schoolmanagementsystem.DTO.Students.StudentsScoresTable;
 import com.codewithben.schoolmanagementsystem.DTO.Students.UpdateStudentPersonalData;
-import com.codewithben.schoolmanagementsystem.DTO.Subject.SubjectScores;
 import com.codewithben.schoolmanagementsystem.Entity.*;
 import com.codewithben.schoolmanagementsystem.Entity.Attendance;
 import com.codewithben.schoolmanagementsystem.Repository.*;
@@ -58,19 +56,19 @@ public class StudentService {
                                 String parentName, String parentContact, String levelId, String staffId) {
 
         if (parentContact.length() != 10) {
-            loggingService.logActivity(LogType.STUDENT, LogAction.UPDATE, "Invalid parent phone number", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.STUDENT, LogAction.UPDATE, "Invalid parent phone number", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid parent phone number");
         }
 
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staff == null) {
-            loggingService.logActivity(LogType.STUDENT, LogAction.CREATE, "Invalid staff Id", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.STUDENT, LogAction.CREATE, "Invalid staff Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Could not save student");
         }
 
         Level level = levelRepository.findByLevelID(levelId).orElse(null);
         if (level == null) {
-            loggingService.logActivity(LogType.STUDENT, LogAction.CREATE, "Invalid Class Id", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.STUDENT, LogAction.CREATE, "Invalid Class Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Selected class not found");
         }
 
@@ -112,11 +110,11 @@ public class StudentService {
             staff.getInstitution().setStudents(students);
             institutionRepository.save(staff.getInstitution());
 
-            loggingService.logActivity(LogType.STUDENT, LogAction.CREATE, "N/A", staffId, LogStatus.SUCCESS);
+            loggingService.logGeneralActivity(LogType.STUDENT, LogAction.CREATE, "N/A", staffId, LogStatus.SUCCESS);
             return ResponseEntity.ok(studentId);
         }
 
-        loggingService.logActivity(LogType.STUDENT, LogAction.CREATE, "Student already exist", staffId, LogStatus.FAILED);
+        loggingService.logGeneralActivity(LogType.STUDENT, LogAction.CREATE, "Student already exist", staffId, LogStatus.FAILED);
         return ResponseEntity.status(HttpStatus.CONFLICT).body("Student already exist");
     }
 
@@ -125,11 +123,11 @@ public class StudentService {
 
         Students student = studentsRepository.findByStudentId(studentId).orElse(null);
         if (student == null) {
-            loggingService.logActivity(LogType.STUDENT, LogAction.READ, "Invalid Student Id", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.STUDENT, LogAction.READ, "Invalid Student Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Student not found");
         }
 
-        loggingService.logActivity(LogType.STUDENT, LogAction.READ, "N/A", staffId, LogStatus.SUCCESS);
+        loggingService.logGeneralActivity(LogType.STUDENT, LogAction.READ, "N/A", staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok(getStudentData(student));
     }
 
@@ -155,7 +153,7 @@ public class StudentService {
     public ResponseEntity<?> countTotalStudents(String staffId) {
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staff == null) {
-            loggingService.logActivity(LogType.STUDENT, LogAction.READ, "Invalid staff Id", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.STUDENT, LogAction.READ, "Invalid staff Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Invalid staff Id"
             ));
@@ -163,13 +161,13 @@ public class StudentService {
 
         List<Students> students = utilityClass.getActiveStudents(staff.getInstitution().getStudents());
         if (students == null || students.isEmpty()) {
-            loggingService.logActivity(LogType.STUDENT, LogAction.READ, "Institution has no students", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.STUDENT, LogAction.READ, "Institution has no students", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Institution has no student"
             ));
         }
 
-        loggingService.logActivity(LogType.STUDENT, LogAction.READ, "N/A", staffId, LogStatus.SUCCESS);
+        loggingService.logGeneralActivity(LogType.STUDENT, LogAction.READ, "N/A", staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok(students.size());
     }
 
@@ -178,7 +176,7 @@ public class StudentService {
 
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staff == null) {
-            loggingService.logActivity(LogType.STUDENT, LogAction.READ, "Invalid staff Id", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.STUDENT, LogAction.READ, "Invalid staff Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Invalid Staff Id"
             ));
@@ -186,7 +184,7 @@ public class StudentService {
 
         List<Level> levels = staff.getInstitution().getLevels();
         if (levels == null || levels.isEmpty()) {
-            loggingService.logActivity(LogType.STUDENT, LogAction.READ, "Institution has no classes yet", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.STUDENT, LogAction.READ, "Institution has no classes yet", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Institution has no class yet"
             ));
@@ -231,7 +229,7 @@ public class StudentService {
             }
         }
 
-        loggingService.logActivity(LogType.STUDENT, LogAction.READ, "N/A", staffId, LogStatus.SUCCESS);
+        loggingService.logGeneralActivity(LogType.STUDENT, LogAction.READ, "N/A", staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok(todaysAbsentees);
     }
 
@@ -239,18 +237,18 @@ public class StudentService {
 
         Students student = studentsRepository.findByStudentId(data.getStudentId()).orElse(null);
         if (student == null) {
-            loggingService.logActivity(LogType.STUDENT, LogAction.UPDATE, "Invalid student Id", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.STUDENT, LogAction.UPDATE, "Invalid student Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Student not found");
         }
 
         if (data.getParentPhoneNumber().length() != 10) {
-            loggingService.logActivity(LogType.STUDENT, LogAction.UPDATE, "Invalid parent phone number", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.STUDENT, LogAction.UPDATE, "Invalid parent phone number", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid parent phone number");
         }
 
         Level level = levelRepository.findByLevelID(data.getGradeId()).orElse(null);
         if (level == null) {
-            loggingService.logActivity(LogType.STUDENT, LogAction.UPDATE, "Invalid class Id", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.STUDENT, LogAction.UPDATE, "Invalid class Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Class not found");
         }
 
@@ -269,7 +267,7 @@ public class StudentService {
             throw new RuntimeException(e);
         }
 
-        loggingService.logActivity(LogType.STUDENT, LogAction.UPDATE, "N/A", staffId, LogStatus.SUCCESS);
+        loggingService.logGeneralActivity(LogType.STUDENT, LogAction.UPDATE, "N/A", staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok().build();
     }
 
@@ -279,7 +277,7 @@ public class StudentService {
 
         Level level = levelRepository.findByLevelID(levelId).orElse(null);
         if (level == null) {
-            loggingService.logActivity(LogType.ATTENDANCE, LogAction.READ, "Invalid class Id", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.READ, "Invalid class Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Invalid class Id"
             ));
@@ -290,14 +288,14 @@ public class StudentService {
         );
         Semester semester = semesterRepository.findBySemesterID(currentSemesterId).orElse(null);
         if (semester == null) {
-            loggingService.logActivity(LogType.ATTENDANCE, LogAction.CREATE, "Current term not added to system", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.CREATE, "Current term not added to system", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
                     "message", "Current term not added to system"
             ));
         }
 
         if (!utilityClass.isSchoolDay(selectedDate)) {
-            loggingService.logActivity(LogType.ATTENDANCE, LogAction.CREATE, "Attendance can't be marked on weekends", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.CREATE, "Attendance can't be marked on weekends", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
                     "message", "Attendance can't be marked on weekends"
             ));
@@ -308,7 +306,7 @@ public class StudentService {
             for (SchoolHoliday holiday : holidays) {
 
                 if (!selectedDate.isBefore(holiday.getStartDate()) && !selectedDate.isAfter(holiday.getEndDate())) {
-                    loggingService.logActivity(LogType.ATTENDANCE, LogAction.CREATE, "Today is holiday", staffId, LogStatus.FAILED);
+                    loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.CREATE, "Today is holiday", staffId, LogStatus.FAILED);
                     return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
                             "message", "Today is holiday"
                     ));
@@ -346,7 +344,7 @@ public class StudentService {
             ));
         }
 
-        loggingService.logActivity(LogType.ATTENDANCE, LogAction.READ, "N/A", staffId, LogStatus.SUCCESS);
+        loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.READ, "N/A", staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok(attendanceList);
     }
 
@@ -356,7 +354,7 @@ public class StudentService {
         //Check if date is accepted for attendance
         LocalDate selectedDate = LocalDate.parse(date, DateTimeFormatter.ISO_DATE);
         if (!utilityClass.isSchoolDay(selectedDate)) {
-            loggingService.logActivity(LogType.ATTENDANCE, LogAction.CREATE, "Attendance can't be marked on weekends", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.CREATE, "Attendance can't be marked on weekends", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
                     "message", "Attendance can't be marked on weekends"
             ));
@@ -364,7 +362,7 @@ public class StudentService {
 
         Students student = studentsRepository.findByStudentId(studentId).orElse(null);
         if (student == null) {
-            loggingService.logActivity(LogType.ATTENDANCE, LogAction.CREATE, "Invalid student Id", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.CREATE, "Invalid student Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Invalid student Id"
             ));
@@ -375,7 +373,7 @@ public class StudentService {
         );
         Semester semester = semesterRepository.findBySemesterID(currentSemesterId).orElse(null);
         if (semester == null) {
-            loggingService.logActivity(LogType.ATTENDANCE, LogAction.CREATE, "Current term not added to system", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.CREATE, "Current term not added to system", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
                     "message", "Current term not added to system"
             ));
@@ -386,7 +384,7 @@ public class StudentService {
             for (SchoolHoliday holiday : holidays) {
 
                 if (!selectedDate.isBefore(holiday.getStartDate()) && !selectedDate.isAfter(holiday.getEndDate())) {
-                    loggingService.logActivity(LogType.ATTENDANCE, LogAction.CREATE, "Today is holiday", staffId, LogStatus.FAILED);
+                    loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.CREATE, "Today is holiday", staffId, LogStatus.FAILED);
                     return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
                             "message", "Today is holiday"
                     ));
@@ -396,7 +394,7 @@ public class StudentService {
 
         Level level = levelRepository.findByLevelID(levelId).orElse(null);
         if (level == null) {
-            loggingService.logActivity(LogType.ATTENDANCE, LogAction.CREATE, "Invalid student Id", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.CREATE, "Invalid student Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Invalid level Id"
             ));
@@ -404,7 +402,7 @@ public class StudentService {
 
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staff == null) {
-            loggingService.logActivity(LogType.ATTENDANCE, LogAction.CREATE, "Invalid staff Id", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.CREATE, "Invalid staff Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Invalid staff Id"
             ));
@@ -432,7 +430,7 @@ public class StudentService {
         todaysAttendance.setStatus(AttendanceStatus.valueOf(status));
         attendanceRepository.save(todaysAttendance);
 
-        loggingService.logActivity(LogType.ATTENDANCE, LogAction.CREATE, "N/A", staffId, LogStatus.SUCCESS);
+        loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.CREATE, "N/A", staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok().build();
     }
 
@@ -442,7 +440,7 @@ public class StudentService {
 
         Level level = levelRepository.findByLevelID(levelId).orElse(null);
         if (level == null) {
-            loggingService.logActivity(LogType.STUDENT, LogAction.READ, "Invalid class Id", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.STUDENT, LogAction.READ, "Invalid class Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Invalid class Id"
             ));
@@ -450,7 +448,7 @@ public class StudentService {
 
         List<Students> levelStudents = utilityClass.getActiveStudents(level.getStudents());
         if (levelStudents == null || levelStudents.isEmpty()) {
-            loggingService.logActivity(LogType.STUDENT, LogAction.READ, "Class has no students", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.STUDENT, LogAction.READ, "Class has no students", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Class has no students"
             ));
@@ -465,7 +463,7 @@ public class StudentService {
             studentsHolders.add(stu);
         }
 
-        loggingService.logActivity(LogType.STUDENT, LogAction.READ, "Invalid class Id", staffId, LogStatus.SUCCESS);
+        loggingService.logGeneralActivity(LogType.STUDENT, LogAction.READ, "Invalid class Id", staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok(studentsHolders);
     }
 

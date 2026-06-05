@@ -1,7 +1,6 @@
 package com.codewithben.schoolmanagementsystem.Service;
 
 import com.codewithben.schoolmanagementsystem.Constants.*;
-import com.codewithben.schoolmanagementsystem.DTO.Subject.SubjectDTO;
 import com.codewithben.schoolmanagementsystem.DTO.Staff.FindStaffDTO;
 import com.codewithben.schoolmanagementsystem.DTO.Staff.ViewStaffList;
 import com.codewithben.schoolmanagementsystem.DTO.Staff.StaffCaching;
@@ -39,7 +38,7 @@ public class StaffService {
 
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staff == null) {
-            loggingService.logActivity(LogType.STAFF, LogAction.CREATE, "Invalid newStaff Id", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.STAFF, LogAction.CREATE, "Invalid newStaff Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
                     "message", "Invalid newStaff Id"
             ));
@@ -47,14 +46,14 @@ public class StaffService {
 
 
         if (staffsRepository.existsByPhoneNumberAndInstitution_InstitutionId(phoneNumber, staff.getInstitution().getInstitutionId())) {
-            loggingService.logActivity(LogType.STAFF, LogAction.CREATE, "Phone number already exist", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.STAFF, LogAction.CREATE, "Phone number already exist", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
                     "message", "Phone number already exist"
             ));
         }
 
         if (staffsRepository.existsByFirstNameAndLastName(firstName, surName)) {
-            loggingService.logActivity(LogType.STAFF, LogAction.CREATE, "Staff already exist", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.STAFF, LogAction.CREATE, "Staff already exist", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
                     "message", "Staff already exist"
             ));
@@ -81,32 +80,24 @@ public class StaffService {
         newStaff.setRoles(saveStaffRoles(newStaff, staffRoles));
         staffsRepository.save(newStaff);
 
-        loggingService.logActivity(LogType.STAFF, LogAction.CREATE, "N/A", staffId, LogStatus.SUCCESS);
+        loggingService.logGeneralActivity(LogType.STAFF, LogAction.CREATE, "N/A", staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok(staffID);
     }
 
-    public ResponseEntity<?> addNewPrincipal(String institutionId, String firstName, String surName, String gender, String dateOfBirth,
+    public ResponseEntity<?> addNewPrincipal(Institution institution, String firstName, String surName, String gender, String dateOfBirth,
                                          String email, String password, String phoneNumber,
                                          List<String> staffRoles) {
 
-        Institution institution = institutiionRepository.findByInstitutionId(institutionId).orElse(null);
-        if (institution == null) {
-            loggingService.logActivity(LogType.STAFF, LogAction.CREATE, "Invalid institution Id", "", LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
-                    "message", "Invalid institution Id"
-            ));
-        }
-
 
         if (staffsRepository.existsByPhoneNumberAndInstitution_InstitutionId(phoneNumber, institution.getInstitutionId())) {
-            loggingService.logActivity(LogType.STAFF, LogAction.CREATE, "Phone number already exist", "", LogStatus.FAILED);
+            loggingService.logNewSubscription(LogType.STAFF, LogAction.CREATE, "Phone number already exist", LogStatus.FAILED, institution);
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
                     "message", "Phone number already exist"
             ));
         }
 
         if (staffsRepository.existsByFirstNameAndLastName(firstName, surName)) {
-            loggingService.logActivity(LogType.STAFF, LogAction.CREATE, "Staff already exist", "", LogStatus.FAILED);
+            loggingService.logNewSubscription(LogType.STAFF, LogAction.CREATE, "Staff already exist", LogStatus.FAILED, institution);
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
                     "message", "Staff already exist"
             ));
@@ -133,7 +124,7 @@ public class StaffService {
         newPrincipal.setRoles(saveStaffRoles(newPrincipal, staffRoles));
         staffsRepository.save(newPrincipal);
 
-        loggingService.logActivity(LogType.STAFF, LogAction.CREATE, "New Subscription", "", LogStatus.SUCCESS);
+        loggingService.logGeneralActivity(LogType.STAFF, LogAction.CREATE, "New Subscription", "", LogStatus.SUCCESS);
         return ResponseEntity.ok(staffID);
     }
 
@@ -161,7 +152,7 @@ public class StaffService {
 
         Staffs staff = staffsRepository.findByStaffId(instructorId).orElse(null);
         if (staff == null) {
-            loggingService.logActivity(LogType.STAFF, LogAction.READ, "Invalid staff Id", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.STAFF, LogAction.READ, "Invalid staff Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid staff Id");
         }
 
@@ -186,7 +177,7 @@ public class StaffService {
         staffData.setStaffStatus(staff.getStaffStatus().name());
         staffData.setDateOfRegistration(staff.getDateOfRegistration().toString());
 
-        loggingService.logActivity(LogType.STAFF, LogAction.READ, "N/A", staffId, LogStatus.SUCCESS);
+        loggingService.logGeneralActivity(LogType.STAFF, LogAction.READ, "N/A", staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok(staffData);
     }
 
@@ -199,7 +190,7 @@ public class StaffService {
 
         Staffs staff = staffsRepository.findByStaffId(updateInfo.getStaffId()).orElse(null);
         if (staff == null) {
-            loggingService.logActivity(LogType.STAFF, LogAction.UPDATE, "Invalid staff Id", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.STAFF, LogAction.UPDATE, "Invalid staff Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid Staff Id");
         }
 
@@ -216,7 +207,7 @@ public class StaffService {
         staff.setStaffStatus(StaffStatus.valueOf(updateInfo.getStaffStatus()));
         staffsRepository.save(staff);
 
-        loggingService.logActivity(LogType.STAFF, LogAction.UPDATE, "N/A", staffId, LogStatus.SUCCESS);
+        loggingService.logGeneralActivity(LogType.STAFF, LogAction.UPDATE, "N/A", staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok().build();
     }
 
@@ -247,7 +238,7 @@ public class StaffService {
 
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staff == null) {
-            loggingService.logActivity(LogType.STAFF, LogAction.READ, "Invalid staff Id", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.STAFF, LogAction.READ, "Invalid staff Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Invalid Staff Id"
             ));
@@ -255,13 +246,13 @@ public class StaffService {
 
         List<Staffs> staffs = getActiveStaff(staff.getInstitution());
         if (staffs == null) {
-            loggingService.logActivity(LogType.STAFF, LogAction.READ, "Institution has no staff", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.STAFF, LogAction.READ, "Institution has no staff", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Institution has no staff"
             ));
         }
 
-        loggingService.logActivity(LogType.STAFF, LogAction.READ, "N/A", staffId, LogStatus.SUCCESS);
+        loggingService.logGeneralActivity(LogType.STAFF, LogAction.READ, "N/A", staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok(staffs.size());
     }
 
@@ -269,7 +260,7 @@ public class StaffService {
 
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staff == null) {
-            loggingService.logActivity(LogType.STAFF, LogAction.READ, "Invalid Staff Id", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.STAFF, LogAction.READ, "Invalid Staff Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message",  "Invalid Staff Id"
             ));
@@ -277,7 +268,7 @@ public class StaffService {
 
         List<Staffs> staffs = getActiveStaff(staff.getInstitution());
         if (staffs == null) {
-            loggingService.logActivity(LogType.STAFF, LogAction.READ, "Institution has no staff", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.STAFF, LogAction.READ, "Institution has no staff", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message",  "Institution has no staff"
             ));
@@ -291,7 +282,7 @@ public class StaffService {
             }
         }
 
-        loggingService.logActivity(LogType.STAFF, LogAction.READ, "N/A", staffId, LogStatus.SUCCESS);
+        loggingService.logGeneralActivity(LogType.STAFF, LogAction.READ, "N/A", staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok(staffCount);
     }
 
@@ -300,14 +291,14 @@ public class StaffService {
 
         Staffs staff = staffsRepository.findByStaffId(newPasswordStaffId).orElse(null);
         if (staff == null) {
-            loggingService.logActivity(LogType.STAFF, LogAction.RESET, "Invalid Staff Id", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.STAFF, LogAction.RESET, "Invalid Staff Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Invalid Staff Id"
             ));
         }
 
         if (bCryptPasswordEncoder.matches(newPassword, staff.getPassword())) {
-            loggingService.logActivity(LogType.STAFF, LogAction.RESET, "You can't use old password", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.STAFF, LogAction.RESET, "You can't use old password", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
                     "message", "You can't use old password"
             ));
@@ -316,14 +307,14 @@ public class StaffService {
         staff.setPassword(bCryptPasswordEncoder.encode(newPassword));
         staffsRepository.save(staff);
 
-        loggingService.logActivity(LogType.STAFF, LogAction.RESET, "N/A", staffId, LogStatus.SUCCESS);
+        loggingService.logGeneralActivity(LogType.STAFF, LogAction.RESET, "N/A", staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok().build();
     }
 
     public ResponseEntity<?> loadAllStaffInfo(String staffId) {
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staff == null) {
-            loggingService.logActivity(LogType.STAFF, LogAction.READ, "Invalid staff Id", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.STAFF, LogAction.READ, "Invalid staff Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Invalid staff Id"
             ));
@@ -351,7 +342,7 @@ public class StaffService {
             staffList.add(foundStaff);
         }
 
-        loggingService.logActivity(LogType.STAFF, LogAction.READ, "N/A", staffId, LogStatus.SUCCESS);
+        loggingService.logGeneralActivity(LogType.STAFF, LogAction.READ, "N/A", staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok(getFinalStaffList(staffList));
     }
 
@@ -373,7 +364,7 @@ public class StaffService {
 
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staff == null) {
-            loggingService.logActivity(LogType.STAFF, LogAction.READ, "Invalid staff Id", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.STAFF, LogAction.READ, "Invalid staff Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Invalid staff Id"
             ));
@@ -381,7 +372,7 @@ public class StaffService {
 
         List<Staffs> staffs = staff.getInstitution().getStaff();
         if (staffs == null || staffs.isEmpty()) {
-            loggingService.logActivity(LogType.STAFF, LogAction.READ, "Institution has no staff", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.STAFF, LogAction.READ, "Institution has no staff", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Institution has no staff"
             ));
@@ -408,7 +399,7 @@ public class StaffService {
             viewStaffLists.add(newStaff);
         }
 
-        loggingService.logActivity(LogType.STAFF, LogAction.READ, "N/A", staffId, LogStatus.SUCCESS);
+        loggingService.logGeneralActivity(LogType.STAFF, LogAction.READ, "N/A", staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok(viewStaffLists);
     }
 

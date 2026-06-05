@@ -43,7 +43,7 @@ public class ConductService {
 
         Level level = levelRepository.findByLevelID(levelId).orElse(null);
         if (level == null) {
-            loggingService.logActivity(LogType.CONDUCT, LogAction.READ, logData, staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.CONDUCT, LogAction.READ, logData, staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Invalid class Id"
             ));
@@ -51,7 +51,7 @@ public class ConductService {
 
         Semester semester = semesterRepository.findBySemesterID(semesterId).orElse(null);
         if (semester == null) {
-            loggingService.logActivity(LogType.CONDUCT, LogAction.READ, logData, staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.CONDUCT, LogAction.READ, logData, staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Invalid semester Id"
             ));
@@ -59,7 +59,7 @@ public class ConductService {
 
         List<Results> studentList = resultsRepository.findByLevel_LevelIDAndSemester_SemesterIDOrderByTotalScoreDesc(levelId, semesterId);
         if (studentList == null || studentList.isEmpty()) {
-            loggingService.logActivity(LogType.CONDUCT, LogAction.READ, logData, staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.CONDUCT, LogAction.READ, logData, staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "No results found to contain conduct records"
             ));
@@ -116,7 +116,7 @@ public class ConductService {
             conductList.add(studentConductRecord);
         }
 
-        loggingService.logActivity(LogType.CONDUCT, LogAction.READ, logData, staffId, LogStatus.SUCCESS);
+        loggingService.logGeneralActivity(LogType.CONDUCT, LogAction.READ, logData, staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok(conductList);
     }
 
@@ -132,7 +132,7 @@ public class ConductService {
         Results studentResult =
                 resultsRepository.findByStudent_StudentIdAndSemester_SemesterID(record.getStudentId(), record.getSemesterId()).orElse(null);
         if (studentResult == null) {
-            loggingService.logActivity(LogType.CONDUCT, LogAction.CREATE, logData, staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.CONDUCT, LogAction.CREATE, logData, staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "No semester result found for this student"
             ));
@@ -156,7 +156,7 @@ public class ConductService {
             studentResult.setConduct(conduct);
             resultsRepository.save(studentResult);
 
-            loggingService.logActivity(LogType.CONDUCT, LogAction.CREATE, logData, staffId, LogStatus.SUCCESS);
+            loggingService.logGeneralActivity(LogType.CONDUCT, LogAction.CREATE, logData, staffId, LogStatus.SUCCESS);
             return ResponseEntity.ok().build();
         }
 
@@ -169,7 +169,7 @@ public class ConductService {
         conduct.setClassTeacherRemark(record.getConductRemark());
         conductRepository.save(conduct);
 
-        loggingService.logActivity(LogType.CONDUCT, LogAction.CREATE, logData, staffId, LogStatus.SUCCESS);
+        loggingService.logGeneralActivity(LogType.CONDUCT, LogAction.CREATE, logData, staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok().build();
     }
 }

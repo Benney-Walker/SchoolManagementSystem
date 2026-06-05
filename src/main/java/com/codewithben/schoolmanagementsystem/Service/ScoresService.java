@@ -49,7 +49,7 @@ public class ScoresService {
 
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if(staff == null){
-            loggingService.logActivity(LogType.SUBJECT_SCORE, LogAction.CREATE,"Invalid staff Id", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.SUBJECT_SCORE, LogAction.CREATE,"Invalid staff Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Invalid staff Id"
             ));
@@ -57,7 +57,7 @@ public class ScoresService {
 
         Students student = studentsRepository.findByStudentId(scores.getStudentId()).orElse(null);
         if (student == null) {
-            loggingService.logActivity(LogType.SUBJECT_SCORE, LogAction.CREATE,"Invalid student Id", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.SUBJECT_SCORE, LogAction.CREATE,"Invalid student Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Invalid student Id"
             ));
@@ -67,7 +67,7 @@ public class ScoresService {
                 student.getInstitution().getInstitutionId()
         );
         if (gradeSystem == null || gradeSystem.isEmpty()) {
-            loggingService.logActivity(LogType.SUBJECT_SCORE, LogAction.CREATE,"No grading criteria saved on system", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.SUBJECT_SCORE, LogAction.CREATE,"No grading criteria saved on system", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "No grading criteria saved on system"
             ));
@@ -75,7 +75,7 @@ public class ScoresService {
 
         Subjects subject = subjectsRepository.findBySubjectId(subjectId).orElse(null);
         if (subject == null) {
-            loggingService.logActivity(LogType.SUBJECT_SCORE, LogAction.CREATE,"Invalid staff Id", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.SUBJECT_SCORE, LogAction.CREATE,"Invalid staff Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Invalid subject ID"
             ));
@@ -83,7 +83,7 @@ public class ScoresService {
 
         Semester semester = semesterRepository.findBySemesterID(semesterId).orElse(null);
         if (semester == null) {
-            loggingService.logActivity(LogType.SUBJECT_SCORE, LogAction.CREATE,"Invalid semester Id", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.SUBJECT_SCORE, LogAction.CREATE,"Invalid semester Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Invalid semester ID"
             ));
@@ -150,7 +150,7 @@ public class ScoresService {
 
         updateResultTotals(result, staff, subject);
 
-        loggingService.logActivity(LogType.SUBJECT_SCORE, LogAction.CREATE,"N/A", staffId, LogStatus.SUCCESS);
+        loggingService.logGeneralActivity(LogType.SUBJECT_SCORE, LogAction.CREATE,"N/A", staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok().build();
     }
 
@@ -159,7 +159,7 @@ public class ScoresService {
 
         Students student = studentsRepository.findByStudentId(studentId).orElse(null);
         if (student == null) {
-            loggingService.logActivity(LogType.RESULT, LogAction.READ,"Invalid student Id", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.RESULT, LogAction.READ,"Invalid student Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Student not found");
         }
 
@@ -167,7 +167,7 @@ public class ScoresService {
                 studentId, semesterId
         ).orElse(null);
         if (results == null) {
-            loggingService.logActivity(LogType.RESULT, LogAction.READ,"No result available for filter", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.RESULT, LogAction.READ,"No result available for filter", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Results not found");
         }
 
@@ -195,7 +195,7 @@ public class ScoresService {
         Double averageScore = results.getAverageScore();
         String position = results.getPosition();
 
-        loggingService.logActivity(LogType.RESULT, LogAction.READ,"N/A", staffId, LogStatus.SUCCESS);
+        loggingService.logGeneralActivity(LogType.RESULT, LogAction.READ,"N/A", staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok(new StudentResult(
                 studentID, studentName, levelName, semesterName, totalScore,
                 averageScore, position, subjectResults
@@ -207,7 +207,7 @@ public class ScoresService {
 
         Subjects subject = subjectsRepository.findBySubjectId(subjectId).orElse(null);
         if (subject == null) {
-            loggingService.logActivity(LogType.SUBJECT_SCORE, LogAction.READ, "Invalid subject id", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.SUBJECT_SCORE, LogAction.READ, "Invalid subject id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Subject not found"
             ));
@@ -217,7 +217,7 @@ public class ScoresService {
         List<Students> students =
                 utilityClass.getActiveStudents(subject.getLevel().getStudents());
         if (students == null || students.isEmpty()) {
-            loggingService.logActivity(LogType.SUBJECT_SCORE, LogAction.READ, "Class has no students", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.SUBJECT_SCORE, LogAction.READ, "Class has no students", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Class has no students"
             ));
@@ -279,7 +279,7 @@ public class ScoresService {
             subjectStudents.add(scoresTable);
         }
 
-        loggingService.logActivity(LogType.SUBJECT_SCORE, LogAction.READ, "N/A", staffId, LogStatus.SUCCESS);
+        loggingService.logGeneralActivity(LogType.SUBJECT_SCORE, LogAction.READ, "N/A", staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok(
                 new SubjectScores(subjectName, subjectId, subjectStudents)
         );

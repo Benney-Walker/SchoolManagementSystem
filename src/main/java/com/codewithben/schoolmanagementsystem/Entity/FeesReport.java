@@ -25,6 +25,8 @@ public class FeesReport {
 
     private LocalDate dateOfPayment;
 
+    private boolean isDeleted;
+
     @ManyToOne
     @JoinColumn(nullable = false, name = "student_studentId")
     private Students student;

@@ -23,7 +23,7 @@ public class AuthenticationFailureListener implements ApplicationListener<Abstra
 
         System.out.println(username);
 
-        loggingService.logActivity(
+        loggingService.logGeneralActivity(
                 LogType.STAFF,
                 LogAction.LOGIN,
                 "N/A",

@@ -1,15 +1,10 @@
 package com.codewithben.schoolmanagementsystem.Controller;
 
-import com.codewithben.schoolmanagementsystem.Constants.LogType;
 import com.codewithben.schoolmanagementsystem.DTO.Fees.FetchFeesDetails;
 import com.codewithben.schoolmanagementsystem.DTO.Fees.NewFeesPaymentDTO;
 import com.codewithben.schoolmanagementsystem.DTO.Fees.StudentPaymentRecords;
-import com.codewithben.schoolmanagementsystem.Entity.Staffs;
-import com.codewithben.schoolmanagementsystem.Repository.StaffsRepository;
 import com.codewithben.schoolmanagementsystem.Service.FeesService;
-import com.codewithben.schoolmanagementsystem.Service.LoggingService;
 import lombok.AllArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,21 +14,26 @@ import org.springframework.web.bind.annotation.*;
 public class FinanceController {
     private final FeesService feesService;
 
-    private final LoggingService loggingService;
-
-    private final StaffsRepository staffsRepository;
-
 
     @PostMapping("/v1/add-new-fees")
     public ResponseEntity<?> addNewFees(@RequestHeader("staffId") String staffId,
-                                        @RequestParam String gradeId,
-                                        @RequestParam String semesterId,
-                                        @RequestParam String feesAmount) {
+                                     @RequestParam String gradeId,
+                                     @RequestParam String semesterId,
+                                     @RequestParam String feesAmount) {
 
         return feesService.addNewSemesterFees(Double.parseDouble(feesAmount), semesterId, gradeId, staffId);
     }
 
-    @PostMapping("/v2/add-fees-payment")
+    @PostMapping("/v2/new-fees")
+    public ResponseEntity<?> newFees(@RequestHeader("staffId") String staffId,
+                                     @RequestParam String classId,
+                                     @RequestParam String semesterId,
+                                     @RequestParam String feesAmount) {
+
+        return feesService.addNewSemesterFees(Double.parseDouble(feesAmount), semesterId, classId, staffId);
+    }
+
+    @PostMapping("/v1/add-fees-payment")
     public ResponseEntity<?> addNewFeePayment(@RequestHeader("staffId") String staffId,
                                               @RequestBody NewFeesPaymentDTO data) {
         String studentId = data.getStudentId();
@@ -82,6 +82,7 @@ public class FinanceController {
     public ResponseEntity<?> fetchGradesFeesReport(@RequestHeader("staffId") String staffId,
                                                    @PathVariable String levelId,
                                                    @PathVariable String semesterId) {
+
         return feesService.fetchGradeFeesReport(levelId, semesterId, staffId);
     }
 

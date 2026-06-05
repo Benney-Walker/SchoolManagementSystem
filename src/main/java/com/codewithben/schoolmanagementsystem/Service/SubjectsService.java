@@ -35,7 +35,7 @@ public class SubjectsService {
 
         Level level = levelRepository.findByLevelID(levelId).orElse(null);
         if (level == null) {
-            loggingService.logActivity(LogType.SUBJECT, LogAction.CREATE, "Invalid Class Id", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.SUBJECT, LogAction.CREATE, "Invalid Class Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Invalid Class Id"
             ));
@@ -43,7 +43,7 @@ public class SubjectsService {
 
         Subjects subject = subjectsRepository.findBySubjectNameAndLevel_LevelID(subjectName, levelId).orElse(null);
         if (subject != null) {
-            loggingService.logActivity(LogType.SUBJECT, LogAction.CREATE, "Subject already exists", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.SUBJECT, LogAction.CREATE, "Subject already exists", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
                     "message", "Subject already exists"
             ));
@@ -65,7 +65,7 @@ public class SubjectsService {
         level.setSubjects(levelSubjects);
         levelRepository.save(level);
 
-        loggingService.logActivity(LogType.SUBJECT, LogAction.CREATE, "N/A", staffId, LogStatus.SUCCESS);
+        loggingService.logGeneralActivity(LogType.SUBJECT, LogAction.CREATE, "N/A", staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok().build();
     }
 
@@ -74,13 +74,13 @@ public class SubjectsService {
 
         Subjects subject = subjectsRepository.findBySubjectId(subjectId).orElse(null);
         if (subject == null) {
-            loggingService.logActivity(LogType.SUBJECT, LogAction.READ, "Subject not found", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.SUBJECT, LogAction.READ, "Subject not found", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Subject not found"
             ));
         }
 
-        loggingService.logActivity(LogType.SUBJECT, LogAction.READ, "N/A", staffId, LogStatus.SUCCESS);
+        loggingService.logGeneralActivity(LogType.SUBJECT, LogAction.READ, "N/A", staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok( new SubjectDTO(
                 subject.getSubjectId(),
                 subject.getSubjectName(),
@@ -94,7 +94,7 @@ public class SubjectsService {
 
         Subjects subject = subjectsRepository.findBySubjectId(subjectDTO.getSubjectId()).orElse(null);
         if (subject == null) {
-            loggingService.logActivity(LogType.SUBJECT, LogAction.UPDATE, "Invalid subject Id", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.SUBJECT, LogAction.UPDATE, "Invalid subject Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Invalid Subject Id"
             ));
@@ -102,7 +102,7 @@ public class SubjectsService {
 
         Level level = levelRepository.findByLevelID(subjectDTO.getLevelId()).orElse(null);
         if (level == null) {
-            loggingService.logActivity(LogType.SUBJECT, LogAction.UPDATE, "Invalid class Id", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.SUBJECT, LogAction.UPDATE, "Invalid class Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Invalid class Id"
             ));
@@ -112,7 +112,7 @@ public class SubjectsService {
         subject.setLevel(level);
         subjectsRepository.save(subject);
 
-        loggingService.logActivity(LogType.SUBJECT, LogAction.UPDATE, "N/A", staffId, LogStatus.SUCCESS);
+        loggingService.logGeneralActivity(LogType.SUBJECT, LogAction.UPDATE, "N/A", staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok().build();
     }
 
@@ -121,14 +121,14 @@ public class SubjectsService {
 
         Subjects subject = subjectsRepository.findBySubjectId(subjectId).orElse(null);
         if (subject == null) {
-            loggingService.logActivity(LogType.SUBJECT, LogAction.DELETE, "Invalid subject Id", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.SUBJECT, LogAction.DELETE, "Invalid subject Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Invalid Subject Id"
             ));
         }
 
         subjectsRepository.delete(subject);
-        loggingService.logActivity(LogType.SUBJECT, LogAction.DELETE, "N/A", staffId, LogStatus.SUCCESS);
+        loggingService.logGeneralActivity(LogType.SUBJECT, LogAction.DELETE, "N/A", staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok().build();
     }
 }

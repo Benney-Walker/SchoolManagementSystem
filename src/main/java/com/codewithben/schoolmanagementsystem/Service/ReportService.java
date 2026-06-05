@@ -44,7 +44,7 @@ public class ReportService {
         //This finds the level and the semester with their IDs
         Level level = levelRepository.findByLevelID(levelId).orElse(null);
         if (level == null) {
-            loggingService.logActivity(LogType.RESULT, LogAction.READ, "Invalid Class Id", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.RESULT, LogAction.READ, "Invalid Class Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Invalid Class Id"
             ));
@@ -52,7 +52,7 @@ public class ReportService {
 
         Semester semester = semesterRepository.findBySemesterID(semesterId).orElse(null);
         if (semester == null) {
-            loggingService.logActivity(LogType.RESULT, LogAction.READ, "Invalid Term Id", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.RESULT, LogAction.READ, "Invalid Term Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Invalid Term Id"
             ));
@@ -63,7 +63,7 @@ public class ReportService {
         List<Results> studentResults = resultsRepository
                 .findByLevel_LevelIDAndSemester_SemesterIDOrderByTotalScoreDesc(levelId, semesterId);
         if (studentResults == null || studentResults.isEmpty()) {
-            loggingService.logActivity(LogType.RESULT, LogAction.READ, "No Results Found for this criteria", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.RESULT, LogAction.READ, "No Results Found for this criteria", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "No Results Found for this criteria"
             ));
@@ -118,7 +118,7 @@ public class ReportService {
             viewClassSemesterReports.add(results);
         }
 
-        loggingService.logActivity(LogType.RESULT, LogAction.READ, "N/A", staffId, LogStatus.SUCCESS);
+        loggingService.logGeneralActivity(LogType.RESULT, LogAction.READ, "N/A", staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok(viewClassSemesterReports);
     }
 
@@ -127,7 +127,7 @@ public class ReportService {
 
         Level level = levelRepository.findByLevelID(levelId).orElse(null);
         if (level == null) {
-            loggingService.logActivity(LogType.RESULT, LogAction.READ, "Invalid class Id", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.RESULT, LogAction.READ, "Invalid class Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Invalid Level ID"
             ));
@@ -135,7 +135,7 @@ public class ReportService {
 
         Semester semester = semesterRepository.findBySemesterID(semesterId).orElse(null);
         if (semester == null) {
-            loggingService.logActivity(LogType.RESULT, LogAction.READ, "Invalid Term Id", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.RESULT, LogAction.READ, "Invalid Term Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Invalid Semester ID"
             ));
@@ -151,20 +151,20 @@ public class ReportService {
 
             byte[] reportPDF = jasperReportService.generateClassReportCards(reportData, level.getInstitution().getInstitutionId());
 
-            loggingService.logActivity(LogType.RESULT, LogAction.READ, "N/A", staffId, LogStatus.SUCCESS);
+            loggingService.logGeneralActivity(LogType.RESULT, LogAction.READ, "N/A", staffId, LogStatus.SUCCESS);
             return ResponseEntity.ok().body(reportPDF);
 
         } catch (IllegalArgumentException ex) {
             ex.printStackTrace();
 
-            loggingService.logActivity(LogType.RESULT, LogAction.READ, "Class has no records for this semester", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.RESULT, LogAction.READ, "Class has no records for this semester", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Class has no records for this semester"
             ));
         } catch (Exception e) {
             e.printStackTrace();
 
-            loggingService.logActivity(LogType.RESULT, LogAction.READ, "Internal Server Error! Contact developers", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.RESULT, LogAction.READ, "Internal Server Error! Contact developers", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
                     "message", "Internal Server Error! Contact developers"
             ));
@@ -252,7 +252,7 @@ public class ReportService {
 
         Level level = levelRepository.findByLevelID(levelId).orElse(null);
         if (level == null) {
-            loggingService.logActivity(LogType.STUDENT, LogAction.PROMOTE, "Invalid class Id", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.STUDENT, LogAction.PROMOTE, "Invalid class Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Invalid class Id"
             ));
@@ -260,7 +260,7 @@ public class ReportService {
 
         Students student = studentsRepository.findByStudentId(studentId).orElse(null);
         if (student == null) {
-            loggingService.logActivity(LogType.STUDENT, LogAction.PROMOTE, "Invalid student Id", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.STUDENT, LogAction.PROMOTE, "Invalid student Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Invalid student Id"
             ));
@@ -269,7 +269,7 @@ public class ReportService {
         student.setLevel(level);
         studentsRepository.save(student);
 
-        loggingService.logActivity(LogType.STUDENT, LogAction.PROMOTE, "Invalid student Id", staffId, LogStatus.SUCCESS);
+        loggingService.logGeneralActivity(LogType.STUDENT, LogAction.PROMOTE, "Invalid student Id", staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok().build();
     }
 }
