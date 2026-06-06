@@ -128,18 +128,12 @@ public class ResultsService {
             ));
         }
 
-        //Retrieve sba
-        List<SbaRecords> sbaRecords = new ArrayList<>();
-        for (Results results : resultsList) {
-            String studentId = results.getStudent().getStudentId();
-            String studentName = results.getStudent().getFirstName() + " " + results.getStudent().getLastName();
-            String classTest1Score = "";
-            String groupWorkScore = "";
-            String classTest2Score = "";
-            String projectScore = "";
-            String classScore = "";
-            String examScore = "";
-            String calculatedExamScore = "";
+        List<SbaRecords> sbaRecords = generateSbaRecords(resultsList, subjectId);
+
+        loggingService.logGeneralActivity(LogType.RESULT, LogAction.READ,"N/A", staffId, LogStatus.SUCCESS);
+        return ResponseEntity.ok(sbaRecords);
+    }
+
     public GenerateStudentResult generateStudentResult(
             Results result, String resumingDate, String totalAttendance
     ) {
@@ -197,35 +191,53 @@ public class ResultsService {
     /*===============================================
                           Helpers
      ================================================*/
+    public List<SbaRecords> generateSbaRecords(List<Results> resultsList, String subjectId) {
 
-            List<SubjectScore> subjectScores = results.getSubjectScores();
-            for (SubjectScore subjectScore : subjectScores) {
-                if (subjectScore.getSubject().getSubjectId().equals(subjectId)) {
-                    classTest1Score = subjectScore.getClassTest1().toString();
-                    groupWorkScore = subjectScore.getGroupWork().toString();
-                    classTest2Score = subjectScore.getClassTest2().toString();
-                    projectScore = subjectScore.getProjectWork().toString();
-                    classScore = subjectScore.getClassScore().toString();
-                    examScore = subjectScore.getExamScore().toString();
-                    calculatedExamScore = subjectScore.getCalculatedExamScore().toString();
-                    break;
+        try {
+            //Retrieve sba
+            List<SbaRecords> sbaRecords = new ArrayList<>();
+            for (Results results : resultsList) {
+                String studentId = results.getStudent().getStudentId();
+                String studentName = results.getStudent().getFirstName() + " " + results.getStudent().getLastName();
+                String classTest1Score = "";
+                String groupWorkScore = "";
+                String classTest2Score = "";
+                String projectScore = "";
+                String classScore = "";
+                String examScore = "";
+                String calculatedExamScore = "";
+
+                List<SubjectScore> subjectScores = results.getSubjectScores();
+                for (SubjectScore subjectScore : subjectScores) {
+                    if (subjectScore.getSubject().getSubjectId().equals(subjectId)) {
+                        classTest1Score = subjectScore.getClassTest1().toString();
+                        groupWorkScore = subjectScore.getGroupWork().toString();
+                        classTest2Score = subjectScore.getClassTest2().toString();
+                        projectScore = subjectScore.getProjectWork().toString();
+                        classScore = subjectScore.getClassScore().toString();
+                        examScore = subjectScore.getExamScore().toString();
+                        calculatedExamScore = subjectScore.getCalculatedExamScore().toString();
+                        break;
+                    }
                 }
+
+                SbaRecords sbaRecord = SbaRecords.builder()
+                        .studentId(studentId)
+                        .studentName(studentName)
+                        .classTest1Score(classTest1Score)
+                        .classTest2Score(classTest2Score)
+                        .groupWorkScore(groupWorkScore)
+                        .projectScore(projectScore)
+                        .examScore(examScore)
+                        .classScore(classScore)
+                        .calculatedExamScore(calculatedExamScore)
+                        .build();
+                sbaRecords.add(sbaRecord);
             }
 
-            SbaRecords sbaRecord = SbaRecords.builder()
-                    .studentId(studentId)
-                    .studentName(studentName)
-                    .classTest1Score(classTest1Score)
-                    .classTest2Score(classTest2Score)
-                    .groupWorkScore(groupWorkScore)
-                    .projectScore(projectScore)
-                    .examScore(examScore)
-                    .classScore(classScore)
-                    .calculatedExamScore(calculatedExamScore)
-                    .build();
-            sbaRecords.add(sbaRecord);
+            return sbaRecords;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
-
-        return ResponseEntity.ok(sbaRecords);
     }
 }
