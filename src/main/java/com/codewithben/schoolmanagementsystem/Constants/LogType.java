@@ -10,6 +10,7 @@ public enum LogType {
     CLASS,
     LOG,
     RESULT,
+    REPORT,
     SCHOOL_HOLIDAY,
     TERM,
     STAFF,
