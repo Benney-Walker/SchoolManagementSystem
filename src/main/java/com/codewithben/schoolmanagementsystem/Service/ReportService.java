@@ -3,10 +3,9 @@ package com.codewithben.schoolmanagementsystem.Service;
 import com.codewithben.schoolmanagementsystem.Constants.LogAction;
 import com.codewithben.schoolmanagementsystem.Constants.LogStatus;
 import com.codewithben.schoolmanagementsystem.Constants.LogType;
-import com.codewithben.schoolmanagementsystem.DTO.Report.GenerateStudentReport;
-import com.codewithben.schoolmanagementsystem.DTO.Report.SubjectReportDTO;
-import com.codewithben.schoolmanagementsystem.DTO.Report.ViewClassSemesterReport;
-import com.codewithben.schoolmanagementsystem.DTO.Result.ViewStudentsSubjectsResults;
+import com.codewithben.schoolmanagementsystem.DTO.Report.GenerateStudentResult;
+import com.codewithben.schoolmanagementsystem.DTO.Report.SbaReport;
+import com.codewithben.schoolmanagementsystem.DTO.Result.SbaRecords;
 import com.codewithben.schoolmanagementsystem.Entity.*;
 import com.codewithben.schoolmanagementsystem.Repository.*;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +22,6 @@ import java.util.Map;
 @RequiredArgsConstructor
 @Service
 public class ReportService {
-    private final StudentsRepository studentsRepository;
 
     private final ResultsRepository resultsRepository;
 
@@ -33,7 +31,13 @@ public class ReportService {
 
     private final JasperReportService jasperReportService;
 
+    private final ResultsService resultsService;
+
+    private final AttendanceService attendanceService;
+
     private final LoggingService loggingService;
+
+    private final SubjectsRepository subjectsRepository;
 
     private final StudentService studentService;
 
@@ -156,31 +160,5 @@ public class ReportService {
                 .min(Comparator.comparing(Semester::getSemesterStartDate))
                 .map(s -> s.getSemesterStartDate().toString())
                 .orElse(null);
-    }
-
-    public ResponseEntity<?> promoteStudent(String studentId, String levelId, String staffId) {
-        String logData = "Level Id: " + levelId + " studentId: " + studentId;
-
-        Level level = levelRepository.findByLevelID(levelId).orElse(null);
-        if (level == null) {
-            loggingService.logGeneralActivity(LogType.STUDENT, LogAction.PROMOTE, "Invalid class Id", staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "Invalid class Id"
-            ));
-        }
-
-        Students student = studentsRepository.findByStudentId(studentId).orElse(null);
-        if (student == null) {
-            loggingService.logGeneralActivity(LogType.STUDENT, LogAction.PROMOTE, "Invalid student Id", staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "Invalid student Id"
-            ));
-        }
-
-        student.setLevel(level);
-        studentsRepository.save(student);
-
-        loggingService.logGeneralActivity(LogType.STUDENT, LogAction.PROMOTE, "Invalid student Id", staffId, LogStatus.SUCCESS);
-        return ResponseEntity.ok().build();
     }
 }
