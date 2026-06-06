@@ -86,71 +86,65 @@ public class ReportService {
         }
     }
 
-
-    public List<GenerateStudentReport> generateClassReports(
-            Level level, Semester semester, String resumingDate, String totalAttendance
-    ) {
-        //Report List container
-        List<GenerateStudentReport> generateStudentReports = new ArrayList<>();
-
-        //Retrieve list of results from database
-        List<Results> classResults = resultsRepository.findByLevel_LevelIDAndSemester_SemesterIDOrderByTotalScoreDesc(
-                level.getLevelID(), semester.getSemesterID()
-        );
-        if (classResults == null || classResults.isEmpty()) {
-            throw new IllegalArgumentException("No Results Found for this criteria");
+    public ResponseEntity<?> generateSbaReport(String staffId, String levelId, String semesterId, String subjectId) {
+        Subjects subject = subjectsRepository.findBySubjectId(subjectId).orElse(null);
+        if (subject == null) {
+            loggingService.logGeneralActivity(LogType.REPORT, LogAction.READ, "Invalid subject Id", staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Invalid Subject ID"
+            ));
         }
 
-        for (Results result : classResults) {
-            String studentId = result.getStudent().getStudentId();
-            String studentName = result.getStudent().getFirstName() +
-                    " " + result.getStudent().getLastName();
-            String className = level.getLevelName();
-            String semesterName = semester.getSemesterName();
-            String totalScore = result.getTotalScore().toString();
-            String averageScore = result.getAverageScore().toString();
-            String position = result.getPosition();
-            String academicYear = semester.getAcademicYear();
-            String totalStudents = String.valueOf(classResults.size());
-            String vacationDate = semester.getSemesterEndDate().toString();
-            String attendancePresent = String.valueOf(
-                    studentService.getStudentPresentAttendance(studentId, semester.getSemesterID())
-            );
-            String semesterRemark = "Not field yet"; //Not included on report yet
-            String instructorName = level.getStaff().getFirstName() +
-                    " " + level.getStaff().getLastName();
-            String currentDate = LocalDate.now().toString();
-
-            //Get subject scores
-            List<SubjectReportDTO> scores = new ArrayList<>();
-
-            List<SubjectScore> subjectScores = result.getSubjectScores();
-            for (SubjectScore subjectScore : subjectScores) {
-
-                SubjectReportDTO score = new SubjectReportDTO(
-                        subjectScore.getSubject().getSubjectName(),
-                        subjectScore.getClassScore().toString(),
-                        subjectScore.getCalculatedExamScore().toString(),
-                        subjectScore.getTotalScore().toString(),
-                        subjectScore.getGrade(),
-                        subjectScore.getGradeDescriptor()
-                );
-
-                scores.add(score);
-            }
-
-            GenerateStudentReport generateStudentReport = new GenerateStudentReport(
-                    studentId, studentName, className, semesterName,
-                    position, totalScore, averageScore, academicYear,
-                    totalStudents, vacationDate, resumingDate, attendancePresent,
-                    totalAttendance, instructorName, currentDate, "-", scores
-            );
-
-            generateStudentReports.add(generateStudentReport);
+        Level level = levelRepository.findByLevelID(levelId).orElse(null);
+        if (level == null) {
+            loggingService.logGeneralActivity(LogType.REPORT, LogAction.READ, "Invalid class Id", staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Invalid Level ID"
+            ));
         }
 
-        return generateStudentReports;
+        Semester semester = semesterRepository.findBySemesterID(semesterId).orElse(null);
+        if (semester == null) {
+            loggingService.logGeneralActivity(LogType.REPORT, LogAction.READ, "Invalid Term Id", staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Invalid Semester ID"
+            ));
+        }
+
+        List<Results> resultsList = resultsRepository
+                .findByLevel_LevelIDAndSemester_SemesterID(levelId, semesterId);
+        if (resultsList == null || resultsList.isEmpty()) {
+            loggingService.logGeneralActivity(LogType.REPORT, LogAction.READ,"No records found", staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "No records found"
+            ));
+        }
+
+        List<SbaRecords> sbaRecords = resultsService.generateSbaRecords(resultsList, subjectId);
+
+        //Create sba report object
+        SbaReport sbaReport = SbaReport.builder()
+                .semesterName(semester.getSemesterName())
+                .academicYear(semester.getAcademicYear())
+                .className(level.getLevelName())
+                .subjectName(subject.getSubjectName())
+                .sbaRecords(sbaRecords)
+                .dateOfReport(LocalDate.now().toString())
+                .build();
+
+        try {
+            byte[] sbaReportPdf = jasperReportService.generateSbaReport(sbaReport, level.getInstitution().getInstitutionName());
+
+            loggingService.logGeneralActivity(LogType.REPORT, LogAction.READ,"N/A", staffId, LogStatus.SUCCESS);
+            return ResponseEntity.ok(sbaReportPdf);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
+
+    /*================================================
+                        HELPERS
+     =================================================*/
 
     private String getResumingDate(Level level, Semester semester) {
         List<Semester> nextSemester = semesterRepository
