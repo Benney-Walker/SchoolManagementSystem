@@ -16,7 +16,9 @@ import java.util.Map;
 @Service
 public class JasperReportService {
 
-    private JasperReport cachedReport;
+    private JasperReport cachedStudentReport;
+
+    private JasperReport cachedSbaReport;
 
     public byte[] generateClassReportCards(
             List<GenerateStudentReport> generateStudentReports,
@@ -43,14 +45,21 @@ public class JasperReportService {
     }
 
 
-    private JasperReport getCompiledReport() throws JRException, IOException {
-        if (cachedReport == null) {
+    /*================================================
+                        HELPERS
+     =================================================*/
+    private JasperReport getCompiledStudentReport() throws JRException, IOException {
+        if (cachedStudentReport == null) {
             InputStream template = getClass()
                     .getResourceAsStream("/reports/class_results_report.jasper");
             if (template == null) {
                 throw new FileNotFoundException("Report template not found");
             }
-            cachedReport = (JasperReport)  JRLoader.loadObject(template);
+            cachedStudentReport = (JasperReport)  JRLoader.loadObject(template);
+        }
+        return cachedStudentReport;
+    }
+
     private JasperReport getCompiledSbaReport() throws JRException, IOException {
         if (cachedSbaReport == null) {
             InputStream template = getClass()
