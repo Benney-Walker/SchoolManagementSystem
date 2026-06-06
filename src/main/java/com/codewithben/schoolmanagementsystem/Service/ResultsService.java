@@ -3,10 +3,7 @@ package com.codewithben.schoolmanagementsystem.Service;
 import com.codewithben.schoolmanagementsystem.Constants.LogAction;
 import com.codewithben.schoolmanagementsystem.Constants.LogStatus;
 import com.codewithben.schoolmanagementsystem.Constants.LogType;
-import com.codewithben.schoolmanagementsystem.DTO.Report.GenerateStudentResult;
-import com.codewithben.schoolmanagementsystem.DTO.Report.StudentSubjectReport;
-import com.codewithben.schoolmanagementsystem.DTO.Report.SubjectReportDTO;
-import com.codewithben.schoolmanagementsystem.DTO.Report.ViewClassSemesterReport;
+import com.codewithben.schoolmanagementsystem.DTO.Report.*;
 import com.codewithben.schoolmanagementsystem.DTO.Result.SbaRecords;
 import com.codewithben.schoolmanagementsystem.DTO.Result.StudentResult;
 import com.codewithben.schoolmanagementsystem.DTO.Result.ViewStudentsSubjectsResults;
@@ -19,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -134,6 +132,22 @@ public class ResultsService {
         return ResponseEntity.ok(sbaRecords);
     }
 
+    public ResponseEntity<?> viewMasterScoreSheet(String levelId, String semesterId, String staffId) {
+
+        List<Results> resultsList = resultsRepository
+                .findByLevel_LevelIDAndSemester_SemesterID(levelId, semesterId);
+        if (resultsList == null || resultsList.isEmpty()) {
+            loggingService.logGeneralActivity(LogType.RESULT, LogAction.READ,"No records found", staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "No records found"
+            ));
+        }
+
+        MasterScoreSheet masterScoreSheet = generateMasterSheetRecord(resultsList);
+        loggingService.logGeneralActivity(LogType.RESULT, LogAction.READ,"N/A", staffId, LogStatus.SUCCESS);
+        return ResponseEntity.ok(masterScoreSheet);
+    }
+
     public GenerateStudentResult generateStudentResult(
             Results result, String resumingDate, String totalAttendance
     ) {
@@ -237,6 +251,62 @@ public class ResultsService {
 
             return sbaRecords;
         } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public MasterScoreSheet generateMasterSheetRecord(List<Results> resultsList) {
+
+        try {
+            String semesterName = null;
+            String className = null;
+
+            List<MasterScoreSheetRow> rows = new ArrayList<>();
+            for (Results result : resultsList) {
+
+                List<SubjectScore> subjectScores = result.getSubjectScores();
+                if (subjectScores == null || subjectScores.isEmpty()) continue;
+
+                List<String> subjects = new ArrayList<>();
+                Map<String, Double> scores = new LinkedHashMap<>();
+                for (SubjectScore subjectScore : subjectScores) {
+
+                    subjects.add(subjectScore.getSubject().getSubjectName());
+
+                    scores.put(
+                            subjectScore.getSubject().getSubjectName(),
+                            subjectScore.getTotalScore()
+                    );
+                }
+                String[] splitPositionString = result.getPosition().split("");
+                String position = "";
+                if (splitPositionString.length == 3) {
+                    position = splitPositionString[0];
+                } else if (splitPositionString.length == 4) {
+                    position = splitPositionString[0] + splitPositionString[1];
+                }
+
+                MasterScoreSheetRow record = MasterScoreSheetRow.builder()
+                        .studentId(result.getStudent().getStudentId())
+                        .studentName(
+                                result.getStudent().getFirstName() + " " + result.getStudent().getLastName()
+                                )
+                        .subjects(subjects)
+                        .subjectScore(scores)
+                        .studentTotalScore(result.getTotalScore())
+                        .studentAverageScore(result.getAverageScore())
+                        .position(Integer.parseInt(position))
+                        .build();
+                rows.add(record);
+
+                if (semesterName == null || className == null) {
+                    semesterName = result.getSemester().getSemesterName();
+                    className = result.getLevel().getLevelName();
+                }
+            }
+
+            return new MasterScoreSheet(className, semesterName, rows);
+        } catch (NumberFormatException e) {
             throw new RuntimeException(e);
         }
     }
