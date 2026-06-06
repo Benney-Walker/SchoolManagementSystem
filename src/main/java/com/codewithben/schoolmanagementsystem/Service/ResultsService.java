@@ -3,7 +3,9 @@ package com.codewithben.schoolmanagementsystem.Service;
 import com.codewithben.schoolmanagementsystem.Constants.LogAction;
 import com.codewithben.schoolmanagementsystem.Constants.LogStatus;
 import com.codewithben.schoolmanagementsystem.Constants.LogType;
+import com.codewithben.schoolmanagementsystem.DTO.Report.GenerateStudentResult;
 import com.codewithben.schoolmanagementsystem.DTO.Report.StudentSubjectReport;
+import com.codewithben.schoolmanagementsystem.DTO.Report.SubjectReportDTO;
 import com.codewithben.schoolmanagementsystem.DTO.Report.ViewClassSemesterReport;
 import com.codewithben.schoolmanagementsystem.DTO.Result.SbaRecords;
 import com.codewithben.schoolmanagementsystem.DTO.Result.StudentResult;
@@ -15,6 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -31,12 +34,10 @@ public class ResultsService {
 
     private final ResultsRepository resultsRepository;
 
-    private final StudentsRepository studentsRepository;
+    private final AttendanceService attendanceService;
 
     public ResponseEntity<?> viewClassSemesterReport(String levelId, String semesterId, String staffId) {
-        String logData = "Class Id: " + levelId + " semester Id: " + semesterId;
 
-        //This finds the level and the semester with their IDs
         Level level = levelRepository.findByLevelID(levelId).orElse(null);
         if (level == null) {
             loggingService.logGeneralActivity(LogType.RESULT, LogAction.READ, "Invalid Class Id", staffId, LogStatus.FAILED);
@@ -117,60 +118,11 @@ public class ResultsService {
         return ResponseEntity.ok(viewClassSemesterReports);
     }
 
-    public ResponseEntity<?> findStudentResults(String studentId, String semesterId, String levelId, String staffId) {
-        String logData = "Student Id: " + " Semester Id: " + semesterId + " class Id: " + levelId;
-
-        Students student = studentsRepository.findByStudentId(studentId).orElse(null);
-        if (student == null) {
-            loggingService.logGeneralActivity(LogType.RESULT, LogAction.READ,"Invalid student Id", staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Student not found");
-        }
-
-        Results results = resultsRepository.findByStudent_StudentIdAndSemester_SemesterID(
-                studentId, semesterId
-        ).orElse(null);
-        if (results == null) {
-            loggingService.logGeneralActivity(LogType.RESULT, LogAction.READ,"No result available for filter", staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Results not found");
-        }
-
-        List<StudentSubjectReport> subjectResults = new ArrayList<>();
-
-        List<SubjectScore> subjectScores = results.getSubjectScores();
-
-        for (SubjectScore subjectScore : subjectScores) {
-            if (subjectScore.getStudent().getStudentId().equals(studentId)) {
-                StudentSubjectReport studentSubjectReport = new StudentSubjectReport(
-                        subjectScore.getSubject().getSubjectName(),
-                        String.valueOf(subjectScore.getTotalScore()),
-                        subjectScore.getGrade(),
-                        subjectScore.getGradeDescriptor()
-                );
-                subjectResults.add(studentSubjectReport);
-            }
-        }
-
-        String studentID = results.getStudent().getStudentId();
-        String studentName = student.getFirstName() + " " + student.getLastName();
-        String semesterName = results.getSemester().getSemesterName();
-        String levelName = results.getLevel().getLevelName();
-        Double totalScore = results.getTotalScore();
-        Double averageScore = results.getAverageScore();
-        String position = results.getPosition();
-
-        loggingService.logGeneralActivity(LogType.RESULT, LogAction.READ,"N/A", staffId, LogStatus.SUCCESS);
-        return ResponseEntity.ok(new StudentResult(
-                studentID, studentName, levelName, semesterName, totalScore,
-                averageScore, position, subjectResults
-        ));
-    }
-
     public ResponseEntity<?> viewSba(String staffId, String levelId, String semesterId, String subjectId) {
-
         List<Results> resultsList = resultsRepository
                 .findByLevel_LevelIDAndSemester_SemesterID(levelId, semesterId);
         if (resultsList == null || resultsList.isEmpty()) {
-            loggingService.logGeneralActivity(LogType.RESULT, LogAction.READ,"No records found  for filter", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.RESULT, LogAction.READ,"No records found", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "No records found"
             ));
@@ -188,6 +140,63 @@ public class ResultsService {
             String classScore = "";
             String examScore = "";
             String calculatedExamScore = "";
+    public GenerateStudentResult generateStudentResult(
+            Results result, String resumingDate, String totalAttendance
+    ) {
+
+        try {
+            String studentId = result.getStudent().getStudentId();
+            String studentName = result.getStudent().getFirstName() +
+                    " " + result.getStudent().getLastName();
+            String className = result.getLevel().getLevelName();
+            String semesterName = result.getSemester().getSemesterName();
+            String totalScore = result.getTotalScore().toString();
+            String averageScore = result.getAverageScore().toString();
+            String position = result.getPosition();
+            String academicYear = result.getSemester().getAcademicYear();
+            String totalStudents = String.valueOf(result.getLevel().getStudents().size());
+            String vacationDate = result.getSemester().getSemesterEndDate().toString();
+            String attendancePresent = String.valueOf(
+                    attendanceService.getStudentPresentAttendance(studentId, result.getSemester().getSemesterID())
+            );
+
+            String instructorName = result.getLevel().getStaff().getFirstName() +
+                    " " + result.getLevel().getStaff().getLastName();
+            String currentDate = LocalDate.now().toString();
+
+            //Get subject scores
+            List<SubjectReportDTO> scores = new ArrayList<>();
+
+            List<SubjectScore> subjectScores = result.getSubjectScores();
+            for (SubjectScore subjectScore : subjectScores) {
+
+                SubjectReportDTO score = new SubjectReportDTO(
+                        subjectScore.getSubject().getSubjectName(),
+                        subjectScore.getClassScore().toString(),
+                        subjectScore.getCalculatedExamScore().toString(),
+                        subjectScore.getTotalScore().toString(),
+                        subjectScore.getGrade(),
+                        subjectScore.getGradeDescriptor()
+                );
+
+                scores.add(score);
+            }
+
+            return new GenerateStudentResult(
+                    studentId, studentName, className, semesterName,
+                    position, totalScore, averageScore, academicYear,
+                    totalStudents, vacationDate, resumingDate, attendancePresent,
+                    totalAttendance, instructorName, currentDate, "-", scores
+            );
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
+    /*===============================================
+                          Helpers
+     ================================================*/
 
             List<SubjectScore> subjectScores = results.getSubjectScores();
             for (SubjectScore subjectScore : subjectScores) {
