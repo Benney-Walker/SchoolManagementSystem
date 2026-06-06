@@ -172,7 +172,17 @@ public class AdminController {
         return reportService.generateClassBulkReport(staffId, levelId, semesterId);
     }
 
+    @GetMapping(
+            value = "/v2/generate-sba-report",
+            produces = MediaType.APPLICATION_PDF_VALUE
+    )
+    public ResponseEntity<?> generateSbaReport(@RequestHeader("staffId") String staffId,
+                                               @RequestParam String levelId,
+                                               @RequestParam String semesterId,
+                                               @RequestParam String subjectId) {
 
+        return reportService.generateSbaReport(staffId, levelId, semesterId, subjectId);
+    }
 
     @GetMapping("/v1/recent-logs")
     public ResponseEntity<?> getRecentActivities(@RequestHeader("staffId") String staffId) {
