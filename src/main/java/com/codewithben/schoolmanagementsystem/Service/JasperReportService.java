@@ -83,7 +83,7 @@ public class JasperReportService {
             if (template == null) {
                 throw new FileNotFoundException("Report template not found");
             }
-            cachedStudentReport = (JasperReport)  JRLoader.loadObject(template);
+            cachedSbaReport = (JasperReport)  JRLoader.loadObject(template);
         }
         return cachedSbaReport;
     }
