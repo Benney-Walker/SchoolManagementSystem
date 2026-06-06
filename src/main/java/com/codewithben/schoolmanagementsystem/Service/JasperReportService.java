@@ -1,6 +1,7 @@
 package com.codewithben.schoolmanagementsystem.Service;
 
-import com.codewithben.schoolmanagementsystem.DTO.Report.GenerateStudentReport;
+import com.codewithben.schoolmanagementsystem.DTO.Report.GenerateStudentResult;
+import com.codewithben.schoolmanagementsystem.DTO.Report.SbaReport;
 import net.sf.jasperreports.engine.*;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import net.sf.jasperreports.engine.util.JRLoader;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Service;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,22 +23,36 @@ public class JasperReportService {
     private JasperReport cachedSbaReport;
 
     public byte[] generateClassReportCards(
-            List<GenerateStudentReport> generateStudentReports,
+            List<GenerateStudentResult> generateStudentResults,
             String schoolName) throws Exception {
 
-        if (generateStudentReports == null) {
-            throw new IllegalArgumentException("No report data available");
-        }
-
-        JasperReport jasperReport = getCompiledReport();
+        JasperReport jasperReport = getCompiledStudentReport();
 
         JRBeanCollectionDataSource dataSource =
-                new JRBeanCollectionDataSource(generateStudentReports);
+                new JRBeanCollectionDataSource(generateStudentResults);
 
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("schoolName", schoolName);
-        parameters.put("logoPath", "reports/daffodils Logo.png");
-        parameters.put("signaturePath", "reports/Signature.png");
+        parameters.put("logoPath", "reports/daffodils_Logo.png");
+        parameters.put("signaturePath", "reports/principal_signature.png");
+
+        JasperPrint print =
+                JasperFillManager.fillReport(jasperReport, parameters, dataSource);
+
+        return JasperExportManager.exportReportToPdf(print);
+    }
+
+    public byte[] generateSbaReport(SbaReport sbaReport, String schoolName) throws Exception {
+        JasperReport jasperReport = getCompiledSbaReport();
+
+        JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(
+                Collections.singletonList(sbaReport)
+        );
+
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("schoolName", schoolName);
+        parameters.put("logoPath", "reports/daffodils_Logo.png");
+        parameters.put("signaturePath", "reports/principal_signature.png");
 
         JasperPrint print =
                 JasperFillManager.fillReport(jasperReport, parameters, dataSource);
