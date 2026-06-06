@@ -20,7 +20,7 @@ public class StudentController {
 
     private final ScoresService scoresService;
 
-    private final ResultsService resultsService;
+    private final AttendanceService attendanceService;
 
     @GetMapping("/v1/absent-students")
     public ResponseEntity<?> getAbsentees(@RequestHeader("staffId") String staffId) {
@@ -55,15 +55,6 @@ public class StudentController {
 
         return studentService.addNewStudent(firstName, lastName, gender, dateOfBirth, hometown, parentName,
                     guardianContact, levelId, staffId);
-    }
-
-    @GetMapping("/v1/search-student-results")
-    public ResponseEntity<?> getStudentResults(@RequestHeader("staffId") String staffId,
-                                               @RequestParam String studentId,
-                                               @RequestParam String semesterId,
-                                               @RequestParam String classId) {
-
-        return resultsService.findStudentResults(studentId, semesterId, classId, staffId);
     }
 
     @GetMapping("/v1/load-subject-students/{subjectId}")
@@ -105,7 +96,7 @@ public class StudentController {
         String levelId = attendance.getLevelId();
         String status = attendance.getStatus().toUpperCase();
 
-        return studentService.markStudentAttendance(studentId, levelId, status, date, staffId);
+        return attendanceService.markStudentAttendance(studentId, levelId, status, date, staffId);
     }
 
     @GetMapping("/v1/load-students/{levelId}")
