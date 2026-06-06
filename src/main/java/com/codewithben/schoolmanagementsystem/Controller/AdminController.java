@@ -165,11 +165,11 @@ public class AdminController {
             value = "/v2/generate-class-report",
             produces = MediaType.APPLICATION_PDF_VALUE
     )
-    public ResponseEntity<?> generateStudentReports(@RequestHeader("staffId") String staffId,
+    public ResponseEntity<?> generateBulkClassReports(@RequestHeader("staffId") String staffId,
                                                     @RequestParam String levelId,
                                                     @RequestParam String semesterId) {
 
-        return reportService.getClassBulkReport(staffId, levelId, semesterId);
+        return reportService.generateClassBulkReport(staffId, levelId, semesterId);
     }
 
 
