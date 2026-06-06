@@ -37,12 +37,11 @@ public class ReportService {
 
     private final StudentService studentService;
 
-    public ResponseEntity<?> getClassBulkReport(String staffId, String levelId, String semesterId) {
-        String logData = "Class Id: " + levelId + " Semester Id: " + semesterId;
+    public ResponseEntity<?> generateClassBulkReport(String staffId, String levelId, String semesterId) {
 
         Level level = levelRepository.findByLevelID(levelId).orElse(null);
         if (level == null) {
-            loggingService.logGeneralActivity(LogType.RESULT, LogAction.READ, "Invalid class Id", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.REPORT, LogAction.READ, "Invalid class Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Invalid Level ID"
             ));
@@ -50,39 +49,42 @@ public class ReportService {
 
         Semester semester = semesterRepository.findBySemesterID(semesterId).orElse(null);
         if (semester == null) {
-            loggingService.logGeneralActivity(LogType.RESULT, LogAction.READ, "Invalid Term Id", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.REPORT, LogAction.READ, "Invalid Term Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Invalid Semester ID"
             ));
         }
 
         String totalAttendance = String.valueOf(
-                studentService.getTotalAttendanceCount(semester)
+                attendanceService.getTotalAttendanceCount(semester)
         );
         String resumingDate = getResumingDate(level,  semester);
 
-        try {
-            List<GenerateStudentReport> reportData = generateClassReports(level, semester, resumingDate, totalAttendance);
-
-            byte[] reportPDF = jasperReportService.generateClassReportCards(reportData, level.getInstitution().getInstitutionId());
-
-            loggingService.logGeneralActivity(LogType.RESULT, LogAction.READ, "N/A", staffId, LogStatus.SUCCESS);
-            return ResponseEntity.ok().body(reportPDF);
-
-        } catch (IllegalArgumentException ex) {
-            ex.printStackTrace();
-
-            loggingService.logGeneralActivity(LogType.RESULT, LogAction.READ, "Class has no records for this semester", staffId, LogStatus.FAILED);
+        List<Results> classResultsList = resultsRepository
+                .findByLevel_LevelIDAndSemester_SemesterID(levelId, semesterId);
+        if (classResultsList == null || classResultsList.isEmpty()) {
+            loggingService.logGeneralActivity(LogType.REPORT, LogAction.READ, "No records are found", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "Class has no records for this semester"
+                    "message", "No records are found"
             ));
-        } catch (Exception e) {
-            e.printStackTrace();
+        }
 
-            loggingService.logGeneralActivity(LogType.RESULT, LogAction.READ, "Internal Server Error! Contact developers", staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
-                    "message", "Internal Server Error! Contact developers"
-            ));
+        List<GenerateStudentResult> reportData = new ArrayList<>();
+        //retrieve results
+        for (Results result : classResultsList) {
+            reportData.add(
+                    resultsService.generateStudentResult(result, resumingDate, totalAttendance)
+            );
+        }
+
+        try {
+
+            byte[] studentBulkReportPdf = jasperReportService.generateClassReportCards(reportData, level.getInstitution().getInstitutionName());
+
+            loggingService.logGeneralActivity(LogType.REPORT, LogAction.READ, "N/A", staffId, LogStatus.SUCCESS);
+            return ResponseEntity.ok().body(studentBulkReportPdf);
+        } catch (Exception e) {
+            throw new RuntimeException("Error while generating report for " + e);
         }
     }
 
