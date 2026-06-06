@@ -109,7 +109,7 @@ public class StaffController {
         return classService.loadClassesForCache(staffId);
     }
 
-    @GetMapping("/v2/load-classes")
+    @GetMapping("/v1/load-classes")
     public ResponseEntity<?> loadClassesForCache(@RequestHeader("staffId") String staffId) {
 
         return classService.loadClassesForCache(staffId);
