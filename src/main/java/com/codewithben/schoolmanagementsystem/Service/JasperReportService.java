@@ -51,7 +51,15 @@ public class JasperReportService {
                 throw new FileNotFoundException("Report template not found");
             }
             cachedReport = (JasperReport)  JRLoader.loadObject(template);
+    private JasperReport getCompiledSbaReport() throws JRException, IOException {
+        if (cachedSbaReport == null) {
+            InputStream template = getClass()
+                    .getResourceAsStream("/reports/sba_report.jasper");
+            if (template == null) {
+                throw new FileNotFoundException("Report template not found");
+            }
+            cachedStudentReport = (JasperReport)  JRLoader.loadObject(template);
         }
-        return cachedReport;
+        return cachedSbaReport;
     }
 }
