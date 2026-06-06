@@ -31,6 +31,8 @@ public class StaffController {
 
     private final ConductService conductService;
 
+    private final StudentService studentService;
+
 
     @GetMapping("/v1/total-staffs")
     public ResponseEntity<?> loadTotalStaffs(@RequestHeader("staffId") String staffId) {
@@ -64,7 +66,7 @@ public class StaffController {
     }
 
 
-    @GetMapping("/v2/view-class-results")
+    @GetMapping("/v1/view-class-results")
     public ResponseEntity<?> viewClassSemesterResults(@RequestHeader("staffId") String staffId,
                                                       @RequestParam String levelId,
                                                       @RequestParam String semesterId) {
@@ -86,7 +88,7 @@ public class StaffController {
                                                 @PathVariable String levelId,
                                                 @PathVariable String studentId) {
 
-        return reportService.promoteStudent(studentId, levelId, staffId);
+        return studentService.promoteStudent(studentId, levelId, staffId);
     }
 
     @GetMapping("/v1/load-staffs-info")
