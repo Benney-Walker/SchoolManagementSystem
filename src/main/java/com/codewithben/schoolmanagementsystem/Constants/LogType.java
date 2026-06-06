@@ -4,7 +4,6 @@ public enum LogType {
     ATTENDANCE,
     CONDUCT,
     FEES,
-    FEES_REPORT,
     GRADE,
     INSTITUTION,
     CLASS,
