@@ -83,6 +83,14 @@ public class StaffController {
         return resultsService.viewSba(staffId, classId, semesterId, subjectId);
     }
 
+    @GetMapping("/v1/view-master-sheet")
+    public ResponseEntity<?> viewMasterSheet(@RequestHeader("staffId") String staffId,
+                                             @RequestParam String levelId,
+                                             @RequestParam String semesterId) {
+
+        return resultsService.viewMasterScoreSheet(levelId, semesterId, staffId);
+    }
+
     @PostMapping("/v1/promote-student/{studentId}/{levelId}")
     public ResponseEntity<?> movePassedStudents(@RequestHeader("staffId") String staffId,
                                                 @PathVariable String levelId,
