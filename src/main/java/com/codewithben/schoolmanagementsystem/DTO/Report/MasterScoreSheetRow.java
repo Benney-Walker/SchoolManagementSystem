@@ -18,9 +18,7 @@ public class MasterScoreSheetRow {
 
     private String studentName;
 
-    private List<String> subjects;
-
-    private Map<String, Double> subjectScore;
+    private Map<String, Double> subjectScores;
 
     private Double studentTotalScore;
 
