@@ -9,8 +9,6 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
-
 @AllArgsConstructor
 @RestController
 @RequestMapping("/api/student")
@@ -48,7 +46,7 @@ public class StudentController {
         String lastName = addNewStudent.getLastName();
         String levelId = addNewStudent.getLevelId();
         String gender = addNewStudent.getGender();
-        LocalDate dateOfBirth = addNewStudent.getDateOfBirth();
+        String dateOfBirth = addNewStudent.getDateOfBirth();
         String hometown = addNewStudent.getHomeTown();
         String parentName = addNewStudent.getParentName();
         String guardianContact = addNewStudent.getGuardianContact();
