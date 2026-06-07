@@ -16,7 +16,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -34,17 +33,9 @@ public class StudentService {
 
     private final UtilityClass utilityClass;
 
-    private final SubjectsRepository subjectsRepository;
-
     private final SemesterRepository semesterRepository;
 
-    private final ResultsRepository resultsRepository;
-
     private final InstitutiionRepository institutionRepository;
-
-    private final SubjectScoreRepository subjectScoreRepository;
-
-    private final GradeSystemRepository gradeSystemRepository;
 
     private final AttendanceRepository attendanceRepository;
 
@@ -52,24 +43,30 @@ public class StudentService {
 
     //Method for adding new student
     @Transactional
-    public ResponseEntity<?> addNewStudent(String firstName, String lastName, String gender, LocalDate dateOfBirth, String hometown,
-                                String parentName, String parentContact, String levelId, String staffId) {
+    public ResponseEntity<?> addNewStudent(String firstName, String lastName, String gender, String dateOfBirth, String hometown,
+                                           String parentName, String parentContact, String levelId, String staffId) {
 
         if (parentContact.length() != 10) {
-            loggingService.logGeneralActivity(LogType.STUDENT, LogAction.UPDATE, "Invalid parent phone number", staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid parent phone number");
+            loggingService.logGeneralActivity(LogType.STUDENT, LogAction.CREATE, "Invalid parent phone number", staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                    "message", "Invalid parent phone number"
+            ));
         }
 
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staff == null) {
             loggingService.logGeneralActivity(LogType.STUDENT, LogAction.CREATE, "Invalid staff Id", staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Could not save student");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                    "message", "Invalid staff Id"
+            ));
         }
 
         Level level = levelRepository.findByLevelID(levelId).orElse(null);
         if (level == null) {
             loggingService.logGeneralActivity(LogType.STUDENT, LogAction.CREATE, "Invalid Class Id", staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Selected class not found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Invalid class Id"
+            ));
         }
 
         Students student = studentsRepository.findByFirstNameAndLastName(firstName, lastName).orElse(null);
@@ -82,7 +79,7 @@ public class StudentService {
             student.setFirstName(firstName);
             student.setLastName(lastName);
             student.setGender(gender);
-            student.setDateOfBirth(dateOfBirth);
+            student.setDateOfBirth(LocalDate.parse(dateOfBirth));
             student.setHomeTown(hometown);
             student.setParentName(parentName);
             student.setParentPhoneNumber(parentContact);
@@ -115,16 +112,19 @@ public class StudentService {
         }
 
         loggingService.logGeneralActivity(LogType.STUDENT, LogAction.CREATE, "Student already exist", staffId, LogStatus.FAILED);
-        return ResponseEntity.status(HttpStatus.CONFLICT).body("Student already exist");
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                "message", "Student already exist"
+        ));
     }
 
     public ResponseEntity<?> findStudent(String studentId, String staffId) {
-        String logData = "Student Id: " + studentId;
 
         Students student = studentsRepository.findByStudentId(studentId).orElse(null);
         if (student == null) {
             loggingService.logGeneralActivity(LogType.STUDENT, LogAction.READ, "Invalid Student Id", staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Student not found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Invalid student Id"
+            ));
         }
 
         loggingService.logGeneralActivity(LogType.STUDENT, LogAction.READ, "N/A", staffId, LogStatus.SUCCESS);
@@ -238,18 +238,24 @@ public class StudentService {
         Students student = studentsRepository.findByStudentId(data.getStudentId()).orElse(null);
         if (student == null) {
             loggingService.logGeneralActivity(LogType.STUDENT, LogAction.UPDATE, "Invalid student Id", staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Student not found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Invalid Student Id"
+            ));
         }
 
         if (data.getParentPhoneNumber().length() != 10) {
             loggingService.logGeneralActivity(LogType.STUDENT, LogAction.UPDATE, "Invalid parent phone number", staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid parent phone number");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                    "message", "Invalid parent phone number"
+            ));
         }
 
         Level level = levelRepository.findByLevelID(data.getGradeId()).orElse(null);
         if (level == null) {
             loggingService.logGeneralActivity(LogType.STUDENT, LogAction.UPDATE, "Invalid class Id", staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Class not found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Invalid class Id"
+            ));
         }
 
         try {
