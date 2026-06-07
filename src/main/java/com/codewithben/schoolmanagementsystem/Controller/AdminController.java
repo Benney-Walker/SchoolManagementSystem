@@ -184,6 +184,17 @@ public class AdminController {
         return reportService.generateSbaReport(staffId, levelId, semesterId, subjectId);
     }
 
+    @GetMapping(
+            value = "/v2/generate-master-sheet",
+            produces = MediaType.APPLICATION_PDF_VALUE
+    )
+    public ResponseEntity<?> generateMasterScoreSheet(@RequestHeader("staffId") String staffId,
+                                               @RequestParam String levelId,
+                                               @RequestParam String semesterId) {
+
+        return reportService.generateMasterScoreSheet(levelId, semesterId, staffId);
+    }
+
     @GetMapping("/v1/recent-logs")
     public ResponseEntity<?> getRecentActivities(@RequestHeader("staffId") String staffId) {
 
