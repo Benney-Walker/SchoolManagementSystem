@@ -17,5 +17,9 @@ public class MasterScoreSheet {
 
     private String semesterName;
 
+    private String academicYear;
+
+    private List<String> subjects;
+
     private List<MasterScoreSheetRow> records;
 }
