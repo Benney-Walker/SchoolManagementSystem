@@ -193,7 +193,7 @@ public class ResultsService {
                     studentId, studentName, className, semesterName,
                     position, totalScore, averageScore, academicYear,
                     totalStudents, vacationDate, resumingDate, attendancePresent,
-                    totalAttendance, instructorName, currentDate, "-", scores
+                    totalAttendance, instructorName, currentDate, "-", scores, null
             );
         } catch (Exception e) {
             throw new RuntimeException(e);
