@@ -40,6 +40,7 @@
     <field name="currentDate" class="java.lang.String"/>
     <field name="promotedTo" class="java.lang.String"/>
     <field name="subjectScores" class="java.util.List"/>
+    <field name="studentConductReport" class="com.codewithben.schoolmanagementsystem.DTO.Conduct.StudentConductReport"/>
     <detail>
         <band height="802" splitType="Stretch">
             <element kind="image" uuid="c1234567-89ab-cdef-0123-456789abcdef" x="10" y="0" width="70" height="70" scaleImage="RetainShape">
@@ -232,277 +233,278 @@
                     <pen lineWidth="0.5"/>
                 </box>
             </element>
-            <element kind="staticText" uuid="67756978-dbce-4ed0-bc1e-d4f54a7e6042" positionType="Float" x="10" y="265" width="135" height="15">
+
+            <element kind="staticText" uuid="550eebf2-1c88-4d61-9f82-62bde028b9ce" positionType="Float" x="10" y="265" width="135" height="15">
                 <text><![CDATA[ REGULAR]]></text>
                 <box>
                     <pen lineWidth="0.5"/>
                 </box>
             </element>
-            <element kind="staticText" uuid="f0c469d3-8cb0-461e-9cf5-cd2473beb172" positionType="Float" x="145" y="265" width="80" height="15">
-                <text><![CDATA[]]></text>
+            <element kind="textField" uuid="7d4f524f-15ee-4b2f-895b-f29d7df18afb" positionType="Float" x="145" y="265" width="80" height="15" fontSize="11.0" hTextAlign="Center" bold="true">
+                <expression><![CDATA[$F{studentConductReport} != null && "EXCELLENT".equals($F{studentConductReport}.getRegular()) ? "✓" : ""]]></expression>
                 <box>
                     <pen lineWidth="0.5"/>
                 </box>
             </element>
-            <element kind="staticText" uuid="d8688331-186c-4255-88f9-c593146a8f78" positionType="Float" x="225" y="265" width="80" height="15">
-                <text><![CDATA[]]></text>
+            <element kind="textField" uuid="33c68e74-ce68-468b-a8a9-c275ef2ff301" positionType="Float" x="225" y="265" width="80" height="15" fontSize="11.0" hTextAlign="Center" bold="true">
+                <expression><![CDATA[$F{studentConductReport} != null && "VERY_GOOD".equals($F{studentConductReport}.getRegular()) ? "✓" : ""]]></expression>
                 <box>
                     <pen lineWidth="0.5"/>
                 </box>
             </element>
-            <element kind="staticText" uuid="d7399432-3e60-47fb-8126-b60aeaa11da2" positionType="Float" x="305" y="265" width="80" height="15">
-                <text><![CDATA[]]></text>
+            <element kind="textField" uuid="02f72012-4665-4621-897e-b4e5cd8b5527" positionType="Float" x="305" y="265" width="80" height="15" fontSize="11.0" hTextAlign="Center" bold="true">
+                <expression><![CDATA[$F{studentConductReport} != null && "GOOD".equals($F{studentConductReport}.getRegular()) ? "✓" : ""]]></expression>
                 <box>
                     <pen lineWidth="0.5"/>
                 </box>
             </element>
-            <element kind="staticText" uuid="56dbe770-e1be-4a53-87e1-42bf1c38e379" positionType="Float" x="385" y="265" width="80" height="15">
-                <text><![CDATA[]]></text>
+            <element kind="textField" uuid="e28a85d9-6645-44ca-90bd-20a9a4e96b8c" positionType="Float" x="385" y="265" width="80" height="15" fontSize="11.0" hTextAlign="Center" bold="true">
+                <expression><![CDATA[$F{studentConductReport} != null && "FAIR".equals($F{studentConductReport}.getRegular()) ? "✓" : ""]]></expression>
                 <box>
                     <pen lineWidth="0.5"/>
                 </box>
             </element>
-            <element kind="staticText" uuid="17e66c59-88f6-409d-bdc7-67a51ef73db2" positionType="Float" x="465" y="265" width="80" height="15">
-                <text><![CDATA[]]></text>
+            <element kind="textField" uuid="ee89d7c0-7bd1-45e8-9347-23159f440116" positionType="Float" x="465" y="265" width="80" height="15" fontSize="11.0" hTextAlign="Center" bold="true">
+                <expression><![CDATA[$F{studentConductReport} != null && "NOT_TO_EXPECTATION".equals($F{studentConductReport}.getRegular()) ? "✓" : ""]]></expression>
                 <box>
                     <pen lineWidth="0.5"/>
                 </box>
             </element>
-            <element kind="staticText" uuid="db7eda57-0155-4ada-93cb-10d79b4e2859" positionType="Float" x="10" y="280" width="135" height="15">
+            <element kind="staticText" uuid="adecae08-a35e-4363-a342-f717df8807be" positionType="Float" x="10" y="280" width="135" height="15">
                 <text><![CDATA[ PUNCTUAL]]></text>
                 <box>
                     <pen lineWidth="0.5"/>
                 </box>
             </element>
-            <element kind="staticText" uuid="50b75faf-e255-4b37-a80d-1b89c9d5c8ce" positionType="Float" x="145" y="280" width="80" height="15">
-                <text><![CDATA[]]></text>
+            <element kind="textField" uuid="b3da5f62-342c-4b1c-a768-9aae6c0562a4" positionType="Float" x="145" y="280" width="80" height="15" fontSize="11.0" hTextAlign="Center" bold="true">
+                <expression><![CDATA[$F{studentConductReport} != null && "EXCELLENT".equals($F{studentConductReport}.getPunctual()) ? "✓" : ""]]></expression>
                 <box>
                     <pen lineWidth="0.5"/>
                 </box>
             </element>
-            <element kind="staticText" uuid="9818b263-27c8-40bd-a359-70a9c34ad01c" positionType="Float" x="225" y="280" width="80" height="15">
-                <text><![CDATA[]]></text>
+            <element kind="textField" uuid="8df4f3cb-4284-44f3-8f3f-2d7557e0cc23" positionType="Float" x="225" y="280" width="80" height="15" fontSize="11.0" hTextAlign="Center" bold="true">
+                <expression><![CDATA[$F{studentConductReport} != null && "VERY_GOOD".equals($F{studentConductReport}.getPunctual()) ? "✓" : ""]]></expression>
                 <box>
                     <pen lineWidth="0.5"/>
                 </box>
             </element>
-            <element kind="staticText" uuid="1ff8e0f4-caad-4101-9ab5-ae495b63d783" positionType="Float" x="305" y="280" width="80" height="15">
-                <text><![CDATA[]]></text>
+            <element kind="textField" uuid="15be6f15-cbd5-4bf3-bd57-ba393caaff7c" positionType="Float" x="305" y="280" width="80" height="15" fontSize="11.0" hTextAlign="Center" bold="true">
+                <expression><![CDATA[$F{studentConductReport} != null && "GOOD".equals($F{studentConductReport}.getPunctual()) ? "✓" : ""]]></expression>
                 <box>
                     <pen lineWidth="0.5"/>
                 </box>
             </element>
-            <element kind="staticText" uuid="a763f20e-ddba-4bae-ac37-871425e6a448" positionType="Float" x="385" y="280" width="80" height="15">
-                <text><![CDATA[]]></text>
+            <element kind="textField" uuid="c71d492e-2800-4b31-b75f-41e5729fe80c" positionType="Float" x="385" y="280" width="80" height="15" fontSize="11.0" hTextAlign="Center" bold="true">
+                <expression><![CDATA[$F{studentConductReport} != null && "FAIR".equals($F{studentConductReport}.getPunctual()) ? "✓" : ""]]></expression>
                 <box>
                     <pen lineWidth="0.5"/>
                 </box>
             </element>
-            <element kind="staticText" uuid="182398fb-89a3-4090-b3a5-9bc89eaeba6b" positionType="Float" x="465" y="280" width="80" height="15">
-                <text><![CDATA[]]></text>
+            <element kind="textField" uuid="fe23e239-fbae-4715-8979-a8f76b2cb04c" positionType="Float" x="465" y="280" width="80" height="15" fontSize="11.0" hTextAlign="Center" bold="true">
+                <expression><![CDATA[$F{studentConductReport} != null && "NOT_TO_EXPECTATION".equals($F{studentConductReport}.getPunctual()) ? "✓" : ""]]></expression>
                 <box>
                     <pen lineWidth="0.5"/>
                 </box>
             </element>
-            <element kind="staticText" uuid="54ae15a1-8424-4329-8ba4-27ad5d4b1f9d" positionType="Float" x="10" y="295" width="135" height="15">
+            <element kind="staticText" uuid="f95b5229-aec8-49c4-9a08-79cf8dcc9342" positionType="Float" x="10" y="295" width="135" height="15">
                 <text><![CDATA[ PHYSICAL APPEARANCE]]></text>
                 <box>
                     <pen lineWidth="0.5"/>
                 </box>
             </element>
-            <element kind="staticText" uuid="444707ae-e121-4ae2-832a-9e4e4ef27a7c" positionType="Float" x="145" y="295" width="80" height="15">
-                <text><![CDATA[]]></text>
+            <element kind="textField" uuid="f6fb2089-8415-457d-95a7-91534b7b25ec" positionType="Float" x="145" y="295" width="80" height="15" fontSize="11.0" hTextAlign="Center" bold="true">
+                <expression><![CDATA[$F{studentConductReport} != null && "EXCELLENT".equals($F{studentConductReport}.getPhysicalAppearance()) ? "✓" : ""]]></expression>
                 <box>
                     <pen lineWidth="0.5"/>
                 </box>
             </element>
-            <element kind="staticText" uuid="9e61cc2b-855a-4192-9ec1-12d4765ee3a7" positionType="Float" x="225" y="295" width="80" height="15">
-                <text><![CDATA[]]></text>
+            <element kind="textField" uuid="a9125e7e-7df7-4283-bd4b-edb8fd103567" positionType="Float" x="225" y="295" width="80" height="15" fontSize="11.0" hTextAlign="Center" bold="true">
+                <expression><![CDATA[$F{studentConductReport} != null && "VERY_GOOD".equals($F{studentConductReport}.getPhysicalAppearance()) ? "✓" : ""]]></expression>
                 <box>
                     <pen lineWidth="0.5"/>
                 </box>
             </element>
-            <element kind="staticText" uuid="3de4e2d4-9ca1-4224-b012-abea0270aa55" positionType="Float" x="305" y="295" width="80" height="15">
-                <text><![CDATA[]]></text>
+            <element kind="textField" uuid="a5ada590-96e0-4797-a3f2-b00206033dcd" positionType="Float" x="305" y="295" width="80" height="15" fontSize="11.0" hTextAlign="Center" bold="true">
+                <expression><![CDATA[$F{studentConductReport} != null && "GOOD".equals($F{studentConductReport}.getPhysicalAppearance()) ? "✓" : ""]]></expression>
                 <box>
                     <pen lineWidth="0.5"/>
                 </box>
             </element>
-            <element kind="staticText" uuid="a86d2ac0-f6e5-48fe-a9fb-c49a33c4fbbb" positionType="Float" x="385" y="295" width="80" height="15">
-                <text><![CDATA[]]></text>
+            <element kind="textField" uuid="dcbddcc8-2a5e-42ca-b4d3-52b571b96ee8" positionType="Float" x="385" y="295" width="80" height="15" fontSize="11.0" hTextAlign="Center" bold="true">
+                <expression><![CDATA[$F{studentConductReport} != null && "FAIR".equals($F{studentConductReport}.getPhysicalAppearance()) ? "✓" : ""]]></expression>
                 <box>
                     <pen lineWidth="0.5"/>
                 </box>
             </element>
-            <element kind="staticText" uuid="81a53912-16e8-4170-9b59-1ddf43a907fb" positionType="Float" x="465" y="295" width="80" height="15">
-                <text><![CDATA[]]></text>
+            <element kind="textField" uuid="f992efc0-3a16-47e3-af34-f2790cb23a84" positionType="Float" x="465" y="295" width="80" height="15" fontSize="11.0" hTextAlign="Center" bold="true">
+                <expression><![CDATA[$F{studentConductReport} != null && "NOT_TO_EXPECTATION".equals($F{studentConductReport}.getPhysicalAppearance()) ? "✓" : ""]]></expression>
                 <box>
                     <pen lineWidth="0.5"/>
                 </box>
             </element>
-            <element kind="staticText" uuid="466409f8-12ad-44ca-84d1-5a258580006d" positionType="Float" x="10" y="310" width="135" height="15">
+            <element kind="staticText" uuid="189dce1b-ca73-47fd-b67c-0d324e5b665e" positionType="Float" x="10" y="310" width="135" height="15">
                 <text><![CDATA[ SOCIAL]]></text>
                 <box>
                     <pen lineWidth="0.5"/>
                 </box>
             </element>
-            <element kind="staticText" uuid="200d6882-5e89-4251-a626-c97a3c2fd7a8" positionType="Float" x="145" y="310" width="80" height="15">
-                <text><![CDATA[]]></text>
+            <element kind="textField" uuid="d50272e6-398f-43d3-a62f-2c01b1e8a54b" positionType="Float" x="145" y="310" width="80" height="15" fontSize="11.0" hTextAlign="Center" bold="true">
+                <expression><![CDATA[$F{studentConductReport} != null && "EXCELLENT".equals($F{studentConductReport}.getSocial()) ? "✓" : ""]]></expression>
                 <box>
                     <pen lineWidth="0.5"/>
                 </box>
             </element>
-            <element kind="staticText" uuid="a0786c0f-757f-4f17-9b77-9f1afc0f260b" positionType="Float" x="225" y="310" width="80" height="15">
-                <text><![CDATA[]]></text>
+            <element kind="textField" uuid="ed485a07-1261-4d58-a784-be1c6388f64b" positionType="Float" x="225" y="310" width="80" height="15" fontSize="11.0" hTextAlign="Center" bold="true">
+                <expression><![CDATA[$F{studentConductReport} != null && "VERY_GOOD".equals($F{studentConductReport}.getSocial()) ? "✓" : ""]]></expression>
                 <box>
                     <pen lineWidth="0.5"/>
                 </box>
             </element>
-            <element kind="staticText" uuid="3180e2d3-393a-411a-b419-759d53bef596" positionType="Float" x="305" y="310" width="80" height="15">
-                <text><![CDATA[]]></text>
+            <element kind="textField" uuid="a5a31340-a35a-422d-a089-8d2933b21841" positionType="Float" x="305" y="310" width="80" height="15" fontSize="11.0" hTextAlign="Center" bold="true">
+                <expression><![CDATA[$F{studentConductReport} != null && "GOOD".equals($F{studentConductReport}.getSocial()) ? "✓" : ""]]></expression>
                 <box>
                     <pen lineWidth="0.5"/>
                 </box>
             </element>
-            <element kind="staticText" uuid="67c845b8-3ea1-4f9f-88a5-7a344092a76c" positionType="Float" x="385" y="310" width="80" height="15">
-                <text><![CDATA[]]></text>
+            <element kind="textField" uuid="b3b56379-1434-4002-ab7b-d2d407a00fef" positionType="Float" x="385" y="310" width="80" height="15" fontSize="11.0" hTextAlign="Center" bold="true">
+                <expression><![CDATA[$F{studentConductReport} != null && "FAIR".equals($F{studentConductReport}.getSocial()) ? "✓" : ""]]></expression>
                 <box>
                     <pen lineWidth="0.5"/>
                 </box>
             </element>
-            <element kind="staticText" uuid="b311f59f-a428-486f-9516-84130bf5782f" positionType="Float" x="465" y="310" width="80" height="15">
-                <text><![CDATA[]]></text>
+            <element kind="textField" uuid="091b08c0-a1a4-45df-8396-61c2a7c54a10" positionType="Float" x="465" y="310" width="80" height="15" fontSize="11.0" hTextAlign="Center" bold="true">
+                <expression><![CDATA[$F{studentConductReport} != null && "NOT_TO_EXPECTATION".equals($F{studentConductReport}.getSocial()) ? "✓" : ""]]></expression>
                 <box>
                     <pen lineWidth="0.5"/>
                 </box>
             </element>
-            <element kind="staticText" uuid="65c12094-dd60-41c9-be80-32e25d61a80e" positionType="Float" x="10" y="325" width="135" height="15">
+            <element kind="staticText" uuid="b69ba2ba-0520-447a-ba0e-80bced50980a" positionType="Float" x="10" y="325" width="135" height="15">
                 <text><![CDATA[ EMOTIONAL]]></text>
                 <box>
                     <pen lineWidth="0.5"/>
                 </box>
             </element>
-            <element kind="staticText" uuid="800a5ca2-428d-4e5f-863a-5428a7b8ccba" positionType="Float" x="145" y="325" width="80" height="15">
-                <text><![CDATA[]]></text>
+            <element kind="textField" uuid="20772c38-ce27-4caf-b23e-b7f4be0d6b3e" positionType="Float" x="145" y="325" width="80" height="15" fontSize="11.0" hTextAlign="Center" bold="true">
+                <expression><![CDATA[$F{studentConductReport} != null && "EXCELLENT".equals($F{studentConductReport}.getEmotional()) ? "✓" : ""]]></expression>
                 <box>
                     <pen lineWidth="0.5"/>
                 </box>
             </element>
-            <element kind="staticText" uuid="de7350bf-f460-42e4-b122-b6c0cfc35ea3" positionType="Float" x="225" y="325" width="80" height="15">
-                <text><![CDATA[]]></text>
+            <element kind="textField" uuid="070468b2-fc67-4994-a0b2-88a984c0e3b6" positionType="Float" x="225" y="325" width="80" height="15" fontSize="11.0" hTextAlign="Center" bold="true">
+                <expression><![CDATA[$F{studentConductReport} != null && "VERY_GOOD".equals($F{studentConductReport}.getEmotional()) ? "✓" : ""]]></expression>
                 <box>
                     <pen lineWidth="0.5"/>
                 </box>
             </element>
-            <element kind="staticText" uuid="3247999e-55af-48fb-8459-b934e5715b8a" positionType="Float" x="305" y="325" width="80" height="15">
-                <text><![CDATA[]]></text>
+            <element kind="textField" uuid="9e5eb322-1960-4896-8c2c-869189cf5a93" positionType="Float" x="305" y="325" width="80" height="15" fontSize="11.0" hTextAlign="Center" bold="true">
+                <expression><![CDATA[$F{studentConductReport} != null && "GOOD".equals($F{studentConductReport}.getEmotional()) ? "✓" : ""]]></expression>
                 <box>
                     <pen lineWidth="0.5"/>
                 </box>
             </element>
-            <element kind="staticText" uuid="89bf241e-1585-42ff-97d3-aa8fcd686438" positionType="Float" x="385" y="325" width="80" height="15">
-                <text><![CDATA[]]></text>
+            <element kind="textField" uuid="0b3f14e9-2822-4382-a6d4-ddaa2ac262bb" positionType="Float" x="385" y="325" width="80" height="15" fontSize="11.0" hTextAlign="Center" bold="true">
+                <expression><![CDATA[$F{studentConductReport} != null && "FAIR".equals($F{studentConductReport}.getEmotional()) ? "✓" : ""]]></expression>
                 <box>
                     <pen lineWidth="0.5"/>
                 </box>
             </element>
-            <element kind="staticText" uuid="2581f7f9-83ef-4ae2-b304-a52f232c03b2" positionType="Float" x="465" y="325" width="80" height="15">
-                <text><![CDATA[]]></text>
+            <element kind="textField" uuid="5fe5f23d-1bb4-48d3-b719-0f5193347a7a" positionType="Float" x="465" y="325" width="80" height="15" fontSize="11.0" hTextAlign="Center" bold="true">
+                <expression><![CDATA[$F{studentConductReport} != null && "NOT_TO_EXPECTATION".equals($F{studentConductReport}.getEmotional()) ? "✓" : ""]]></expression>
                 <box>
                     <pen lineWidth="0.5"/>
                 </box>
             </element>
-            <element kind="staticText" uuid="e1780a86-b0ef-4b6b-a5b5-8742d76b3234" positionType="Float" x="10" y="340" width="135" height="15">
+            <element kind="staticText" uuid="c1e74556-185a-4a61-ae71-c82d0eb6e554" positionType="Float" x="10" y="340" width="135" height="15">
                 <text><![CDATA[ COGNITIVE SKILLS]]></text>
                 <box>
                     <pen lineWidth="0.5"/>
                 </box>
             </element>
-            <element kind="staticText" uuid="f156f361-0b03-46df-9fbc-f50c2377d230" positionType="Float" x="145" y="340" width="80" height="15">
-                <text><![CDATA[]]></text>
+            <element kind="textField" uuid="e4b57a63-c852-459b-9c57-78cadcea6c44" positionType="Float" x="145" y="340" width="80" height="15" fontSize="11.0" hTextAlign="Center" bold="true">
+                <expression><![CDATA[$F{studentConductReport} != null && "EXCELLENT".equals($F{studentConductReport}.getCognitiveSkills()) ? "✓" : ""]]></expression>
                 <box>
                     <pen lineWidth="0.5"/>
                 </box>
             </element>
-            <element kind="staticText" uuid="9166b45d-4ee0-4c44-85e0-e6df850af725" positionType="Float" x="225" y="340" width="80" height="15">
-                <text><![CDATA[]]></text>
+            <element kind="textField" uuid="b0556dd9-821a-4b84-9b44-2f62f65a2a34" positionType="Float" x="225" y="340" width="80" height="15" fontSize="11.0" hTextAlign="Center" bold="true">
+                <expression><![CDATA[$F{studentConductReport} != null && "VERY_GOOD".equals($F{studentConductReport}.getCognitiveSkills()) ? "✓" : ""]]></expression>
                 <box>
                     <pen lineWidth="0.5"/>
                 </box>
             </element>
-            <element kind="staticText" uuid="1dd27b28-956b-4cb9-82d2-c15afb24f9fb" positionType="Float" x="305" y="340" width="80" height="15">
-                <text><![CDATA[]]></text>
+            <element kind="textField" uuid="eb4abe27-9690-4f15-a50a-84c03744b03d" positionType="Float" x="305" y="340" width="80" height="15" fontSize="11.0" hTextAlign="Center" bold="true">
+                <expression><![CDATA[$F{studentConductReport} != null && "GOOD".equals($F{studentConductReport}.getCognitiveSkills()) ? "✓" : ""]]></expression>
                 <box>
                     <pen lineWidth="0.5"/>
                 </box>
             </element>
-            <element kind="staticText" uuid="d82fd8ab-8c3e-4a57-a352-bf1506ce45de" positionType="Float" x="385" y="340" width="80" height="15">
-                <text><![CDATA[]]></text>
+            <element kind="textField" uuid="6adabfdf-a8a2-4064-8d18-a2ce8c632780" positionType="Float" x="385" y="340" width="80" height="15" fontSize="11.0" hTextAlign="Center" bold="true">
+                <expression><![CDATA[$F{studentConductReport} != null && "FAIR".equals($F{studentConductReport}.getCognitiveSkills()) ? "✓" : ""]]></expression>
                 <box>
                     <pen lineWidth="0.5"/>
                 </box>
             </element>
-            <element kind="staticText" uuid="0823634a-0179-44a2-9be5-4060c2c05e66" positionType="Float" x="465" y="340" width="80" height="15">
-                <text><![CDATA[]]></text>
+            <element kind="textField" uuid="211d22ff-b669-435f-9fad-4c63d083ee13" positionType="Float" x="465" y="340" width="80" height="15" fontSize="11.0" hTextAlign="Center" bold="true">
+                <expression><![CDATA[$F{studentConductReport} != null && "NOT_TO_EXPECTATION".equals($F{studentConductReport}.getCognitiveSkills()) ? "✓" : ""]]></expression>
                 <box>
                     <pen lineWidth="0.5"/>
                 </box>
             </element>
-            <element kind="staticText" uuid="bdb108fd-38f7-4cf4-9136-900d95ebd41a" positionType="Float" x="10" y="370" width="80" height="15" bold="true">
+            <element kind="staticText" uuid="4c6ae812-78d9-45fc-8cd9-a238ce40cd8c" positionType="Float" x="10" y="370" width="80" height="15" bold="true">
                 <text><![CDATA[ATTENDANCE:]]></text>
             </element>
-            <element kind="textField" uuid="46552784-394b-4a4a-a455-671e9299f1d4" positionType="Float" x="90" y="370" width="50" height="15">
+            <element kind="textField" uuid="c931a17f-177c-471c-9ae8-2be0963c3c76" positionType="Float" x="90" y="370" width="50" height="15">
                 <expression><![CDATA[$F{attendancePresent}]]></expression>
             </element>
-            <element kind="staticText" uuid="630b3f1d-5ca4-4b18-88dd-9c43028742ce" positionType="Float" x="150" y="370" width="60" height="15" bold="true">
+            <element kind="staticText" uuid="47fee8c7-edce-4967-9369-07f565e68593" positionType="Float" x="150" y="370" width="60" height="15" bold="true">
                 <text><![CDATA[OUT OF:]]></text>
             </element>
-            <element kind="textField" uuid="f6b1c8bc-bcea-42bb-bd7d-5508c6741260" positionType="Float" x="210" y="370" width="50" height="15">
+            <element kind="textField" uuid="f70c0275-275e-4da4-b07e-7efdef9f03cc" positionType="Float" x="210" y="370" width="50" height="15">
                 <expression><![CDATA[$F{totalAttendance}]]></expression>
             </element>
-            <element kind="staticText" uuid="8b3aa91e-c1cb-465f-9474-0ed740b1b043" positionType="Float" x="300" y="370" width="90" height="15" bold="true">
+            <element kind="staticText" uuid="7f294409-e0de-4720-bb9e-99ee8a7d6f1b" positionType="Float" x="300" y="370" width="90" height="15" bold="true">
                 <text><![CDATA[PROMOTED TO:]]></text>
             </element>
-            <element kind="textField" uuid="15e61427-b882-48ad-8baf-1e17696db801" positionType="Float" x="390" y="370" width="120" height="15">
+            <element kind="textField" uuid="0cdacd65-c76e-485d-b681-1ea5ab15d6a5" positionType="Float" x="390" y="370" width="120" height="15">
                 <expression><![CDATA[$F{promotedTo}]]></expression>
             </element>
-            <element kind="staticText" uuid="2c308b7f-c4b4-40a2-8a4f-758bb548be26" positionType="Float" x="10" y="400" width="110" height="15" bold="true">
+            <element kind="staticText" uuid="4f928cb6-4720-4fcd-a9a9-c7d4206d085b" positionType="Float" x="10" y="400" width="110" height="15" bold="true">
                 <text><![CDATA[PECULIAR ISSUE:]]></text>
             </element>
-            <element kind="line" uuid="a1b2c3d4-e5f6-7890-abcd-ef1234567890" positionType="Float" x="120" y="413" width="425" height="1">
+            <element kind="line" uuid="aedabe9a-776e-4beb-b3b9-581b669dc787" positionType="Float" x="120" y="413" width="425" height="1">
                 <pen lineWidth="1.0" lineStyle="Dotted"/>
             </element>
-            <element kind="staticText" uuid="a7965c7a-a939-49b1-94ae-eafa61b24ac3" positionType="Float" x="10" y="430" width="170" height="15" bold="true">
+            <element kind="staticText" uuid="1f49c9ca-7cdc-4bfd-b344-9b6c75c34d6e" positionType="Float" x="10" y="430" width="170" height="15" bold="true">
                 <text><![CDATA[FACILITATOR'S REMARKS:]]></text>
             </element>
-            <element kind="line" uuid="b2c3d4e5-f6a7-890b-cdef-01234567890a" positionType="Float" x="180" y="445" width="365" height="1">
-                <pen lineWidth="1.0" lineStyle="Dotted"/>
+            <element kind="textField" uuid="dfc4b4e2-b404-4e8e-a4b9-ed00f06fd9b3" positionType="Float" x="180" y="430" width="365" height="30" fontSize="10.0">
+                <expression><![CDATA[$F{studentConductReport} != null ? $F{studentConductReport}.getFacilitatorRemark() : ""]]></expression>
             </element>
-            <element kind="staticText" uuid="b8e5d16f-f27e-465d-b33c-bd04f20223cb" positionType="Float" x="10" y="460" width="140" height="15" bold="true">
+            <element kind="staticText" uuid="dbfbc5fc-6c6f-42a8-9c3e-560539203e6f" positionType="Float" x="10" y="465" width="140" height="15" bold="true">
                 <text><![CDATA[FACILITATOR'S SIGN:]]></text>
             </element>
-            <element kind="line" uuid="c3d4e5f6-a7b8-90cd-ef01-234567890abc" positionType="Float" x="165" y="475" width="180" height="1">
+            <element kind="line" uuid="9f817c85-6ccb-44bf-a9af-84a3a360830d" positionType="Float" x="165" y="480" width="180" height="1">
                 <pen lineWidth="1.0" lineStyle="Dotted"/>
             </element>
-            <element kind="staticText" uuid="d4e5f6a7-b8c9-0def-0123-456789abcdef" positionType="Float" x="354" y="460" width="50" height="15" bold="true">
+            <element kind="staticText" uuid="e458be23-b3c8-4aee-b2d4-1d2c02a16e36" positionType="Float" x="354" y="465" width="50" height="15" bold="true">
                 <text><![CDATA[NAME:]]></text>
             </element>
-            <element kind="textField" uuid="08c2c894-9aa9-4ef5-af86-b6d43b18c369" positionType="Float" x="404" y="460" width="150" height="15">
+            <element kind="textField" uuid="87e225ea-7da5-4bdb-8f03-9a09336d3ccb" positionType="Float" x="404" y="465" width="150" height="15">
                 <expression><![CDATA[$F{instructorName}]]></expression>
             </element>
-            <element kind="staticText" uuid="b386964c-229d-479b-90c8-29c4132f3c9e" positionType="Float" x="10" y="490" width="175" height="15" bold="true">
+            <element kind="staticText" uuid="303c4fac-2945-48df-b3d6-ea344622d106" positionType="Float" x="10" y="495" width="175" height="15" bold="true">
                 <text><![CDATA[HEAD FACILITATOR'S SIGN:]]></text>
             </element>
-            <element kind="image" uuid="6e0c2b12-aa7d-4fca-b63a-f321fdceb73e" positionType="Float" x="210" y="480" width="70" height="40" scaleImage="RetainShape">
+            <element kind="image" uuid="8ac0ad62-e209-4e88-86ef-f597782ccdd4" positionType="Float" x="210" y="485" width="70" height="40" scaleImage="RetainShape">
                 <expression><![CDATA[$P{signaturePath}]]></expression>
             </element>
-            <element kind="staticText" uuid="34f8cf38-85e5-4f53-b50e-71b632e0f9d4" positionType="Float" x="360" y="490" width="40" height="15" bold="true">
+            <element kind="staticText" uuid="a9ba008b-2492-45da-b5cc-721f7d16bf0b" positionType="Float" x="360" y="495" width="40" height="15" bold="true">
                 <text><![CDATA[DATE:]]></text>
             </element>
-            <element kind="textField" uuid="442f5a97-9afa-4f15-81e5-ecbe38de4748" positionType="Float" x="405" y="490" width="100" height="15">
+            <element kind="textField" uuid="a4882991-0a81-459c-8a40-4c362b2fd7af" positionType="Float" x="405" y="495" width="100" height="15">
                 <expression><![CDATA[$F{currentDate}]]></expression>
             </element>
-            <element kind="break" uuid="23d09728-b2f6-4c49-83fc-69ccc838b3c5" positionType="Float" x="0" y="790" width="555" height="1"/>
+            <element kind="break" uuid="190975dc-d426-4b18-a0cf-2debbec70d1e" positionType="Float" x="0" y="790" width="555" height="1"/>
         </band>
     </detail>
 </jasperReport>
