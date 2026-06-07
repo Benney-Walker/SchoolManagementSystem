@@ -5,6 +5,7 @@ import com.codewithben.schoolmanagementsystem.Constants.LogAction;
 import com.codewithben.schoolmanagementsystem.Constants.LogStatus;
 import com.codewithben.schoolmanagementsystem.Constants.LogType;
 import com.codewithben.schoolmanagementsystem.DTO.Conduct.StudentConductRecord;
+import com.codewithben.schoolmanagementsystem.DTO.Conduct.StudentConductReport;
 import com.codewithben.schoolmanagementsystem.Entity.Conduct;
 import com.codewithben.schoolmanagementsystem.Entity.Level;
 import com.codewithben.schoolmanagementsystem.Entity.Results;
@@ -171,5 +172,17 @@ public class ConductService {
 
         loggingService.logGeneralActivity(LogType.CONDUCT, LogAction.CREATE, logData, staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok().build();
+    }
+
+    public StudentConductReport getStudentConductReport(Conduct conduct) {
+
+        return StudentConductReport.builder()
+                .regular(conduct.getRegular().name())
+                .punctual(conduct.getPunctual().name())
+                .physicalAppearance(conduct.getPhysicalAppearance().name())
+                .social(conduct.getSocial().name())
+                .emotional(conduct.getEmotional().name())
+                .cognitiveSkills(conduct.getCognitiveSkills().name())
+                .build();
     }
 }
