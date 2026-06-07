@@ -5,7 +5,6 @@ import com.codewithben.schoolmanagementsystem.Constants.LogStatus;
 import com.codewithben.schoolmanagementsystem.Constants.LogType;
 import com.codewithben.schoolmanagementsystem.DTO.Report.*;
 import com.codewithben.schoolmanagementsystem.DTO.Result.SbaRecords;
-import com.codewithben.schoolmanagementsystem.DTO.Result.StudentResult;
 import com.codewithben.schoolmanagementsystem.DTO.Result.ViewStudentsSubjectsResults;
 import com.codewithben.schoolmanagementsystem.Entity.*;
 import com.codewithben.schoolmanagementsystem.Repository.*;
@@ -260,6 +259,8 @@ public class ResultsService {
         try {
             String semesterName = null;
             String className = null;
+            String academicYear = null;
+            List<String> subjects = new ArrayList<>();
 
             List<MasterScoreSheetRow> rows = new ArrayList<>();
             for (Results result : resultsList) {
@@ -267,11 +268,12 @@ public class ResultsService {
                 List<SubjectScore> subjectScores = result.getSubjectScores();
                 if (subjectScores == null || subjectScores.isEmpty()) continue;
 
-                List<String> subjects = new ArrayList<>();
                 Map<String, Double> scores = new LinkedHashMap<>();
                 for (SubjectScore subjectScore : subjectScores) {
 
-                    subjects.add(subjectScore.getSubject().getSubjectName());
+                    if (!subjects.contains(subjectScore.getSubject().getSubjectName())) {
+                        subjects.add(subjectScore.getSubject().getSubjectName());
+                    }
 
                     scores.put(
                             subjectScore.getSubject().getSubjectName(),
@@ -291,21 +293,21 @@ public class ResultsService {
                         .studentName(
                                 result.getStudent().getFirstName() + " " + result.getStudent().getLastName()
                                 )
-                        .subjects(subjects)
-                        .subjectScore(scores)
+                        .subjectScores(scores)
                         .studentTotalScore(result.getTotalScore())
                         .studentAverageScore(result.getAverageScore())
                         .position(Integer.parseInt(position))
                         .build();
                 rows.add(record);
 
-                if (semesterName == null || className == null) {
+                if (semesterName == null || className == null || academicYear == null) {
                     semesterName = result.getSemester().getSemesterName();
                     className = result.getLevel().getLevelName();
+                    academicYear = result.getSemester().getAcademicYear();
                 }
             }
 
-            return new MasterScoreSheet(className, semesterName, rows);
+            return new MasterScoreSheet(className, semesterName, academicYear, subjects, rows);
         } catch (NumberFormatException e) {
             throw new RuntimeException(e);
         }
