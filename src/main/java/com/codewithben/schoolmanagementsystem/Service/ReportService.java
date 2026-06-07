@@ -4,6 +4,7 @@ import com.codewithben.schoolmanagementsystem.Constants.LogAction;
 import com.codewithben.schoolmanagementsystem.Constants.LogStatus;
 import com.codewithben.schoolmanagementsystem.Constants.LogType;
 import com.codewithben.schoolmanagementsystem.DTO.Report.GenerateStudentResult;
+import com.codewithben.schoolmanagementsystem.DTO.Report.MasterScoreSheet;
 import com.codewithben.schoolmanagementsystem.DTO.Report.SbaReport;
 import com.codewithben.schoolmanagementsystem.DTO.Result.SbaRecords;
 import com.codewithben.schoolmanagementsystem.Entity.*;
@@ -39,7 +40,7 @@ public class ReportService {
 
     private final SubjectsRepository subjectsRepository;
 
-    private final StudentService studentService;
+    private final PdfGenerationService pdfGenerationService;
 
     public ResponseEntity<?> generateClassBulkReport(String staffId, String levelId, String semesterId) {
 
@@ -145,6 +146,28 @@ public class ReportService {
             return ResponseEntity.ok(sbaReportPdf);
         } catch (Exception e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public ResponseEntity<?> generateMasterScoreSheet(String levelId, String semesterId, String staffId) {
+
+        List<Results> resultsList = resultsRepository
+                .findByLevel_LevelIDAndSemester_SemesterID(levelId, semesterId);
+        if (resultsList == null || resultsList.isEmpty()) {
+            loggingService.logGeneralActivity(LogType.RESULT, LogAction.READ,"No records found", staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "No records found"
+            ));
+        }
+
+        MasterScoreSheet masterScoreSheet = resultsService.generateMasterSheetRecord(resultsList);
+
+        try {
+            byte[] scoreSheetPdf = pdfGenerationService.generateMasterSheetScore(masterScoreSheet);
+            loggingService.logGeneralActivity(LogType.RESULT, LogAction.READ,"N/A", staffId, LogStatus.SUCCESS);
+            return ResponseEntity.ok(scoreSheetPdf);
+        } catch (Exception e)  {
+            throw new RuntimeException("Error while generating report for " + e);
         }
     }
 
