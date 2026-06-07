@@ -33,8 +33,8 @@ public class JasperReportService {
 
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("schoolName", schoolName);
-        parameters.put("logoPath", "reports/daffodils_Logo.png");
-        parameters.put("signaturePath", "reports/principal_signature.png");
+        parameters.put("logoPath", "reports/Daffodils/daffodils_Logo.png");
+        parameters.put("signaturePath", "reports/Daffodils/principal_signature.png");
 
         JasperPrint print =
                 JasperFillManager.fillReport(jasperReport, parameters, dataSource);
@@ -51,8 +51,8 @@ public class JasperReportService {
 
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("schoolName", schoolName);
-        parameters.put("logoPath", "reports/daffodils_Logo.png");
-        parameters.put("signaturePath", "reports/principal_signature.png");
+        parameters.put("logoPath", "reports/Daffodils/daffodils_Logo.png");
+        parameters.put("signaturePath", "reports/Daffodils/principal_signature.png");
 
         JasperPrint print =
                 JasperFillManager.fillReport(jasperReport, parameters, dataSource);
@@ -67,7 +67,7 @@ public class JasperReportService {
     private JasperReport getCompiledStudentReport() throws JRException, IOException {
         if (cachedStudentReport == null) {
             InputStream template = getClass()
-                    .getResourceAsStream("/reports/class_results_report.jasper");
+                    .getResourceAsStream("/reports/Daffodils/student_report_card.jasper");
             if (template == null) {
                 throw new FileNotFoundException("Report template not found");
             }
@@ -79,7 +79,7 @@ public class JasperReportService {
     private JasperReport getCompiledSbaReport() throws JRException, IOException {
         if (cachedSbaReport == null) {
             InputStream template = getClass()
-                    .getResourceAsStream("/reports/sba_report.jasper");
+                    .getResourceAsStream("/reports/Daffodils/sba_report.jasper");
             if (template == null) {
                 throw new FileNotFoundException("Report template not found");
             }
