@@ -102,8 +102,8 @@ public class ScoresService {
             result.setLevel(subject.getLevel());
             result.setSemester(semester);
             result.setCreatedAt(LocalDate.now());
-            result.setTotalScore(0.0);
-            result.setAverageScore(0.0);
+            result.setTotalScore(Double.valueOf(String.format("%.2f", 0.0)));
+            result.setAverageScore(Double.valueOf(String.format("%.2f", 0.0)));
             result.setUpdatedBy(staff);
         }
 
@@ -115,19 +115,24 @@ public class ScoresService {
                         result.getResultId()
                 ).orElse(new SubjectScore());
 
+        double projectWork = Double.parseDouble(scores.getProjectScore());
+        double classTest1 = Double.parseDouble(scores.getClassTest1Score());
+        double classTest2 = Double.parseDouble(scores.getClassTest2Score());
+        double groupWork = Double.parseDouble(scores.getGroupWorkScore());
         double classScore = Double.parseDouble(scores.getClassScore());
+        double examScore = Double.parseDouble(scores.getExamScore());
         double calculatedExamScore = Double.parseDouble(scores.getCalculatedExamScore());
         double totalScore =  classScore + calculatedExamScore;
 
         subjectScore.setSubject(subject);
         subjectScore.setStudent(student);
         subjectScore.setResults(result);
-        subjectScore.setProjectWork(Double.parseDouble(scores.getProjectScore()));
-        subjectScore.setClassTest1(Double.parseDouble(scores.getClassTest1Score()));
-        subjectScore.setGroupWork(Double.parseDouble(scores.getGroupWorkScore()));
-        subjectScore.setClassTest2(Double.parseDouble(scores.getClassTest2Score()));
-        subjectScore.setClassScore(classScore);
-        subjectScore.setExamScore(Double.parseDouble(scores.getExamScore()));
+        subjectScore.setProjectWork(Double.parseDouble(String.format("%.2f", projectWork)));
+        subjectScore.setClassTest1(Double.parseDouble(String.format("%.2f", classTest1)));
+        subjectScore.setGroupWork(Double.parseDouble(String.format("%.2f", groupWork)));
+        subjectScore.setClassTest2(Double.parseDouble(String.format("%.2f", classTest2)));
+        subjectScore.setClassScore(Double.valueOf(String.format("%.2f", classScore)));
+        subjectScore.setExamScore(Double.parseDouble(String.format("%.2f", examScore)));
         subjectScore.setCalculatedExamScore(calculatedExamScore);
         subjectScore.setGrade(
                 utilityClass.extractGrade(totalScore, student.getInstitution().getInstitutionId())
