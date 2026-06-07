@@ -42,6 +42,8 @@ public class ReportService {
 
     private final PdfGenerationService pdfGenerationService;
 
+    private final ConductService conductService;
+
     public ResponseEntity<?> generateClassBulkReport(String staffId, String levelId, String semesterId) {
 
         Level level = levelRepository.findByLevelID(levelId).orElse(null);
@@ -77,9 +79,18 @@ public class ReportService {
         List<GenerateStudentResult> reportData = new ArrayList<>();
         //retrieve results
         for (Results result : classResultsList) {
-            reportData.add(
-                    resultsService.generateStudentResult(result, resumingDate, totalAttendance)
+            if (result.getConduct() == null) {
+                loggingService.logGeneralActivity(LogType.REPORT, LogAction.READ, "No Conduct records found for " + result.getStudent().getFirstName(), staffId, LogStatus.FAILED);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                        "message", "No Conduct records found for " + result.getStudent().getFirstName()
+                ));
+            }
+
+            GenerateStudentResult generateStudentResult = resultsService.generateStudentResult(result, resumingDate, totalAttendance);
+            generateStudentResult.setStudentConductReport(
+                    conductService.getStudentConductReport(result.getConduct())
             );
+            reportData.add(generateStudentResult);
         }
 
         try {
