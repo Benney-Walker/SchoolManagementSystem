@@ -1,7 +1,5 @@
 package com.codewithben.schoolmanagementsystem.DTO.Students;
 
-import java.time.LocalDate;
-
 public class AddNewStudent {
     private String firstName;
 
@@ -9,7 +7,7 @@ public class AddNewStudent {
 
     private String gender;
 
-    private LocalDate dateOfBirth;
+    private String dateOfBirth;
 
     private String hometown;
 
@@ -19,7 +17,7 @@ public class AddNewStudent {
 
     private String levelId;
 
-    public AddNewStudent(String firstName, String lastName, String gender, LocalDate dateOfBirth, String hometown, String parentName,
+    public AddNewStudent(String firstName, String lastName, String gender, String dateOfBirth, String hometown, String parentName,
                          String guardianContact, String levelId) {
         this.firstName = firstName;
         this.lastName = lastName;
@@ -55,11 +53,11 @@ public class AddNewStudent {
         this.gender = gender;
     }
 
-    public LocalDate getDateOfBirth() {
+    public String getDateOfBirth() {
         return dateOfBirth;
     }
 
-    public void setDateOfBirth(LocalDate dateOfBirth) {
+    public void setDateOfBirth(String dateOfBirth) {
         this.dateOfBirth = dateOfBirth;
     }
 
