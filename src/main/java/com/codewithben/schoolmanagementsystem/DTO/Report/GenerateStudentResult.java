@@ -1,5 +1,6 @@
 package com.codewithben.schoolmanagementsystem.DTO.Report;
 
+import com.codewithben.schoolmanagementsystem.DTO.Conduct.StudentConductReport;
 import lombok.*;
 
 import java.util.List;
@@ -42,4 +43,6 @@ public class GenerateStudentResult {
     private String promotedTo;
 
     private List<SubjectReportDTO> subjectScores;
+
+    private StudentConductReport studentConductReport;
 }
