@@ -44,6 +44,8 @@ public class ReportService {
 
     private final ConductService conductService;
 
+    private final UtilityClass utilityClass;
+
     public ResponseEntity<?> generateClassBulkReport(String staffId, String levelId, String semesterId) {
 
         Level level = levelRepository.findByLevelID(levelId).orElse(null);
