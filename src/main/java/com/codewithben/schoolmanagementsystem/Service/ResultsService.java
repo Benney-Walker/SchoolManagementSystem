@@ -238,7 +238,7 @@ public class ResultsService {
 
             return new GenerateStudentResult(
                     studentId, studentName, className, semesterName,
-                    position, totalScore, averageScore, academicYear,
+                    totalScore, averageScore, position, academicYear,
                     totalStudents, vacationDate, resumingDate, attendancePresent,
                     totalAttendance, instructorName, currentDate, "-", scores, null
             );
