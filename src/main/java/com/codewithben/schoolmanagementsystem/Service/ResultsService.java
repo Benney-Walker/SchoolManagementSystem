@@ -38,11 +38,11 @@ public class ResultsService {
 
     private final ConductService conductService;
 
-    public ResponseEntity<?> viewStudentReport(String studentId, String semesterId, String staffId) {
+    public ResponseEntity<?> viewStudentResult(String studentId, String semesterId, String staffId) {
 
         Semester semester = semesterRepository.findBySemesterID(semesterId).orElse(null);
         if (semester == null) {
-            loggingService.logGeneralActivity(LogType.REPORT, LogAction.READ, "Invalid Term Id", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.RESULT, LogAction.READ, "Invalid Term Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Invalid Semester ID"
             ));
@@ -69,7 +69,7 @@ public class ResultsService {
 
         String resumingDate = utilityClass.getResumingDate(studentResult.getStudent().getLevel(),  semester);
 
-        GenerateStudentResult result = generateStudentResult(studentResult, resumingDate, totalAttendance);
+        GenerateStudentResult result = generateStudentResult(studentResult, resumingDate, totalAttendance, "-");
         result.setStudentConductReport(
                 conductService.getStudentConductReport(studentResult.getConduct())
         );
@@ -195,7 +195,7 @@ public class ResultsService {
     }
 
     public GenerateStudentResult generateStudentResult(
-            Results result, String resumingDate, String totalAttendance
+            Results result, String resumingDate, String totalAttendance, String promotedTo
     ) {
 
         try {
@@ -240,7 +240,7 @@ public class ResultsService {
                     studentId, studentName, className, semesterName,
                     totalScore, averageScore, position, academicYear,
                     totalStudents, vacationDate, resumingDate, attendancePresent,
-                    totalAttendance, instructorName, currentDate, "-", scores, null
+                    totalAttendance, instructorName, currentDate, promotedTo, scores, null
             );
         } catch (Exception e) {
             throw new RuntimeException(e);
