@@ -65,7 +65,7 @@ public class ReportService {
         String totalAttendance = String.valueOf(
                 attendanceService.getTotalAttendanceCount(semester)
         );
-        String resumingDate = getResumingDate(level,  semester);
+        String resumingDate = utilityClass.getResumingDate(level,  semester);
 
         List<Results> classResultsList = resultsRepository
                 .findByLevel_LevelIDAndSemester_SemesterID(levelId, semesterId);

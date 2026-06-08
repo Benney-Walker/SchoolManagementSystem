@@ -2,16 +2,14 @@ package com.codewithben.schoolmanagementsystem.Utility;
 
 import com.codewithben.schoolmanagementsystem.Constants.StudentStatus;
 import com.codewithben.schoolmanagementsystem.Entity.*;
-import com.codewithben.schoolmanagementsystem.Repository.EntityID_generationRepository;
-import com.codewithben.schoolmanagementsystem.Repository.GradeSystemRepository;
-import com.codewithben.schoolmanagementsystem.Repository.InstitutiionRepository;
-import com.codewithben.schoolmanagementsystem.Repository.ResultsRepository;
+import com.codewithben.schoolmanagementsystem.Repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -26,6 +24,8 @@ public class UtilityClass {
     private final InstitutiionRepository institutiionRepository;
 
     private final ResultsRepository resultsRepository;
+
+    private final SemesterRepository semesterRepository;
 
     private final AtomicReference<List<GradeSystem>> cache = new AtomicReference<>();
 
@@ -221,6 +221,16 @@ public class UtilityClass {
             }
         }
         return studentsListForReport;
+    }
+
+    public String getResumingDate(Level level, Semester semester) {
+        List<Semester> nextSemester = semesterRepository
+                .findByInstitution_InstitutionId(level.getInstitution().getInstitutionId());
+        return nextSemester.stream()
+                .filter(s -> s.getSemesterStartDate().isAfter(semester.getSemesterEndDate()))
+                .min(Comparator.comparing(Semester::getSemesterStartDate))
+                .map(s -> s.getSemesterStartDate().toString())
+                .orElse(null);
     }
 
 }

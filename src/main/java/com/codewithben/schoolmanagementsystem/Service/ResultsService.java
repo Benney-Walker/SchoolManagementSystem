@@ -33,6 +33,7 @@ public class ResultsService {
 
     private final AttendanceService attendanceService;
 
+        String resumingDate = utilityClass.getResumingDate(studentResult.getStudent().getLevel(),  semester);
     public ResponseEntity<?> viewClassSemesterReport(String levelId, String semesterId, String staffId) {
 
         Level level = levelRepository.findByLevelID(levelId).orElse(null);
