@@ -74,6 +74,14 @@ public class StaffController {
         return resultsService.viewClassSemesterReport(levelId, semesterId, staffId);
     }
 
+    @GetMapping("/v1/report-card")
+    public ResponseEntity<?> viewStudentResults(@RequestHeader("staffId") String staffId,
+                                                @RequestParam String studentId,
+                                                @RequestParam String semesterId) {
+
+        return resultsService.viewStudentReport(studentId, semesterId, staffId);
+    }
+
     @GetMapping("/v1/view-sba")
     public ResponseEntity<?> viewSba(@RequestHeader("staffId") String staffId,
                                      @RequestParam String classId,
