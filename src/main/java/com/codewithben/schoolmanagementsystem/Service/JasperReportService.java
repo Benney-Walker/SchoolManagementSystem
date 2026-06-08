@@ -22,6 +22,26 @@ public class JasperReportService {
 
     private JasperReport cachedSbaReport;
 
+    public byte[] generateStudentReportCard(
+            GenerateStudentResult generateStudentResults,
+            String schoolName) throws Exception {
+
+        JasperReport jasperReport = getCompiledStudentReport();
+
+        JRBeanCollectionDataSource dataSource =
+                new JRBeanCollectionDataSource(Collections.singletonList(generateStudentResults));
+
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("schoolName", schoolName);
+        parameters.put("logoPath", "reports/Daffodils/daffodils_Logo.png");
+        parameters.put("signaturePath", "reports/Daffodils/principal_signature.png");
+
+        JasperPrint print =
+                JasperFillManager.fillReport(jasperReport, parameters, dataSource);
+
+        return JasperExportManager.exportReportToPdf(print);
+    }
+
     public byte[] generateClassReportCards(
             List<GenerateStudentResult> generateStudentResults,
             String schoolName) throws Exception {
