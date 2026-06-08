@@ -228,7 +228,7 @@
                 </box>
             </element>
             <element kind="staticText" uuid="fa0f0a47-9dab-49cd-a499-5b97f2270dfe" positionType="Float" mode="Opaque" x="465" y="250" width="80" fontSize="7" height="15" backcolor="#E8E8E8" bold="true" hTextAlign="Center">
-                <text><![CDATA[NOT TO EXPECTATION]]></text>
+                <text><![CDATA[NOT TO EXPECT]]></text>
                 <box>
                     <pen lineWidth="0.5"/>
                 </box>
