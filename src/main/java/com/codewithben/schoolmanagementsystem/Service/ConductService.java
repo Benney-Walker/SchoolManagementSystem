@@ -183,6 +183,7 @@ public class ConductService {
                 .social(conduct.getSocial().name())
                 .emotional(conduct.getEmotional().name())
                 .cognitiveSkills(conduct.getCognitiveSkills().name())
+                .facilitatorRemark(conduct.getClassTeacherRemark())
                 .build();
     }
 }
