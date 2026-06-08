@@ -1,10 +1,16 @@
 package com.codewithben.schoolmanagementsystem.Entity;
 
 import jakarta.persistence.*;
+import lombok.*;
 
 import java.time.LocalDate;
 import java.util.List;
 
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 public class Results {
 
@@ -44,100 +50,4 @@ public class Results {
 
     private String position;
 
-
-    public long getResultId() {
-        return resultId;
-    }
-
-    public void setResultId(long resultId) {
-        this.resultId = resultId;
-    }
-
-    public Students getStudent() {
-        return student;
-    }
-
-    public void setStudent(Students student) {
-        this.student = student;
-    }
-
-    public Level getLevel() {
-        return level;
-    }
-
-    public void setLevel(Level level) {
-        this.level = level;
-    }
-
-    public Semester getSemester() {
-        return semester;
-    }
-
-    public void setSemester(Semester semester) {
-        this.semester = semester;
-    }
-
-    public List<SubjectScore> getSubjectScores() {
-        return subjectScores;
-    }
-
-    public void setSubjectScores(List<SubjectScore> subjectScores) {
-        this.subjectScores = subjectScores;
-    }
-
-    public Conduct getConduct() {
-        return conduct;
-    }
-
-    public void setConduct(Conduct conduct) {
-        this.conduct = conduct;
-    }
-
-    public LocalDate getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDate createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public LocalDate getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(LocalDate updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-
-    public Staffs getUpdatedBy() {
-        return updatedBy;
-    }
-
-    public void setUpdatedBy(Staffs updatedBy) {
-        this.updatedBy = updatedBy;
-    }
-
-    public Double getTotalScore() {
-        return totalScore;
-    }
-
-    public void setTotalScore(Double totalScore) {
-        this.totalScore = totalScore;
-    }
-
-    public Double getAverageScore() {
-        return averageScore;
-    }
-
-    public void setAverageScore(Double averageScore) {
-        this.averageScore = averageScore;
-    }
-
-    public String getPosition() {
-        return position;
-    }
-
-    public void setPosition(String position) {
-        this.position = position;
-    }
 }
