@@ -1,18 +1,14 @@
 package com.codewithben.schoolmanagementsystem.Controller;
 
-import com.codewithben.schoolmanagementsystem.Constants.LogType;
 import com.codewithben.schoolmanagementsystem.DTO.Conduct.StudentConductRecord;
 import com.codewithben.schoolmanagementsystem.DTO.Staff.NewStaff;
-import com.codewithben.schoolmanagementsystem.Entity.Staffs;
 import com.codewithben.schoolmanagementsystem.Service.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @Builder
 @AllArgsConstructor
@@ -79,7 +75,7 @@ public class StaffController {
                                                 @RequestParam String studentId,
                                                 @RequestParam String semesterId) {
 
-        return resultsService.viewStudentReport(studentId, semesterId, staffId);
+        return resultsService.viewStudentResult(studentId, semesterId, staffId);
     }
 
     @GetMapping("/v1/view-sba")

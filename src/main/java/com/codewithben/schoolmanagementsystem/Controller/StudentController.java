@@ -6,6 +6,7 @@ import com.codewithben.schoolmanagementsystem.DTO.Students.AddNewStudent;
 import com.codewithben.schoolmanagementsystem.DTO.Students.UpdateStudentPersonalData;
 import com.codewithben.schoolmanagementsystem.Service.*;
 import lombok.AllArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,6 +20,8 @@ public class StudentController {
     private final ScoresService scoresService;
 
     private final AttendanceService attendanceService;
+
+    private final ReportService reportService;
 
     @GetMapping("/v1/absent-students")
     public ResponseEntity<?> getAbsentees(@RequestHeader("staffId") String staffId) {
@@ -102,5 +105,17 @@ public class StudentController {
                                                @PathVariable String levelId) {
 
         return studentService.getGradeStudents(levelId, staffId);
+    }
+
+    @GetMapping(
+            value = "/v2/generate-report-card",
+            produces = MediaType.APPLICATION_PDF_VALUE
+    )
+    public ResponseEntity<?> generateStudentReport(@RequestHeader("staffId") String staffId,
+                                                   @RequestHeader("promotionId") String promotionId,
+                                                   @RequestParam String studentId,
+                                                   @RequestParam String semesterId) {
+
+        return reportService.generateStudentReport(studentId, semesterId, promotionId, staffId);
     }
 }
