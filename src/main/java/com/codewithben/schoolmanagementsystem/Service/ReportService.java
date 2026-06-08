@@ -47,6 +47,64 @@ public class ReportService {
 
     private final UtilityClass utilityClass;
 
+    public ResponseEntity<?> generateStudentReport(String studentId, String semesterId, String promotionLevelId, String staffId) {
+
+        Semester semester = semesterRepository.findBySemesterID(semesterId).orElse(null);
+        if (semester == null) {
+            loggingService.logGeneralActivity(LogType.REPORT, LogAction.READ, "Invalid Term Id", staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Invalid Semester ID"
+            ));
+        }
+
+        String promotionLevel = "-";
+        if (!promotionLevelId.equals("no_promotion")) {
+            Level level = levelRepository.findByLevelID(promotionLevelId).orElse(null);
+            if (level == null) {
+                loggingService.logGeneralActivity(LogType.RESULT, LogAction.READ, "Invalid Class Id", staffId, LogStatus.FAILED);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                        "message", "Invalid Class Id"
+                ));
+            }
+            promotionLevel = level.getLevelName();
+        }
+
+        String totalAttendance = String.valueOf(
+                attendanceService.getTotalAttendanceCount(semester)
+        );
+
+        Results studentResult = resultsRepository.findByStudent_StudentIdAndSemester_SemesterID(studentId, semesterId).orElse(null);
+        if (studentResult == null) {
+            loggingService.logGeneralActivity(LogType.RESULT, LogAction.READ, "No record found for this student for this semester", staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "No record found for this student for this semester"
+            ));
+        }
+
+        if (studentResult.getConduct() == null) {
+            loggingService.logGeneralActivity(LogType.RESULT, LogAction.READ, "Student conducts not uploaded yet", staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                    "message", "Student conducts not uploaded yet"
+            ));
+        }
+
+        String resumingDate = utilityClass.getResumingDate(studentResult.getStudent().getLevel(),  semester);
+
+        GenerateStudentResult result = resultsService.generateStudentResult(studentResult, resumingDate, totalAttendance, "-");
+        result.setStudentConductReport(
+                conductService.getStudentConductReport(studentResult.getConduct())
+        );
+
+        try {
+            byte[] studentReport = jasperReportService.generateStudentReportCard(result, studentResult.getStudent().getInstitution().getInstitutionName());
+
+            loggingService.logGeneralActivity(LogType.REPORT, LogAction.READ, "N/A", staffId, LogStatus.SUCCESS);
+            return ResponseEntity.ok().body(studentReport);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public ResponseEntity<?> generateClassBulkReport(String staffId, String levelId, String semesterId) {
 
         Level level = levelRepository.findByLevelID(levelId).orElse(null);
@@ -89,7 +147,7 @@ public class ReportService {
                 ));
             }
 
-            GenerateStudentResult generateStudentResult = resultsService.generateStudentResult(result, resumingDate, totalAttendance);
+            GenerateStudentResult generateStudentResult = resultsService.generateStudentResult(result, resumingDate, totalAttendance, "-");
             generateStudentResult.setStudentConductReport(
                     conductService.getStudentConductReport(result.getConduct())
             );
