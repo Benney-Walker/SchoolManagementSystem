@@ -9,6 +9,7 @@ import com.codewithben.schoolmanagementsystem.DTO.Report.SbaReport;
 import com.codewithben.schoolmanagementsystem.DTO.Result.SbaRecords;
 import com.codewithben.schoolmanagementsystem.Entity.*;
 import com.codewithben.schoolmanagementsystem.Repository.*;
+import com.codewithben.schoolmanagementsystem.Utility.UtilityClass;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -184,17 +185,4 @@ public class ReportService {
         }
     }
 
-    /*================================================
-                        HELPERS
-     =================================================*/
-
-    private String getResumingDate(Level level, Semester semester) {
-        List<Semester> nextSemester = semesterRepository
-                .findByInstitution_InstitutionId(level.getInstitution().getInstitutionId());
-        return nextSemester.stream()
-                .filter(s -> s.getSemesterStartDate().isAfter(semester.getSemesterEndDate()))
-                .min(Comparator.comparing(Semester::getSemesterStartDate))
-                .map(s -> s.getSemesterStartDate().toString())
-                .orElse(null);
-    }
 }
