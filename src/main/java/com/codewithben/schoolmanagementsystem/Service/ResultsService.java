@@ -34,7 +34,52 @@ public class ResultsService {
 
     private final AttendanceService attendanceService;
 
+    private final UtilityClass utilityClass;
+
+    private final ConductService conductService;
+
+    public ResponseEntity<?> viewStudentReport(String studentId, String semesterId, String staffId) {
+
+        Semester semester = semesterRepository.findBySemesterID(semesterId).orElse(null);
+        if (semester == null) {
+            loggingService.logGeneralActivity(LogType.REPORT, LogAction.READ, "Invalid Term Id", staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Invalid Semester ID"
+            ));
+        }
+
+        String totalAttendance = String.valueOf(
+                attendanceService.getTotalAttendanceCount(semester)
+        );
+
+        Results studentResult = resultsRepository.findByStudent_StudentIdAndSemester_SemesterID(studentId, semesterId).orElse(null);
+        if (studentResult == null) {
+            loggingService.logGeneralActivity(LogType.RESULT, LogAction.READ, "No record found for this student for this semester", staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "No record found for this student for this semester"
+            ));
+        }
+
+        if (studentResult.getConduct() == null) {
+            loggingService.logGeneralActivity(LogType.RESULT, LogAction.READ, "Student conducts not uploaded yet", staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                    "message", "Student conducts not uploaded yet"
+            ));
+        }
+
         String resumingDate = utilityClass.getResumingDate(studentResult.getStudent().getLevel(),  semester);
+
+        GenerateStudentResult result = generateStudentResult(studentResult, resumingDate, totalAttendance);
+        result.setStudentConductReport(
+                conductService.getStudentConductReport(studentResult.getConduct())
+        );
+
+        loggingService.logGeneralActivity(LogType.RESULT, LogAction.READ, "N/A", staffId, LogStatus.SUCCESS);
+        return ResponseEntity.ok().header(
+                "school-name", studentResult.getStudent().getInstitution().getInstitutionName()
+        ).body(result);
+    }
+
     public ResponseEntity<?> viewClassSemesterReport(String levelId, String semesterId, String staffId) {
 
         Level level = levelRepository.findByLevelID(levelId).orElse(null);
