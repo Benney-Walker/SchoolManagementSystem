@@ -91,7 +91,7 @@ public class StudentController {
 
     @PostMapping("/v1/mark-attendance")
     public ResponseEntity<?> markAttendance(@RequestHeader("staffId") String staffId,
-                                            @RequestHeader("selectedDate") String date,
+                                            @RequestHeader("selectedId") String date,
                                             @RequestBody Attendance attendance) {
         String studentId = attendance.getStudentId();
         String levelId = attendance.getLevelId();
