@@ -43,7 +43,7 @@ public class FinanceController {
         String levelId = data.getLevelId();
         String semesterId = data.getSemesterId();
 
-        return feesService.addNewFeePayment(studentId, amountPaid, personWhoPaid, phoneNumber, levelId, semesterId, staffId);
+        return feesService.addNewPayment(studentId, amountPaid, personWhoPaid, phoneNumber, levelId, semesterId, staffId);
     }
 
     @GetMapping("/v1/fetch-payment-records")
@@ -75,7 +75,7 @@ public class FinanceController {
                                                      @RequestParam String semesterId,
                                                      @RequestParam String gradeId) {
 
-        return feesService.findStudentFeesPaymentDetails(studentId, semesterId, gradeId, staffId);
+        return feesService.findStudentPaymentRecords(studentId, semesterId, gradeId, staffId);
     }
 
     @GetMapping("/v1/fetch-grade-fees-report/{levelId}/{semesterId}")
