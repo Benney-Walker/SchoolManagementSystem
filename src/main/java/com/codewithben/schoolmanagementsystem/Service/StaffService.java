@@ -38,9 +38,9 @@ public class StaffService {
 
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staff == null) {
-            loggingService.logGeneralActivity(LogType.STAFF, LogAction.CREATE, "Invalid newStaff Id", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.STAFF, LogAction.CREATE, "Invalid Staff Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
-                    "message", "Invalid newStaff Id"
+                    "message", "Invalid Staff Id"
             ));
         }
 
