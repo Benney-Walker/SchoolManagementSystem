@@ -36,53 +36,56 @@ public class HolidayService {
 
     private final LoggingService loggingService;
 
-    public ResponseEntity<?> addOrUpdateHoliday(String staffId, Holiday holiday) {
-        String logData
-                =" Holiday Name= " + holiday.getHolidayName() +
-                " Start Date= " + holiday.getStartDate() +
-                " End Date= " + holiday.getEndDate() +
-                " Semester Name= " + holiday.getSemesterName() +
-                " Academic Year= " + holiday.getAcademicYear();
+    public ResponseEntity<?> addNewHoliday(String staffId, Holiday holiday) {
 
         Semester semester = semesterRepository.findBySemesterID(holiday.getSemesterId()).orElse(null);
         if (semester == null) {
-            loggingService.logGeneralActivity(LogType.SCHOOL_HOLIDAY, LogAction.CREATE, logData, staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.SCHOOL_HOLIDAY, LogAction.CREATE, "Invalid term Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "Invalid semester Id"
+                    "message", "Invalid term Id"
             ));
         }
 
-        //0 means new holiday
-        if (holiday.getHolidayId() == 0) {
+        //Check if holiday name exist for school
+        SchoolHoliday existedHoliday =
+                schoolHolidayRepository.findByStartDateAndEndDateAndHolidayNameAndInstitution_InstitutionId(
+                        LocalDate.parse(holiday.getStartDate()),
+                        LocalDate.parse(holiday.getEndDate()),
+                        HolidayType.valueOf(holiday.getHolidayName()),
+                        semester.getInstitution().getInstitutionId()
+                ).orElse(null);
+        if (existedHoliday == null) {
 
-            //Check if holiday name exist for school
-            SchoolHoliday existedHoliday =
-                    schoolHolidayRepository.findByHolidayNameAndInstitution_InstitutionId(
-                            HolidayType.valueOf(holiday.getHolidayName()),
-                            semester.getInstitution().getInstitutionId()
-                    ).orElse(null);
-            if (existedHoliday == null) {
+            existedHoliday = new SchoolHoliday();
+            existedHoliday.setHolidayName(HolidayType.valueOf(holiday.getHolidayName()));
+            existedHoliday.setStartDate(LocalDate.parse(holiday.getStartDate()));
+            existedHoliday.setEndDate(LocalDate.parse(holiday.getEndDate()));
+            existedHoliday.setSemester(semester);
+            existedHoliday.setInstitution(semester.getInstitution());
 
-                existedHoliday = new SchoolHoliday();
-                existedHoliday.setHolidayName(HolidayType.valueOf(holiday.getHolidayName()));
-                existedHoliday.setStartDate(LocalDate.parse(holiday.getStartDate()));
-                existedHoliday.setEndDate(LocalDate.parse(holiday.getEndDate()));
-                existedHoliday.setSemester(semester);
-                existedHoliday.setInstitution(semester.getInstitution());
+            loggingService.logGeneralActivity(LogType.SCHOOL_HOLIDAY, LogAction.CREATE, "N/A", staffId, LogStatus.SUCCESS);
+            schoolHolidayRepository.save(existedHoliday);
+        }
 
-                loggingService.logGeneralActivity(LogType.SCHOOL_HOLIDAY, LogAction.CREATE, logData, staffId, LogStatus.SUCCESS);
-                schoolHolidayRepository.save(existedHoliday);
-            }
+        loggingService.logGeneralActivity(LogType.SCHOOL_HOLIDAY, LogAction.CREATE, "Holiday already exists", staffId, LogStatus.FAILED);
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                "message", "Holiday already exists"
+        ));
+    }
 
-            loggingService.logGeneralActivity(LogType.SCHOOL_HOLIDAY, LogAction.CREATE, logData, staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
-                    "message", "Holiday already exists"
+    public ResponseEntity<?> updateHoliday(String staffId, Holiday holiday) {
+
+        Semester semester = semesterRepository.findBySemesterID(holiday.getSemesterId()).orElse(null);
+        if (semester == null) {
+            loggingService.logGeneralActivity(LogType.SCHOOL_HOLIDAY, LogAction.CREATE, "Invalid term Id", staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Invalid term Id"
             ));
         }
 
         SchoolHoliday schoolHoliday = schoolHolidayRepository.findByHolidayId(holiday.getHolidayId()).orElse(null);
         if (schoolHoliday == null) {
-            loggingService.logGeneralActivity(LogType.SCHOOL_HOLIDAY, LogAction.UPDATE, logData, staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.SCHOOL_HOLIDAY, LogAction.UPDATE, "Invalid holiday Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Invalid holiday Id"
             ));
@@ -95,7 +98,7 @@ public class HolidayService {
         schoolHoliday.setInstitution(semester.getInstitution());
         schoolHolidayRepository.save(schoolHoliday);
 
-        loggingService.logGeneralActivity(LogType.SCHOOL_HOLIDAY, LogAction.UPDATE, logData, staffId, LogStatus.SUCCESS);
+        loggingService.logGeneralActivity(LogType.SCHOOL_HOLIDAY, LogAction.UPDATE, "N/A", staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok().build();
     }
 
