@@ -13,9 +13,9 @@ import java.time.LocalDate;
 @Entity
 public class PaymentRecords {
     @Id
-    private String feesReportId;
+    private String recordsId;
 
-    private Double amountPaid;
+    private double amountPaid;
 
     private double feesBalance;
 
