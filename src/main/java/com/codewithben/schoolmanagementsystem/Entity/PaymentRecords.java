@@ -11,7 +11,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-public class FeesReport {
+public class PaymentRecords {
     @Id
     private String feesReportId;
 
