@@ -114,7 +114,7 @@ public class FinanceController {
         return feesService.fetchFeesDetails(semesterId, levelId, staffId);
     }
 
-    @PutMapping("/v1/update-semester-fees")
+    @PutMapping("/v2/update-semester-fees")
     public ResponseEntity<?> updateFeesAmount(@RequestHeader("staffId") String staffId,
                                               @RequestBody FetchFeesDetails fetchFeesDetails) {
 
