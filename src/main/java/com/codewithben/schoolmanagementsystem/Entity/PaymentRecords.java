@@ -25,7 +25,7 @@ public class PaymentRecords {
 
     private LocalDate dateOfPayment;
 
-    private boolean isDeleted;
+    private boolean isDeleted = false;
 
     @ManyToOne
     @JoinColumn(name = "fee_record_recordId")
