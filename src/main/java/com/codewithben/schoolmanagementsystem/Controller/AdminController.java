@@ -224,7 +224,7 @@ public class AdminController {
     public ResponseEntity<?> addNewHoliday(@RequestHeader("staffId")String staffId,
                                            @RequestBody Holiday holiday) {
 
-        return holidayService.addOrUpdateHoliday(staffId, holiday);
+        return holidayService.addNewHoliday(staffId, holiday);
     }
 
     @GetMapping("/v1/load-holidays")
@@ -237,6 +237,6 @@ public class AdminController {
     public ResponseEntity<?> updateHoliday(@RequestHeader("staffId")String staffId,
                                            @RequestBody Holiday holiday) {
 
-        return holidayService.addOrUpdateHoliday(staffId, holiday);
+        return holidayService.updateHoliday(staffId, holiday);
     }
 }
