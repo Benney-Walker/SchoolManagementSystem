@@ -25,7 +25,7 @@ public class AuthenticationFailureListener implements ApplicationListener<Abstra
         loggingService.logGeneralActivity(
                 LogType.STAFF,
                 LogAction.LOGIN,
-                "N/A",
+                event.getException().getMessage(),
                 username,
                 LogStatus.FAILED
         );
