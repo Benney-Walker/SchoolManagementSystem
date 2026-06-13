@@ -21,7 +21,7 @@ public class Fees {
     private Double amountToBePayed;
 
     @OneToMany(mappedBy = "fees")
-    private List<FeesReport> feesReport;
+    private List<StudentFeeRecord> feesRecords;
 
     @ManyToOne
     @JoinColumn(nullable = false, name = "Semester_semesterID")
