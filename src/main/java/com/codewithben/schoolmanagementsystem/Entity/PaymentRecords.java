@@ -28,12 +28,8 @@ public class PaymentRecords {
     private boolean isDeleted;
 
     @ManyToOne
-    @JoinColumn(nullable = false, name = "student_studentId")
-    private Students student;
-
-    @ManyToOne
-    @JoinColumn(name = "fees_feesId")
-    private Fees fees;
+    @JoinColumn(name = "fee_record_recordId")
+    private StudentFeeRecord feeRecord;
 
     @ManyToOne
     @JoinColumn(name = "institution_institutionId")
