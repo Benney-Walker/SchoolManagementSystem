@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class RecentPaymentTable {
+public class RecentPaymentRecords {
     private String paymentDate;
 
     private String studentId;
