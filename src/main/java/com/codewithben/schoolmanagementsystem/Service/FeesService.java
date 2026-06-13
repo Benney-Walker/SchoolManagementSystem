@@ -276,7 +276,7 @@ public class FeesService {
         }
 
         //Retrieve all classes
-        List<Level> levels = institution.getLevels();
+        List<Level> levels = institution.getLevel();
         if (levels == null || levels.isEmpty()) {
             loggingService.logGeneralActivity(LogType.FEES, LogAction.READ, "N/A", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
@@ -541,7 +541,7 @@ public class FeesService {
         studentFeeRecordRepository.save(feeRecord);
 
         //Add Payment to institution
-        List<PaymentRecords> institutionPaymentRecords = student.getInstitution().getFeesReport();
+        List<PaymentRecords> institutionPaymentRecords = student.getInstitution().getPaymentRecords();
         if (institutionPaymentRecords == null) {
             institutionPaymentRecords = new ArrayList<>();
         }
@@ -598,7 +598,7 @@ public class FeesService {
             ));
         }
 
-        List<Level> levels = staff.getInstitution().getLevels();
+        List<Level> levels = staff.getInstitution().getLevel();
         if (levels == null || levels.isEmpty()) {
             loggingService.logGeneralActivity(LogType.FEES, LogAction.READ, "N/A", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
@@ -636,7 +636,7 @@ public class FeesService {
             ));
         }
 
-        List<Level> levels = staff.getInstitution().getLevels();
+        List<Level> levels = staff.getInstitution().getLevel();
         if (levels == null || levels.isEmpty()) {
             loggingService.logGeneralActivity(LogType.FEES, LogAction.READ, "N/A", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(

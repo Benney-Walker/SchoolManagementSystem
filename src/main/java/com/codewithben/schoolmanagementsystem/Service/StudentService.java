@@ -182,7 +182,7 @@ public class StudentService {
             ));
         }
 
-        List<Level> levels = staff.getInstitution().getLevels();
+        List<Level> levels = staff.getInstitution().getLevel();
         if (levels == null || levels.isEmpty()) {
             loggingService.logGeneralActivity(LogType.STUDENT, LogAction.READ, "Institution has no classes yet", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(

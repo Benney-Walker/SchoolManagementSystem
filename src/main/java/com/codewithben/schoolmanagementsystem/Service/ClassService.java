@@ -101,7 +101,7 @@ public class ClassService {
             ));
         }
 
-        List<Level> levels = staff.getInstitution().getLevels();
+        List<Level> levels = staff.getInstitution().getLevel();
         if (levels == null || levels.isEmpty()) {
             loggingService.logGeneralActivity(LogType.CLASS, LogAction.READ, "N/A", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
