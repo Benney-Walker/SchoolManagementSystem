@@ -10,6 +10,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class FetchFeesDetails {
+    private int feesId;
+
     private String amount;
 
     private String semesterId;
