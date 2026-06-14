@@ -157,9 +157,7 @@ public class FeesService {
         List<StudentPaymentRecords> studentPaymentRecordsList = new ArrayList<>();
         for (PaymentRecords paymentRecord : studentFeeRecord.getPaymentRecords()) {
 
-            System.out.println("Records= " + paymentRecord.getRecordsId() + "/" +paymentRecord.isDeleted());
-
-            if (!paymentRecord.isDeleted()) {
+            if (paymentRecord.isDeleted()) {
                 StudentPaymentRecords studentPaymentRecords = StudentPaymentRecords.builder()
                         .paymentId(paymentRecord.getRecordsId())
                         .dateOfPayment(paymentRecord.getDateOfPayment().toString())
@@ -176,7 +174,6 @@ public class FeesService {
                         .build();
 
                 studentPaymentRecordsList.add(studentPaymentRecords);
-
             }
         }
 
