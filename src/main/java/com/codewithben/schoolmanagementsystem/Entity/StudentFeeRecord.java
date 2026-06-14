@@ -31,7 +31,7 @@ public class StudentFeeRecord {
     @JoinColumn(name = "fees_feesId")
     private Fees fees;
 
-    @OneToMany(mappedBy = "recordsId", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "feeRecord")
     private List<PaymentRecords> paymentRecords;
 
     @ManyToOne
