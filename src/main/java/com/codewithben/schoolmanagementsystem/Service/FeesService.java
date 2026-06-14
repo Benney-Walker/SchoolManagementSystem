@@ -203,7 +203,7 @@ public class FeesService {
             paymentRecord.setAmountPaid(Double.parseDouble(update.getAmount()));
             paymentRecordsRepository.save(paymentRecord);
 
-            StudentFeeRecord studentFeeRecord = paymentRecord.getStudentFeeRecord();
+            StudentFeeRecord studentFeeRecord = paymentRecord.getFeeRecord();
             double newTotalPaid = studentFeeRecord.getPaymentRecords()
                     .stream().mapToDouble(PaymentRecords::getAmountPaid).sum();
             double newBalance = studentFeeRecord.getFeeAmount() - newTotalPaid;
@@ -240,7 +240,7 @@ public class FeesService {
                 ));
             }
 
-            StudentFeeRecord studentFeeRecord = paymentRecord.getStudentFeeRecord();
+            StudentFeeRecord studentFeeRecord = paymentRecord.getFeeRecord();
             //Calculate total paid and new balance
             double oldTotalAmountPaid = studentFeeRecord.getTotalAmountPaid();
             double newTotalAmountPaid = oldTotalAmountPaid - paymentRecord.getAmountPaid();
@@ -696,14 +696,14 @@ public class FeesService {
                 RecentPaymentRecords recentPayment = RecentPaymentRecords.builder()
                         .paymentDate(paymentRecord.getDateOfPayment().toString())
                         .studentId(
-                                paymentRecord.getStudentFeeRecord().getStudent().getStudentId()
+                                paymentRecord.getFeeRecord().getStudent().getStudentId()
                         )
                         .studentNameCol(
-                                paymentRecord.getStudentFeeRecord().getStudent().getFirstName() + " " + paymentRecord.getStudentFeeRecord().getStudent().getLastName()
+                                paymentRecord.getFeeRecord().getStudent().getFirstName() + " " + paymentRecord.getFeeRecord().getStudent().getLastName()
                         )
                         .amountCol(String.valueOf(paymentRecord.getAmountPaid()))
                         .payerCol(paymentRecord.getPersonWhoPaid())
-                        .levelCol(paymentRecord.getStudentFeeRecord().getLevel().getLevelName())
+                        .levelCol(paymentRecord.getFeeRecord().getLevel().getLevelName())
                         .build();
 
                 recentPaymentRecords.add(recentPayment);

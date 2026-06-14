@@ -29,7 +29,7 @@ public class PaymentRecords {
 
     @ManyToOne
     @JoinColumn(name = "fee_record_recordId")
-    private StudentFeeRecord studentFeeRecord;
+    private StudentFeeRecord feeRecord;
 
     @ManyToOne
     @JoinColumn(name = "institution_institutionId")
