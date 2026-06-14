@@ -158,23 +158,25 @@ public class FeesService {
         for (PaymentRecords paymentRecord : studentFeeRecord.getPaymentRecords()) {
 
             if (paymentRecord.isDeleted()) {
-                StudentPaymentRecords studentPaymentRecords = StudentPaymentRecords.builder()
-                        .paymentId(paymentRecord.getRecordsId())
-                        .dateOfPayment(paymentRecord.getDateOfPayment().toString())
-                        .studentId(studentFeeRecord.getStudent().getStudentId())
-                        .studentName(
-                                studentFeeRecord.getStudent().getFirstName() + " " + studentFeeRecord.getStudent().getLastName()
-                        )
-                        .amount(String.valueOf(paymentRecord.getAmountPaid()))
-                        .semesterId(
-                                studentFeeRecord.getSemester().getSemesterName() + " " + studentFeeRecord.getSemester().getAcademicYear()
-                        )
-                        .payerName(paymentRecord.getPersonWhoPaid())
-                        .payerContact(paymentRecord.getPhoneNumber())
-                        .build();
-
-                studentPaymentRecordsList.add(studentPaymentRecords);
+                continue;
             }
+
+            StudentPaymentRecords studentPaymentRecords = StudentPaymentRecords.builder()
+                    .paymentId(paymentRecord.getRecordsId())
+                    .dateOfPayment(paymentRecord.getDateOfPayment().toString())
+                    .studentId(studentFeeRecord.getStudent().getStudentId())
+                    .studentName(
+                            studentFeeRecord.getStudent().getFirstName() + " " + studentFeeRecord.getStudent().getLastName()
+                    )
+                    .amount(String.valueOf(paymentRecord.getAmountPaid()))
+                    .semesterId(
+                            studentFeeRecord.getSemester().getSemesterName() + " " + studentFeeRecord.getSemester().getAcademicYear()
+                    )
+                    .payerName(paymentRecord.getPersonWhoPaid())
+                    .payerContact(paymentRecord.getPhoneNumber())
+                    .build();
+
+            studentPaymentRecordsList.add(studentPaymentRecords);
         }
 
         loggingService.logGeneralActivity(LogType.FEES, LogAction.READ, "N/A", staffId, LogStatus.SUCCESS);
