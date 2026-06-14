@@ -8,6 +8,8 @@ import java.util.Optional;
 
 @Repository
 public interface FeesRepository extends JpaRepository<Fees, Long> {
+    Optional<Fees> findByFeesId(int feesId);
+
     Optional<Fees> findBySemester_SemesterIDAndLevel_LevelID(
             String semesterId, String levelId
     );
