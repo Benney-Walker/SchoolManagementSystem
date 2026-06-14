@@ -119,22 +119,6 @@ public class FeesService {
     //Fetches individual payment records according to grade and semester
     public ResponseEntity<?> fetchIndividualPaymentRecords(String studentId, String levelId, String semesterId, String staffId) {
 
-        Students student = studentsRepository.findByStudentId(studentId).orElse(null);
-        if (student == null) {
-            loggingService.logGeneralActivity(LogType.FEES, LogAction.READ, "Invalid student Id", staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "Invalid student Id"
-            ));
-        }
-
-        Level level = levelRepository.findByLevelID(levelId).orElse(null);
-        if (level == null) {
-            loggingService.logGeneralActivity(LogType.FEES, LogAction.READ, "Invalid class Id", staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "Invalid class Id"
-            ));
-        }
-
         Fees fees = feesRepository.findBySemester_SemesterIDAndLevel_LevelID(
                 semesterId, levelId
         ).orElse(null);
