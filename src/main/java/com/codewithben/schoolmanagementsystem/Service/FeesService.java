@@ -65,9 +65,9 @@ public class FeesService {
             ));
         }
 
-        StudentFeeRecord feeRecord = studentFeeRecordRepository
+        StudentFeeRecord studentFeeRecord = studentFeeRecordRepository
                 .findByStudent_StudentIdAndFees_FeesId(studentId, fees.getFeesId()).orElse(null);
-        if (feeRecord == null) {
+        if (studentFeeRecord == null) {
             loggingService.logGeneralActivity(LogType.FEES, LogAction.READ, "No records found", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "No records found"
@@ -78,7 +78,7 @@ public class FeesService {
         //ArrayList to Store Fees Report
         List<PaymentHistory> paymentHistoryList = new ArrayList<>();
 
-        for (PaymentRecords paymentRecords : feeRecord.getPaymentRecords()) {
+        for (PaymentRecords paymentRecords : studentFeeRecord.getPaymentRecords()) {
 
             if (!paymentRecords.isDeleted()) {
 
@@ -98,9 +98,9 @@ public class FeesService {
         String studentFullName = student.getFirstName() + " " + student.getLastName();
         String semesterName = fees.getSemester().getSemesterName();
         String levelName = fees.getLevel().getLevelName();
-        String totalFeesAmount = String.valueOf(feeRecord.getFeeAmount());
-        String totalFeesPaid = String.valueOf(feeRecord.getTotalAmountPaid());
-        String feesBalance = String.valueOf(feeRecord.getBalance());
+        String totalFeesAmount = String.valueOf(studentFeeRecord.getFeeAmount());
+        String totalFeesPaid = String.valueOf(studentFeeRecord.getTotalAmountPaid());
+        String feesBalance = String.valueOf(studentFeeRecord.getBalance());
 
         loggingService.logGeneralActivity(LogType.FEES, LogAction.READ, "N/A", staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok(new StudentFeesPaymentDisplay(
@@ -145,9 +145,9 @@ public class FeesService {
             ));
         }
 
-        StudentFeeRecord feeRecord = studentFeeRecordRepository
+        StudentFeeRecord studentFeeRecord = studentFeeRecordRepository
                 .findByStudent_StudentIdAndFees_FeesId(studentId, fees.getFeesId()).orElse(null);
-        if (feeRecord == null) {
+        if (studentFeeRecord == null) {
             loggingService.logGeneralActivity(LogType.FEES, LogAction.READ, "No records found", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "No records found"
@@ -155,19 +155,19 @@ public class FeesService {
         }
 
         List<StudentPaymentRecords> studentPaymentRecordsList = new ArrayList<>();
-        for (PaymentRecords paymentRecord : feeRecord.getPaymentRecords()) {
+        for (PaymentRecords paymentRecord : studentFeeRecord.getPaymentRecords()) {
 
             if (!paymentRecord.isDeleted()) {
                 StudentPaymentRecords studentPaymentRecords = StudentPaymentRecords.builder()
                         .paymentId(paymentRecord.getRecordsId())
                         .dateOfPayment(paymentRecord.getDateOfPayment().toString())
-                        .studentId(feeRecord.getStudent().getStudentId())
+                        .studentId(studentFeeRecord.getStudent().getStudentId())
                         .studentName(
-                                feeRecord.getStudent().getFirstName() + " " + feeRecord.getStudent().getLastName()
+                                studentFeeRecord.getStudent().getFirstName() + " " + studentFeeRecord.getStudent().getLastName()
                         )
                         .amount(String.valueOf(paymentRecord.getAmountPaid()))
                         .semesterId(
-                                feeRecord.getSemester().getSemesterName() + " " + feeRecord.getSemester().getAcademicYear()
+                                studentFeeRecord.getSemester().getSemesterName() + " " + studentFeeRecord.getSemester().getAcademicYear()
                         )
                         .payerName(paymentRecord.getPersonWhoPaid())
                         .payerContact(paymentRecord.getPhoneNumber())
@@ -203,15 +203,15 @@ public class FeesService {
             paymentRecord.setAmountPaid(Double.parseDouble(update.getAmount()));
             paymentRecordsRepository.save(paymentRecord);
 
-            StudentFeeRecord feeRecord = paymentRecord.getFeeRecord();
-            double newTotalPaid = feeRecord.getPaymentRecords()
+            StudentFeeRecord studentFeeRecord = paymentRecord.getStudentFeeRecord();
+            double newTotalPaid = studentFeeRecord.getPaymentRecords()
                     .stream().mapToDouble(PaymentRecords::getAmountPaid).sum();
-            double newBalance = feeRecord.getFeeAmount() - newTotalPaid;
+            double newBalance = studentFeeRecord.getFeeAmount() - newTotalPaid;
 
-            feeRecord.setTotalAmountPaid(newTotalPaid);
-            feeRecord.setBalance(newBalance);
+            studentFeeRecord.setTotalAmountPaid(newTotalPaid);
+            studentFeeRecord.setBalance(newBalance);
             paymentRecord.setFeesBalance(newBalance);
-            studentFeeRecordRepository.save(feeRecord);
+            studentFeeRecordRepository.save(studentFeeRecord);
         }
 
         paymentRecord.setPersonWhoPaid(update.getPayerName());
@@ -240,15 +240,15 @@ public class FeesService {
                 ));
             }
 
-            StudentFeeRecord feeRecord = paymentRecord.getFeeRecord();
+            StudentFeeRecord studentFeeRecord = paymentRecord.getStudentFeeRecord();
             //Calculate total paid and new balance
-            double oldTotalAmountPaid = feeRecord.getTotalAmountPaid();
+            double oldTotalAmountPaid = studentFeeRecord.getTotalAmountPaid();
             double newTotalAmountPaid = oldTotalAmountPaid - paymentRecord.getAmountPaid();
-            double newBalance = feeRecord.getBalance() + paymentRecord.getAmountPaid();
+            double newBalance = studentFeeRecord.getBalance() + paymentRecord.getAmountPaid();
             //Save records
-            feeRecord.setTotalAmountPaid(newTotalAmountPaid);
-            feeRecord.setBalance(newBalance);
-            studentFeeRecordRepository.save(feeRecord);
+            studentFeeRecord.setTotalAmountPaid(newTotalAmountPaid);
+            studentFeeRecord.setBalance(newBalance);
+            studentFeeRecordRepository.save(studentFeeRecord);
 
             paymentRecord.setDeleted(true);
             paymentRecordsRepository.save(paymentRecord);
@@ -368,11 +368,11 @@ public class FeesService {
             return 0.0;
         }
 
-        List<StudentFeeRecord> feeRecords = fees.getFeesRecords();
-        if (feeRecords == null || feeRecords.isEmpty()) {
+        List<StudentFeeRecord> studentFeeRecords = fees.getFeesRecords();
+        if (studentFeeRecords == null || studentFeeRecords.isEmpty()) {
             return 0.0;
         }
-        return feeRecords.stream()
+        return studentFeeRecords.stream()
                 .mapToDouble(StudentFeeRecord::getTotalAmountPaid)
                 .sum();
     }
@@ -499,24 +499,24 @@ public class FeesService {
             ));
         }
 
-        StudentFeeRecord feeRecord = studentFeeRecordRepository
+        StudentFeeRecord studentFeeRecord = studentFeeRecordRepository
                 .findByStudent_StudentIdAndFees_FeesId(studentId, fees.getFeesId()).orElse(null);
-        if (feeRecord == null) {
-            feeRecord = new StudentFeeRecord();
-            feeRecord.setFeeAmount(fees.getAmountToBePayed());
-            feeRecord.setTotalAmountPaid(0);
-            feeRecord.setBalance(fees.getAmountToBePayed());
-            feeRecord.setStudent(student);
-            feeRecord.setFees(fees);
-            feeRecord.setLevel(fees.getLevel());
-            feeRecord.setSemester(fees.getSemester());
-            feeRecord.setInstitution(fees.getInstitution());
-            studentFeeRecordRepository.save(feeRecord);
+        if (studentFeeRecord == null) {
+            studentFeeRecord = new StudentFeeRecord();
+            studentFeeRecord.setFeeAmount(fees.getAmountToBePayed());
+            studentFeeRecord.setTotalAmountPaid(0);
+            studentFeeRecord.setBalance(fees.getAmountToBePayed());
+            studentFeeRecord.setStudent(student);
+            studentFeeRecord.setFees(fees);
+            studentFeeRecord.setLevel(fees.getLevel());
+            studentFeeRecord.setSemester(fees.getSemester());
+            studentFeeRecord.setInstitution(fees.getInstitution());
+            studentFeeRecordRepository.save(studentFeeRecord);
         }
 
-        double oldTotalPaid = feeRecord.getTotalAmountPaid();
+        double oldTotalPaid = studentFeeRecord.getTotalAmountPaid();
         double newTotalPaid = oldTotalPaid + amountPaid;
-        double newBalance = feeRecord.getBalance() - newTotalPaid;
+        double newBalance = studentFeeRecord.getBalance() - newTotalPaid;
 
         // Create and save
         PaymentRecords paymentRecord = new PaymentRecords();
@@ -530,15 +530,15 @@ public class FeesService {
         paymentRecord.setDeleted(false);
         paymentRecordsRepository.save(paymentRecord);
 
-        List<PaymentRecords> paymentRecords = feeRecord.getPaymentRecords();
+        List<PaymentRecords> paymentRecords = studentFeeRecord.getPaymentRecords();
         if (paymentRecords == null) {
             paymentRecords = new ArrayList<>();
         }
         paymentRecords.add(paymentRecord);
-        feeRecord.setPaymentRecords(paymentRecords);
-        feeRecord.setTotalAmountPaid(newTotalPaid);
-        feeRecord.setBalance(newBalance);
-        studentFeeRecordRepository.save(feeRecord);
+        studentFeeRecord.setPaymentRecords(paymentRecords);
+        studentFeeRecord.setTotalAmountPaid(newTotalPaid);
+        studentFeeRecord.setBalance(newBalance);
+        studentFeeRecordRepository.save(studentFeeRecord);
 
         //Add Payment to institution
         List<PaymentRecords> institutionPaymentRecords = student.getInstitution().getPaymentRecords();
@@ -571,10 +571,10 @@ public class FeesService {
         if (fees == null)
             return 0.0;
 
-        List<StudentFeeRecord> feeRecords = fees.getFeesRecords();
-        if (feeRecords == null || feeRecords.isEmpty())
+        List<StudentFeeRecord> studentFeeRecords = fees.getFeesRecords();
+        if (studentFeeRecords == null || studentFeeRecords.isEmpty())
             return 0.0;
-        return feeRecords.stream().mapToDouble(
+        return studentFeeRecords.stream().mapToDouble(
                 StudentFeeRecord::getTotalAmountPaid
         ).sum();
     }
@@ -696,14 +696,14 @@ public class FeesService {
                 RecentPaymentRecords recentPayment = RecentPaymentRecords.builder()
                         .paymentDate(paymentRecord.getDateOfPayment().toString())
                         .studentId(
-                                paymentRecord.getFeeRecord().getStudent().getStudentId()
+                                paymentRecord.getStudentFeeRecord().getStudent().getStudentId()
                         )
                         .studentNameCol(
-                                paymentRecord.getFeeRecord().getStudent().getFirstName() + " " + paymentRecord.getFeeRecord().getStudent().getLastName()
+                                paymentRecord.getStudentFeeRecord().getStudent().getFirstName() + " " + paymentRecord.getStudentFeeRecord().getStudent().getLastName()
                         )
                         .amountCol(String.valueOf(paymentRecord.getAmountPaid()))
                         .payerCol(paymentRecord.getPersonWhoPaid())
-                        .levelCol(paymentRecord.getFeeRecord().getLevel().getLevelName())
+                        .levelCol(paymentRecord.getStudentFeeRecord().getLevel().getLevelName())
                         .build();
 
                 recentPaymentRecords.add(recentPayment);

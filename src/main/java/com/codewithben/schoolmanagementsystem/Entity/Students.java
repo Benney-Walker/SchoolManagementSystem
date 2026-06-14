@@ -57,7 +57,7 @@ public class Students {
     private List<Conduct> conducts;
 
     @OneToMany(mappedBy = "student")
-    private List<StudentFeeRecord> feeRecords;
+    private List<StudentFeeRecord> studentFeeRecords;
 
     @OneToMany(mappedBy = "student")
     private List<Results> results;

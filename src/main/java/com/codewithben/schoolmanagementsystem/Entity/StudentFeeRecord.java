@@ -15,7 +15,7 @@ public class StudentFeeRecord {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private String feeRecordId;
+    private int feeRecordId;
 
     private double feeAmount;
 
