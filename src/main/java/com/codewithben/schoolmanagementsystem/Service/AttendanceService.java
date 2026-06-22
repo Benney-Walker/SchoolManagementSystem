@@ -97,7 +97,7 @@ public class AttendanceService {
         }
 
         Attendance todaysAttendance = attendanceRepository.findByStudent_StudentIdAndDateMarked(
-                studentId, LocalDate.now()
+                studentId, selectedDate
         ).orElse(null);
         if (todaysAttendance == null) {
             todaysAttendance = new Attendance();
