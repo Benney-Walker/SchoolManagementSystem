@@ -1,6 +1,6 @@
 package com.codewithben.schoolmanagementsystem.Controller;
 
-import com.codewithben.schoolmanagementsystem.DTO.Attendance.Attendance;
+import com.codewithben.schoolmanagementsystem.DTO.Attendance.MarkAttendance_List;
 import com.codewithben.schoolmanagementsystem.DTO.Result.SaveStudentScores;
 import com.codewithben.schoolmanagementsystem.DTO.Students.AddNewStudent;
 import com.codewithben.schoolmanagementsystem.DTO.Students.UpdateStudentPersonalData;

@@ -1,13 +1,13 @@
 package com.codewithben.schoolmanagementsystem.DTO.Attendance;
 
-public class Attendance {
+public class MarkAttendance_List {
     private String levelId;
 
     private String studentId;
 
     private String status;
 
-    public Attendance(String studentId, String levelId, String status) {
+    public MarkAttendance_List(String studentId, String levelId, String status) {
         this.studentId = studentId;
         this.levelId = levelId;
         this.status = status;

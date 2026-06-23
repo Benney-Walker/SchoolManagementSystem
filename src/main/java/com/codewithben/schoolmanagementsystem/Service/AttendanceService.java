@@ -4,6 +4,8 @@ import com.codewithben.schoolmanagementsystem.Constants.AttendanceStatus;
 import com.codewithben.schoolmanagementsystem.Constants.LogAction;
 import com.codewithben.schoolmanagementsystem.Constants.LogStatus;
 import com.codewithben.schoolmanagementsystem.Constants.LogType;
+import com.codewithben.schoolmanagementsystem.DTO.Attendance.MarkAttendance_List;
+import com.codewithben.schoolmanagementsystem.DTO.Attendance.StudentAttendance;
 import com.codewithben.schoolmanagementsystem.Entity.*;
 import com.codewithben.schoolmanagementsystem.Repository.*;
 import com.codewithben.schoolmanagementsystem.Utility.UtilityClass;
@@ -183,7 +185,7 @@ public class AttendanceService {
             studentsRepository.save(student);
         }
 
-        todaysAttendance.setStatus(AttendanceStatus.valueOf(status));
+        todaysAttendance.setStatus(AttendanceStatus.valueOf(status.toUpperCase()));
         attendanceRepository.save(todaysAttendance);
 
         loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.CREATE, "N/A", staffId, LogStatus.SUCCESS);
