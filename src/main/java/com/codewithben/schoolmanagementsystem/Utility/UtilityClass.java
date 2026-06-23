@@ -137,7 +137,7 @@ public class UtilityClass {
     }
 
     //Method for finding the current semester
-    public String getCurrentSemesterId(String institutionId) {
+    public Semester getCurrentSemester(Institution institution) {
         LocalDate currentDate = LocalDate.now();
 
         Institution institution = institutiionRepository.findByInstitutionId(institutionId).orElse(null);
@@ -156,7 +156,7 @@ public class UtilityClass {
             // Check if current date is within semester range (inclusive)
             if (currentDate.isEqual(startDate) || currentDate.isAfter(startDate)) {
                 if (currentDate.isEqual(endDate) || currentDate.isBefore(gradePeriod)) {
-                    return semester.getSemesterID();
+                    return semester;
                 }
             }
         }
