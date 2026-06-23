@@ -209,6 +209,18 @@ public class UtilityClass {
         return day != DayOfWeek.SATURDAY && day != DayOfWeek.SUNDAY;
     }
 
+    public boolean isHoliday(Semester semester, LocalDate selectedDate) {
+        List<SchoolHoliday> holidays = semester.getSchoolHoliday();
+        if (holidays != null && !holidays.isEmpty()) {
+            for (SchoolHoliday holiday : holidays) {
+                if (!selectedDate.isBefore(holiday.getStartDate()) && !selectedDate.isAfter(holiday.getEndDate())) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     public List<Students> getActiveStudents(List<Students> students) {
         List<Students> studentsListForReport = new ArrayList<>();
         for (Students student: students) {
