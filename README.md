@@ -1,6 +1,6 @@
 # School Management System — Backend
 
-A multi-tenant **School Management System** REST API built with **Spring Boot 3.5.6** and **Java 21**. It handles institution onboarding, staff and student management, class/level and semester (term) administration, subject scoring and result compilation, conduct grading, attendance tracking, fee billing and payments, a two-dimensional activity log, and PDF report generation via JasperReports (terminal report cards, SBA reports, and master score sheets).
+A multi-tenant **School Management System** REST API built with **Spring Boot 3.5.6** and **Java 21**. It handles institution onboarding, staff and student management, class/level and semester (term) administration, subject scoring and result compilation, conduct grading, markAttendanceList tracking, fee billing and payments, a two-dimensional activity log, and PDF report generation via JasperReports (terminal report cards, SBA reports, and master score sheets).
 
 The system is **multi-tenant**: every record is scoped to an `Institution`, and a school joins the platform using a subscription code before any staff or students can be created.
 
@@ -99,7 +99,7 @@ The service layer was decomposed from a small set of broad services into 16 focu
 | `StaffService` | Staff CRUD, counts, password reset |
 | `ClassService` | Classes/levels and semesters (terms), caches |
 | `StudentService` | Student CRUD, rosters, counts |
-| `AttendanceService` | Marking and querying attendance |
+| `AttendanceService` | Marking and querying markAttendanceList |
 | `SubjectsService` | Subject CRUD per level |
 | `ScoresService` | Saving and loading subject scores |
 | `ResultsService` | Result compilation, class results, SBA/master views |
@@ -379,7 +379,7 @@ All non-auth endpoints expect a `staffId` request header (used to scope and audi
 | GET | `/v1/conduct-records` | Conduct records for a class+semester |
 | PUT | `/v1/save-conduct-record` | Save student conduct |
 
-### `/api/student` — Students, attendance, scoring
+### `/api/student` — Students, markAttendanceList, scoring
 
 | Method | Path | Purpose |
 |---|---|---|
@@ -391,8 +391,8 @@ All non-auth endpoints expect a `staffId` request header (used to scope and audi
 | GET | `/v1/load-students/{levelId}` | Students in a level |
 | GET | `/v1/load-subject-students/{subjectId}` | Students taking a subject |
 | POST | `/v1/save-subject-scores` | Save subject scores (headers: `subjectId`, `semesterId`) |
-| GET | `/v1/load-students-for-attendance/{levelId}/{date}` | Attendance roster |
-| POST | `/v1/mark-attendance` | Mark attendance (header: `selectedDate`) |
+| GET | `/v1/load-students-for-markAttendanceList/{levelId}/{date}` | Attendance roster |
+| POST | `/v1/mark-markAttendanceList` | Mark markAttendanceList (header: `selectedDate`) |
 | GET | `/v2/generate-report-card` | Generate a single student's report card (PDF; header: `promotionId`) |
 
 ### `/api/finance` — Fees & payments
