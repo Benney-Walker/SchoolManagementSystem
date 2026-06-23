@@ -140,13 +140,9 @@ public class UtilityClass {
     public Semester getCurrentSemester(Institution institution) {
         LocalDate currentDate = LocalDate.now();
 
-        Institution institution = institutiionRepository.findByInstitutionId(institutionId).orElse(null);
-        if (institution == null)
-            return "";
-
         List<Semester> semesters = institution.getSemester();
         if (semesters == null)
-            return "";
+            return null;
 
         for (Semester semester : semesters) {
             LocalDate startDate = semester.getSemesterStartDate();
@@ -160,7 +156,7 @@ public class UtilityClass {
                 }
             }
         }
-        return "";
+        return null;
     }
 
     public void reArrangePositions(Subjects subject, Semester semester) {
