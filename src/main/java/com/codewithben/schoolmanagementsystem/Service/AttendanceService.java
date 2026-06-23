@@ -37,6 +37,74 @@ public class AttendanceService {
 
     private final StaffsRepository staffsRepository;
 
+    public ResponseEntity<?> loadStudentsForAttendance(String levelId, String attendanceDate, String staffId) {
+
+        LocalDate selectedDate = LocalDate.parse(attendanceDate, DateTimeFormatter.ISO_DATE);
+
+        Level level = levelRepository.findByLevelID(levelId).orElse(null);
+        if (level == null) {
+            loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.READ, "Invalid class Id", staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Invalid class Id"
+            ));
+        }
+
+        Semester semester = utilityClass.getCurrentSemester(level.getInstitution());
+        if (semester == null) {
+            loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.CREATE, "Current term not added to system", staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                    "message", "Current term not added to system"
+            ));
+        }
+
+        if (!utilityClass.isSchoolDay(selectedDate)) {
+            loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.CREATE, "Attendance can't be marked on weekends", staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                    "message", "Attendance can't be marked on weekends"
+            ));
+        }
+
+        if (utilityClass.isHoliday(semester, selectedDate)) {
+            loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.CREATE, "Selected date is a holiday", staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                    "message", "Selected date is a holiday"
+            ));
+        }
+
+        LocalDate date = LocalDate.parse(attendanceDate, DateTimeFormatter.ISO_DATE);
+
+        List<Attendance> markedAttendance =
+                attendanceRepository.findByLevel_LevelIDAndDateMarked(levelId, date);
+
+        List<Students> students = utilityClass.getActiveStudents(level.getStudents());
+
+        List<StudentAttendance> attendanceList = new ArrayList<>();
+
+        for (Students student : students) {
+
+            String status = AttendanceStatus.ABSENT.name();
+
+            if (markedAttendance != null) {
+                for (Attendance attendance : markedAttendance) {
+                    if (attendance.getStudent().getStudentId().equals(student.getStudentId())) {
+                        status = attendance.getStatus().name();
+                        break;
+                    }
+                }
+            }
+
+            attendanceList.add(new StudentAttendance(
+                    level.getLevelID(),
+                    student.getStudentId(),
+                    student.getFirstName() + " " + student.getLastName(),
+                    status
+            ));
+        }
+
+        loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.READ, "Fetched " + level.getLevelName() + " students for attendance", staffId, LogStatus.SUCCESS);
+        return ResponseEntity.ok(attendanceList);
+    }
+
     public ResponseEntity<?> markStudentAttendance(String studentId, String levelId, String status, String date, String staffId) {
 
         //Check if date is accepted for attendance
