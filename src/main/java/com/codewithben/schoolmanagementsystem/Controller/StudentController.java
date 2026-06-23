@@ -10,6 +10,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @AllArgsConstructor
 @RestController
 @RequestMapping("/api/student")
@@ -86,18 +88,26 @@ public class StudentController {
                                                        @PathVariable String levelId,
                                                        @PathVariable String date) {
 
-        return studentService.loadStudentForAttendance(levelId, date, staffId);
+        return attendanceService.loadStudentsForAttendance(levelId, date, staffId);
     }
 
     @PostMapping("/v1/mark-attendance")
     public ResponseEntity<?> markAttendance(@RequestHeader("staffId") String staffId,
                                             @RequestHeader("selectedId") String date,
-                                            @RequestBody Attendance attendance) {
-        String studentId = attendance.getStudentId();
-        String levelId = attendance.getLevelId();
-        String status = attendance.getStatus().toUpperCase();
+                                            @RequestBody MarkAttendance_List markAttendanceList) {
+        String studentId = markAttendanceList.getStudentId();
+        String levelId = markAttendanceList.getLevelId();
+        String status = markAttendanceList.getStatus().toUpperCase();
 
         return attendanceService.markStudentAttendance(studentId, levelId, status, date, staffId);
+    }
+
+    @PostMapping("/v2/mark-attendance")
+    public ResponseEntity<?> markAttendance(@RequestHeader("staffId") String staffId,
+                                            @RequestHeader("selectedDate") String date,
+                                            @RequestBody List<MarkAttendance_List> markAttendanceList) {
+
+        return attendanceService.markStudentAttendance(markAttendanceList, date, staffId);
     }
 
     @GetMapping("/v1/load-students/{levelId}")

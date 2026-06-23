@@ -126,10 +126,8 @@ public class AttendanceService {
             ));
         }
 
-        String currentSemesterId = utilityClass.getCurrentSemesterId(
-                student.getInstitution().getInstitutionId()
-        );
-        Semester semester = semesterRepository.findBySemesterID(currentSemesterId).orElse(null);
+
+        Semester semester = utilityClass.getCurrentSemester(student.getInstitution());
         if (semester == null) {
             loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.CREATE, "Current term not added to system", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
@@ -189,6 +187,93 @@ public class AttendanceService {
         attendanceRepository.save(todaysAttendance);
 
         loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.CREATE, "N/A", staffId, LogStatus.SUCCESS);
+        return ResponseEntity.ok().build();
+    }
+
+    public ResponseEntity<?> markStudentAttendance(List<MarkAttendance_List> attendanceList, String date, String staffId) {
+
+        //Check if date is accepted for attendance
+        LocalDate selectedDate = LocalDate.parse(date, DateTimeFormatter.ISO_DATE);
+        if (!utilityClass.isSchoolDay(selectedDate)) {
+            loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.CREATE, "Attendance can't be marked on weekends", staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                    "message", "Attendance can't be marked on weekends"
+            ));
+        }
+
+        boolean isNotHoliday = false;
+        Level attendanceLevel = null;
+        Semester attendanceSemester = null;
+
+        for (MarkAttendance_List studentAttendance : attendanceList) {
+
+            Students student = studentsRepository.findByStudentId(studentAttendance.getStudentId()).orElse(null);
+            if (student == null) {
+                loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.CREATE, "Invalid student Id", staffId, LogStatus.FAILED);
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                        "message", "Invalid student Id"
+                ));
+            }
+
+            if (attendanceSemester == null) {
+                Semester semester = utilityClass.getCurrentSemester(student.getInstitution());
+                if (semester == null) {
+                    loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.CREATE, "Current term not added to system", staffId, LogStatus.FAILED);
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                            "message", "Current term not added to system"
+                    ));
+                }
+
+                attendanceSemester = semester;
+            }
+
+            if (!isNotHoliday) {
+                if (utilityClass.isHoliday(attendanceSemester, selectedDate)) {
+                    loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.CREATE, "Attendance can't be marked on holidays", staffId, LogStatus.FAILED);
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                            "message", "Attendance can't be marked on holidays"
+                    ));
+                }
+                isNotHoliday = true;
+            }
+
+            if (attendanceLevel == null) {
+                Level level = levelRepository.findByLevelID(studentAttendance.getLevelId()).orElse(null);
+                if (level == null) {
+                    loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.CREATE, "Invalid student Id", staffId, LogStatus.FAILED);
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                            "message", "Invalid level Id"
+                    ));
+                }
+
+                attendanceLevel = level;
+            }
+
+
+            Attendance todaysAttendance = attendanceRepository.findByStudent_StudentIdAndDateMarked(
+                    studentAttendance.getStudentId(), selectedDate
+            ).orElse(null);
+            if (todaysAttendance == null) {
+                todaysAttendance = new Attendance();
+                todaysAttendance.setStudent(student);
+                todaysAttendance.setSemester(attendanceSemester);
+                todaysAttendance.setLevel(attendanceLevel);
+                todaysAttendance.setDateMarked(selectedDate);
+                todaysAttendance.setMarkedBy(null);
+
+                List<Attendance> studentAttendanceList = student.getAttendance();
+                if (studentAttendanceList == null || studentAttendanceList.isEmpty()) {
+                    studentAttendanceList = new ArrayList<>();
+                }
+                studentAttendanceList.add(todaysAttendance);
+                studentsRepository.save(student);
+            }
+
+            todaysAttendance.setStatus(AttendanceStatus.valueOf(studentAttendance.getStatus().toUpperCase()));
+            attendanceRepository.save(todaysAttendance);
+        }
+
+        loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.CREATE, "Marked attendance for " + attendanceLevel.getLevelName(), staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok().build();
     }
 
