@@ -103,7 +103,7 @@ public class AttendanceService {
             ));
         }
 
-        loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.READ, "Fetched " + level.getLevelName() + " students for attendance", staffId, LogStatus.SUCCESS);
+        loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.READ, "Fetched " + level.getLevelName() + " attendance records", staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok(attendanceList);
     }
 
@@ -186,7 +186,7 @@ public class AttendanceService {
         todaysAttendance.setStatus(AttendanceStatus.valueOf(status.toUpperCase()));
         attendanceRepository.save(todaysAttendance);
 
-        loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.CREATE, "N/A", staffId, LogStatus.SUCCESS);
+        loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.CREATE, "Marked attendance for " + level.getLevelName(), staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok().build();
     }
 
