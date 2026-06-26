@@ -90,7 +90,7 @@ public class ReportService {
 
         String resumingDate = utilityClass.getResumingDate(studentResult.getStudent().getLevel(),  semester);
 
-        GenerateStudentResult result = resultsService.generateStudentResult(studentResult, resumingDate, totalAttendance, "-");
+        GenerateStudentResult result = resultsService.generateStudentResult(studentResult, resumingDate, totalAttendance, promotionLevel);
         result.setStudentConductReport(
                 conductService.getStudentConductReport(studentResult.getConduct())
         );
