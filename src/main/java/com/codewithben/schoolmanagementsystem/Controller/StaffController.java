@@ -165,4 +165,11 @@ public class StaffController {
 
         return conductService.saveStudentConducts(staffId, record);
     }
+
+    @PutMapping("/v2/save-conduct-record")
+    public ResponseEntity<?> saveStudentConduct(@RequestHeader("staffId")String staffId,
+                                                @RequestBody List<StudentConductRecord> records) {
+
+        return conductService.saveStudentConducts(staffId, records);
+    }
 }
