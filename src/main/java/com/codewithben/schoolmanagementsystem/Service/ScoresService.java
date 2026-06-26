@@ -134,6 +134,7 @@ public class ScoresService {
         subjectScore.setClassScore(Double.valueOf(String.format("%.2f", classScore)));
         subjectScore.setExamScore(Double.parseDouble(String.format("%.2f", examScore)));
         subjectScore.setCalculatedExamScore(calculatedExamScore);
+        subjectScore.setSemester(semester);
         subjectScore.setGrade(
                 utilityClass.extractGrade(totalScore, student.getInstitution().getInstitutionId())
         );
@@ -159,14 +160,13 @@ public class ScoresService {
         return ResponseEntity.ok().build();
     }
 
-    public ResponseEntity<?> loadStudentsForScores(String subjectId, String staffId) {
-        String logData = "Subject Id: " + subjectId;
+    public ResponseEntity<?> loadStudentsForScores(String semesterId, String subjectId, String staffId) {
 
         Subjects subject = subjectsRepository.findBySubjectId(subjectId).orElse(null);
         if (subject == null) {
-            loggingService.logGeneralActivity(LogType.SUBJECT_SCORE, LogAction.READ, "Invalid subject id", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.SUBJECT_SCORE, LogAction.READ, "Invalid subject Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "Subject not found"
+                    "message", "Invalid subject Id"
             ));
         }
 
@@ -189,8 +189,8 @@ public class ScoresService {
             StudentsScoresTable scoresTable = new StudentsScoresTable();
 
             // Check if student has scores for this subject
-            SubjectScore score = subjectScoreRepository.findByStudent_StudentIdAndSubject_SubjectId(
-                    studentId, subjectId
+            SubjectScore score = subjectScoreRepository.findByStudent_StudentIdAndSubject_SubjectIdAndSemester_SemesterID(
+                    studentId, subjectId, semesterId
             ).orElse(null);
 
             if (score == null) {
