@@ -59,7 +59,7 @@ public class FinanceController {
     public ResponseEntity<?> updatePaymentRecords(@RequestHeader("staffId") String staffId,
                                                   @RequestBody StudentPaymentRecords update) {
 
-        return feesService.updatePaymentRecords(update, staffId);
+        return feesService.updatePaymentRecord(update, staffId);
     }
 
     @DeleteMapping("/v1/delete-payment-record/{transactionId}")
