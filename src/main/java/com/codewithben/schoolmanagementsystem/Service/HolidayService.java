@@ -112,12 +112,18 @@ public class HolidayService {
             ));
         }
 
-        String currentSemesterId = utilityClass.getCurrentSemesterId(
-                staff.getInstitution().getInstitutionId()
+        Semester currentSemester = utilityClass.getCurrentSemester(
+                staff.getInstitution()
         );
+        if (currentSemester == null) {
+            loggingService.logGeneralActivity(LogType.SCHOOL_HOLIDAY, LogAction.READ, "N/A", staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Current semester not added"
+            ));
+        }
 
         List<SchoolHoliday> semesterHolidays = schoolHolidayRepository
-                .findBySemester_SemesterID(currentSemesterId);
+                .findBySemester_SemesterID(currentSemester.getSemesterID());
         if (semesterHolidays == null || semesterHolidays.isEmpty()) {
             loggingService.logGeneralActivity(LogType.SCHOOL_HOLIDAY, LogAction.READ, "N/A", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
@@ -134,7 +140,7 @@ public class HolidayService {
                     .holidayName(schoolHoliday.getHolidayName().name())
                     .startDate(schoolHoliday.getStartDate().toString())
                     .endDate(schoolHoliday.getEndDate().toString())
-                    .semesterId(currentSemesterId)
+                    .semesterId(schoolHoliday.getSemester().getSemesterID())
                     .semesterName(schoolHoliday.getSemester().getSemesterName())
                     .academicYear(schoolHoliday.getSemester().getAcademicYear())
                     .build();
