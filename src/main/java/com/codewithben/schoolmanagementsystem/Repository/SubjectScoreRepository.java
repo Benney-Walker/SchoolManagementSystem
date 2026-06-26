@@ -19,5 +19,9 @@ public interface SubjectScoreRepository extends JpaRepository<SubjectScore, Long
             String studentId, String subjectId
     );
 
+    Optional<SubjectScore> findByStudent_StudentIdAndSubject_SubjectIdAndSemester_SemesterID(
+            String studentId, String subjectId, String semesterId
+    );
+
     Optional<SubjectScore> findBySubject_SubjectId(String subjectId);
 }
