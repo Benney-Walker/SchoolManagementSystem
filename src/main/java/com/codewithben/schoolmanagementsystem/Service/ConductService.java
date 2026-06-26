@@ -148,8 +148,15 @@ public class ConductService {
             studentResult.setConduct(conduct);
             resultsRepository.save(studentResult);
 
-            loggingService.logGeneralActivity(LogType.CONDUCT, LogAction.CREATE, logData, staffId, LogStatus.SUCCESS);
-            return ResponseEntity.ok().build();
+        } else {
+            conduct.setRegular(ConductRatings.valueOf(record.getRegular()));
+            conduct.setPunctual(ConductRatings.valueOf(record.getPunctual()));
+            conduct.setPhysicalAppearance(ConductRatings.valueOf(record.getPhysicalAppearance()));
+            conduct.setSocial(ConductRatings.valueOf(record.getSocial()));
+            conduct.setEmotional(ConductRatings.valueOf(record.getEmotional()));
+            conduct.setCognitiveSkills(ConductRatings.valueOf(record.getCognitiveSkills()));
+            conduct.setClassTeacherRemark(record.getConductRemark());
+            conductRepository.save(conduct);
         }
 
         loggingService.logGeneralActivity(LogType.CONDUCT, LogAction.CREATE, "Saved conduct record for " + studentResult.getStudent().getFirstName(), staffId, LogStatus.SUCCESS);
