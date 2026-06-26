@@ -60,11 +60,12 @@ public class StudentController {
                     guardianContact, levelId, staffId);
     }
 
-    @GetMapping("/v1/load-subject-students/{subjectId}")
+    @GetMapping("/v1/load-subject-students/{subjectId}/{semesterId}")
     public ResponseEntity<?> getSubjectStudents(@RequestHeader("staffId")String staffId,
-                                                @PathVariable String subjectId) {
+                                                @PathVariable String subjectId,
+                                                @PathVariable String semesterId) {
 
-        return scoresService.loadStudentsForScores(subjectId, staffId);
+        return scoresService.loadStudentsForScores(semesterId, subjectId, staffId);
     }
 
     @PostMapping("/v1/save-subject-scores")
