@@ -26,6 +26,10 @@ public class SubjectScore {
     @JoinColumn(name = "results_resultId")
     private Results results;
 
+    @ManyToOne
+    @JoinColumn(nullable = false, name = "semester_semesterId")
+    private Semester semester;
+
     //Then exercise1Score
     @Column(name = "exercise1score")
     private Double projectWork;
