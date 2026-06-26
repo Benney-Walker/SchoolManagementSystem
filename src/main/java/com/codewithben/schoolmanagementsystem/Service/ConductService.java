@@ -24,7 +24,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-@Builder
 @AllArgsConstructor
 @Service
 public class ConductService {
@@ -40,11 +39,10 @@ public class ConductService {
     private final SemesterRepository semesterRepository;
 
     public ResponseEntity<?> getStudentsConduct(String levelId, String semesterId, String staffId) {
-        String logData = "Level= " + levelId + ", Semester= " + semesterId + ", staffId= " + staffId;
 
         Level level = levelRepository.findByLevelID(levelId).orElse(null);
         if (level == null) {
-            loggingService.logGeneralActivity(LogType.CONDUCT, LogAction.READ, logData, staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.CONDUCT, LogAction.READ, "Invalid class Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Invalid class Id"
             ));
@@ -52,7 +50,7 @@ public class ConductService {
 
         Semester semester = semesterRepository.findBySemesterID(semesterId).orElse(null);
         if (semester == null) {
-            loggingService.logGeneralActivity(LogType.CONDUCT, LogAction.READ, logData, staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.CONDUCT, LogAction.READ, "Invalid semester Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Invalid semester Id"
             ));
@@ -60,7 +58,7 @@ public class ConductService {
 
         List<Results> studentList = resultsRepository.findByLevel_LevelIDAndSemester_SemesterIDOrderByTotalScoreDesc(levelId, semesterId);
         if (studentList == null || studentList.isEmpty()) {
-            loggingService.logGeneralActivity(LogType.CONDUCT, LogAction.READ, logData, staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.CONDUCT, LogAction.READ, "No results found to contain conduct records", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "No results found to contain conduct records"
             ));
@@ -117,23 +115,16 @@ public class ConductService {
             conductList.add(studentConductRecord);
         }
 
-        loggingService.logGeneralActivity(LogType.CONDUCT, LogAction.READ, logData, staffId, LogStatus.SUCCESS);
+        loggingService.logGeneralActivity(LogType.CONDUCT, LogAction.READ, "Loaded conducts records for " + level.getLevelName(), staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok(conductList);
     }
 
     public ResponseEntity<?> saveStudentConducts(String staffId, StudentConductRecord record) {
 
-        String logData
-                = "studentId= " + record.getStudentId() + " studentName= " + record.getStudentName() +
-                " semesterId= " + record.getSemesterId() + " regular= " + record.getRegular() +
-                " punctual= " + record.getPunctual() + " physical Appearance= " + record.getPhysicalAppearance() +
-                " social= " + record.getSocial() + " emotional= " + record.getEmotional() +
-                " cognitiveSkills= " + record.getCognitiveSkills() + " conductRemark= " + record.getConductRemark();
-
         Results studentResult =
                 resultsRepository.findByStudent_StudentIdAndSemester_SemesterID(record.getStudentId(), record.getSemesterId()).orElse(null);
         if (studentResult == null) {
-            loggingService.logGeneralActivity(LogType.CONDUCT, LogAction.CREATE, logData, staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.CONDUCT, LogAction.CREATE, "No semester result found for this student", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "No semester result found for this student"
             ));
@@ -161,16 +152,7 @@ public class ConductService {
             return ResponseEntity.ok().build();
         }
 
-        conduct.setRegular(ConductRatings.valueOf(record.getRegular()));
-        conduct.setPunctual(ConductRatings.valueOf(record.getPunctual()));
-        conduct.setPhysicalAppearance(ConductRatings.valueOf(record.getPhysicalAppearance()));
-        conduct.setSocial(ConductRatings.valueOf(record.getSocial()));
-        conduct.setEmotional(ConductRatings.valueOf(record.getEmotional()));
-        conduct.setCognitiveSkills(ConductRatings.valueOf(record.getCognitiveSkills()));
-        conduct.setClassTeacherRemark(record.getConductRemark());
-        conductRepository.save(conduct);
-
-        loggingService.logGeneralActivity(LogType.CONDUCT, LogAction.CREATE, logData, staffId, LogStatus.SUCCESS);
+        loggingService.logGeneralActivity(LogType.CONDUCT, LogAction.CREATE, "Saved conduct record for " + studentResult.getStudent().getFirstName(), staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok().build();
     }
 
