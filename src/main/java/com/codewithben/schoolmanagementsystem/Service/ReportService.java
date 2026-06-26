@@ -63,7 +63,7 @@ public class ReportService {
             if (level == null) {
                 loggingService.logGeneralActivity(LogType.RESULT, LogAction.READ, "Invalid Class Id", staffId, LogStatus.FAILED);
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                        "message", "Invalid Class Id"
+                        "message", "Invalid promotion class Id"
                 ));
             }
             promotionLevel = level.getLevelName();
