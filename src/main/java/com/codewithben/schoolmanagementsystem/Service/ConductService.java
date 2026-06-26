@@ -163,6 +163,61 @@ public class ConductService {
         return ResponseEntity.ok().build();
     }
 
+    public ResponseEntity<?> saveStudentConducts(String staffId, List<StudentConductRecord> records) {
+
+        if (records == null || records.isEmpty()) {
+            loggingService.logGeneralActivity(LogType.CONDUCT, LogAction.CREATE, "Conduct records empty", staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                    "message", "Conduct records empty"
+            ));
+        }
+
+        String levelName = "";
+
+        List<Conduct> conductList = new ArrayList<>();
+        for (StudentConductRecord record : records) {
+            Results studentResult = resultsRepository
+                    .findByStudent_StudentIdAndSemester_SemesterID(record.getStudentId(), record.getSemesterId()).orElse(null);
+            if (studentResult == null) {
+                loggingService.logGeneralActivity(LogType.CONDUCT, LogAction.CREATE, "No term result found for some students", staffId, LogStatus.FAILED);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                        "message", "No term result found for this student"
+                ));
+            }
+
+            Conduct conduct = studentResult.getConduct();
+            if (conduct == null) {
+
+                conduct = new Conduct();
+                conduct.setStudent(studentResult.getStudent());
+                conduct.setResults(studentResult);
+                conduct.setRegular(ConductRatings.valueOf(record.getRegular()));
+                conduct.setPunctual(ConductRatings.valueOf(record.getPunctual()));
+                conduct.setPhysicalAppearance(ConductRatings.valueOf(record.getPhysicalAppearance()));
+                conduct.setSocial(ConductRatings.valueOf(record.getSocial()));
+                conduct.setEmotional(ConductRatings.valueOf(record.getEmotional()));
+                conduct.setCognitiveSkills(ConductRatings.valueOf(record.getCognitiveSkills()));
+                conduct.setClassTeacherRemark(record.getConductRemark());
+
+            } else {
+                conduct.setRegular(ConductRatings.valueOf(record.getRegular()));
+                conduct.setPunctual(ConductRatings.valueOf(record.getPunctual()));
+                conduct.setPhysicalAppearance(ConductRatings.valueOf(record.getPhysicalAppearance()));
+                conduct.setSocial(ConductRatings.valueOf(record.getSocial()));
+                conduct.setEmotional(ConductRatings.valueOf(record.getEmotional()));
+                conduct.setCognitiveSkills(ConductRatings.valueOf(record.getCognitiveSkills()));
+                conduct.setClassTeacherRemark(record.getConductRemark());
+            }
+
+            conductList.add(conduct);
+        }
+
+        conductRepository.saveAll(conductList);
+
+        loggingService.logGeneralActivity(LogType.CONDUCT, LogAction.CREATE, "Added students conduct records for " + levelName, staffId, LogStatus.SUCCESS);
+        return ResponseEntity.ok().build();
+    }
+
     public StudentConductReport getStudentConductReport(Conduct conduct) {
 
         return StudentConductReport.builder()
