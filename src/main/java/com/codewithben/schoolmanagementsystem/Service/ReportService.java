@@ -10,6 +10,7 @@ import com.codewithben.schoolmanagementsystem.DTO.Result.SbaRecords;
 import com.codewithben.schoolmanagementsystem.Entity.*;
 import com.codewithben.schoolmanagementsystem.Repository.*;
 import com.codewithben.schoolmanagementsystem.Utility.UtilityClass;
+import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +22,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
-@RequiredArgsConstructor
+@AllArgsConstructor
 @Service
 public class ReportService {
 
@@ -53,7 +54,7 @@ public class ReportService {
         if (semester == null) {
             loggingService.logGeneralActivity(LogType.REPORT, LogAction.READ, "Invalid Term Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "Invalid Semester ID"
+                    "message", "Invalid term Id"
             ));
         }
 
@@ -98,7 +99,11 @@ public class ReportService {
         try {
             byte[] studentReport = jasperReportService.generateStudentReportCard(result, studentResult.getStudent().getInstitution().getInstitutionName());
 
-            loggingService.logGeneralActivity(LogType.REPORT, LogAction.READ, "N/A", staffId, LogStatus.SUCCESS);
+            loggingService.logGeneralActivity(
+                    LogType.REPORT, LogAction.READ,
+                    "Generated report card for " + studentResult.getStudent().getFirstName() + " " +
+                            studentResult.getStudent().getLastName(), staffId, LogStatus.SUCCESS
+            );
             return ResponseEntity.ok().body(studentReport);
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -111,7 +116,7 @@ public class ReportService {
         if (level == null) {
             loggingService.logGeneralActivity(LogType.REPORT, LogAction.READ, "Invalid class Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "Invalid Level ID"
+                    "message", "Invalid class Id"
             ));
         }
 
@@ -119,7 +124,7 @@ public class ReportService {
         if (semester == null) {
             loggingService.logGeneralActivity(LogType.REPORT, LogAction.READ, "Invalid Term Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "Invalid Semester ID"
+                    "message", "Invalid term Id"
             ));
         }
 
@@ -158,7 +163,11 @@ public class ReportService {
 
             byte[] studentBulkReportPdf = jasperReportService.generateClassReportCards(reportData, level.getInstitution().getInstitutionName());
 
-            loggingService.logGeneralActivity(LogType.REPORT, LogAction.READ, "N/A", staffId, LogStatus.SUCCESS);
+            loggingService.logGeneralActivity(
+                    LogType.REPORT, LogAction.READ,
+                    "Generated class report for " + level.getLevelName(),
+                    staffId, LogStatus.SUCCESS
+            );
             return ResponseEntity.ok().body(studentBulkReportPdf);
         } catch (Exception e) {
             throw new RuntimeException("Error while generating report for " + e);
@@ -170,7 +179,7 @@ public class ReportService {
         if (subject == null) {
             loggingService.logGeneralActivity(LogType.REPORT, LogAction.READ, "Invalid subject Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "Invalid Subject ID"
+                    "message", "Invalid Subject Id"
             ));
         }
 
@@ -178,7 +187,7 @@ public class ReportService {
         if (level == null) {
             loggingService.logGeneralActivity(LogType.REPORT, LogAction.READ, "Invalid class Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "Invalid Level ID"
+                    "message", "Invalid class Id"
             ));
         }
 
@@ -186,7 +195,7 @@ public class ReportService {
         if (semester == null) {
             loggingService.logGeneralActivity(LogType.REPORT, LogAction.READ, "Invalid Term Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "Invalid Semester ID"
+                    "message", "Invalid term Id"
             ));
         }
 
@@ -214,7 +223,11 @@ public class ReportService {
         try {
             byte[] sbaReportPdf = jasperReportService.generateSbaReport(sbaReport, level.getInstitution().getInstitutionName());
 
-            loggingService.logGeneralActivity(LogType.REPORT, LogAction.READ,"N/A", staffId, LogStatus.SUCCESS);
+            loggingService.logGeneralActivity(
+                    LogType.REPORT, LogAction.READ,
+                    "Generated Sba report for " + level.getLevelName() + "' " +
+                            subject.getSubjectName(), staffId, LogStatus.SUCCESS
+            );
             return ResponseEntity.ok(sbaReportPdf);
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -236,7 +249,11 @@ public class ReportService {
 
         try {
             byte[] scoreSheetPdf = pdfGenerationService.generateMasterSheetScore(masterScoreSheet);
-            loggingService.logGeneralActivity(LogType.RESULT, LogAction.READ,"N/A", staffId, LogStatus.SUCCESS);
+            loggingService.logGeneralActivity(
+                    LogType.RESULT, LogAction.READ,
+                    "Generated master score sheet for " + masterScoreSheet.getClassName(),
+                    staffId, LogStatus.SUCCESS
+            );
             return ResponseEntity.ok(scoreSheetPdf);
         } catch (Exception e)  {
             throw new RuntimeException("Error while generating report for " + e);
