@@ -361,11 +361,12 @@ public class AttendanceService {
         return ResponseEntity.ok(absentees);
     }
 
-    public int getStudentPresentAttendance(String studentId, String semesterId) {
+    public int getStudentPresentAttendanceCount(String studentId, String semesterId) {
 
-        List<Attendance> presentDays = attendanceRepository.findByStudent_StudentIdAndSemester_SemesterIDAndStatus(
-                studentId, semesterId, AttendanceStatus.PRESENT
-        );
+        List<AttendanceRecords> presentDays = attendanceRecordsRepository
+                .findByStudent_StudentIdAndStatusAndAttendanceDate_Semester_SemesterID(
+                        studentId, AttendanceStatus.PRESENT, semesterId
+                );
         if (presentDays == null || presentDays.isEmpty()) {
             return 0;
         }
