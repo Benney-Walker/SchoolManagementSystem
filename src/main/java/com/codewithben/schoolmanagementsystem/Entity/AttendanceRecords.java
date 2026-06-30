@@ -12,7 +12,8 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-public class Attendance {
+@Table(name = "attendance")
+public class AttendanceRecords {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
@@ -20,17 +21,10 @@ public class Attendance {
     @ManyToOne
     private Students student;
 
-    @ManyToOne
-    private Level level;
-
-    @ManyToOne
-    private Semester semester;
-
-    private LocalDate dateMarked;
-
     @Enumerated(EnumType.STRING)
     private AttendanceStatus status;
 
     @ManyToOne
-    private Staffs markedBy;
+    @JoinColumn(name = "attendance_date_date_Id")
+    private AttendanceDate attendanceDate;
 }
