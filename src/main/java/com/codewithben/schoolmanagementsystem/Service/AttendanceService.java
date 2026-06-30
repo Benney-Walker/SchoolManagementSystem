@@ -4,8 +4,10 @@ import com.codewithben.schoolmanagementsystem.Constants.AttendanceStatus;
 import com.codewithben.schoolmanagementsystem.Constants.LogAction;
 import com.codewithben.schoolmanagementsystem.Constants.LogStatus;
 import com.codewithben.schoolmanagementsystem.Constants.LogType;
+import com.codewithben.schoolmanagementsystem.DTO.Attendance.AttendanceRequestList;
 import com.codewithben.schoolmanagementsystem.DTO.Attendance.MarkAttendance_List;
 import com.codewithben.schoolmanagementsystem.DTO.Attendance.StudentAttendance;
+import com.codewithben.schoolmanagementsystem.DTO.Attendance.TodaysAbsentees;
 import com.codewithben.schoolmanagementsystem.Entity.*;
 import com.codewithben.schoolmanagementsystem.Repository.*;
 import com.codewithben.schoolmanagementsystem.Utility.UtilityClass;
@@ -25,7 +27,7 @@ import java.util.Map;
 @Service
 public class AttendanceService {
 
-    private final AttendanceRepository attendanceRepository;
+    private final AttendanceRecordsRepository attendanceRecordsRepository;
 
     private final UtilityClass utilityClass;
 
@@ -33,7 +35,7 @@ public class AttendanceService {
 
     private final StudentsRepository studentsRepository;
 
-    private final SemesterRepository semesterRepository;
+    private final AttendanceDateRepository attendanceDateRepository;
 
     private final LevelRepository levelRepository;
 
