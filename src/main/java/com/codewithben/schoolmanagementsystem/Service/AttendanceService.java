@@ -55,21 +55,21 @@ public class AttendanceService {
 
         Semester semester = utilityClass.getCurrentSemester(level.getInstitution());
         if (semester == null) {
-            loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.CREATE, "Current term not added to system", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.READ, "Current term not added to system", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
                     "message", "Current term not added to system"
             ));
         }
 
         if (!utilityClass.isSchoolDay(selectedDate)) {
-            loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.CREATE, "Attendance can't be marked on weekends", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.READ, "Attendance can't be marked on weekends", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
                     "message", "Attendance can't be marked on weekends"
             ));
         }
 
         if (utilityClass.isHoliday(semester, selectedDate)) {
-            loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.CREATE, "Selected date is a holiday", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.READ, "Selected date is a holiday", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
                     "message", "Selected date is a holiday"
             ));
@@ -82,7 +82,14 @@ public class AttendanceService {
                         levelId, semester.getSemesterID(), selectedDate
                 ).orElse(null);
         if (markedDate == null) {
-            studentsAttendanceRecords = utilityClass.getActiveStudents(level.getStudents())
+            List<Students> activeStudents = utilityClass.getActiveStudents(level.getStudents());
+            if (activeStudents == null || activeStudents.isEmpty()) {
+                loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.READ, "Class has no students yet", staffId, LogStatus.FAILED);
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                        "message", "Class has no students yet"
+                ));
+            }
+            studentsAttendanceRecords = activeStudents
                     .stream().map(s -> {
                         return new StudentAttendance(
                                 levelId,
@@ -323,7 +330,6 @@ public class AttendanceService {
             ));
         }
 
-        LocalDate currentDate = LocalDate.now();
         List<TodaysAbsentees> absentees = new ArrayList<>();
 
         List<AttendanceDate> markedClasses =  attendanceDateRepository
@@ -342,20 +348,23 @@ public class AttendanceService {
             }
 
             for (AttendanceRecords attendanceRecord : attendanceDate.getAttendanceRecords()) {
-                TodaysAbsentees absentStudent = TodaysAbsentees.builder()
-                        .studentId(attendanceRecord.getStudent().getStudentId())
-                        .studentName(
-                                attendanceRecord.getStudent().getFirstName() + " " +
-                                attendanceRecord.getStudent().getLastName()
-                        )
-                        .studentGrade(attendanceDate.getLevel().getLevelName())
-                        .instructorId(attendanceDate.getStaff().getStaffId())
-                        .instructorName(
-                                attendanceDate.getStaff().getFirstName() + " " +
-                                attendanceDate.getStaff().getLastName()
-                        )
-                        .build();
-                absentees.add(absentStudent);
+
+                if (attendanceRecord.getStatus() == AttendanceStatus.ABSENT) {
+                    TodaysAbsentees absentStudent = TodaysAbsentees.builder()
+                            .studentId(attendanceRecord.getStudent().getStudentId())
+                            .studentName(
+                                    attendanceRecord.getStudent().getFirstName() + " " +
+                                            attendanceRecord.getStudent().getLastName()
+                            )
+                            .studentGrade(attendanceDate.getLevel().getLevelName())
+                            .instructorId(attendanceDate.getStaff().getStaffId())
+                            .instructorName(
+                                    attendanceDate.getStaff().getFirstName() + " " +
+                                            attendanceDate.getStaff().getLastName()
+                            )
+                            .build();
+                    absentees.add(absentStudent);
+                }
             }
         }
 
