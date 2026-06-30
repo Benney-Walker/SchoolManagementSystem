@@ -1,5 +1,6 @@
 package com.codewithben.schoolmanagementsystem.Controller;
 
+import com.codewithben.schoolmanagementsystem.DTO.Attendance.AttendanceRequestList;
 import com.codewithben.schoolmanagementsystem.DTO.Attendance.MarkAttendance_List;
 import com.codewithben.schoolmanagementsystem.DTO.Result.SaveStudentScores;
 import com.codewithben.schoolmanagementsystem.DTO.Students.AddNewStudent;
@@ -28,7 +29,7 @@ public class StudentController {
     @GetMapping("/v1/absent-students")
     public ResponseEntity<?> getAbsentees(@RequestHeader("staffId") String staffId) {
 
-        return studentService.getAbsentees(staffId);
+        return attendanceService.getAbsentees(staffId);
     }
 
     @GetMapping("/v1/total-students")
@@ -106,9 +107,10 @@ public class StudentController {
     @PostMapping("/v2/mark-attendance")
     public ResponseEntity<?> markAttendance(@RequestHeader("staffId") String staffId,
                                             @RequestHeader("selectedDate") String date,
-                                            @RequestBody List<MarkAttendance_List> markAttendanceList) {
+                                            @RequestHeader("levelId") String levelId,
+                                            @RequestBody List<AttendanceRequestList> list) {
 
-        return attendanceService.markStudentAttendance(markAttendanceList, date, staffId);
+        return attendanceService.markStudentAttendance(levelId, date, list, staffId);
     }
 
     @GetMapping("/v1/load-students/{levelId}")
