@@ -2,12 +2,11 @@ package com.codewithben.schoolmanagementsystem.Service;
 
 import com.codewithben.schoolmanagementsystem.Constants.*;
 import com.codewithben.schoolmanagementsystem.DTO.Attendance.TodaysAbsentees;
-import com.codewithben.schoolmanagementsystem.DTO.Attendance.StudentAttendance;
 import com.codewithben.schoolmanagementsystem.DTO.Students.FindStudentDTO;
 import com.codewithben.schoolmanagementsystem.DTO.Students.StudentsHolder;
 import com.codewithben.schoolmanagementsystem.DTO.Students.UpdateStudentPersonalData;
 import com.codewithben.schoolmanagementsystem.Entity.*;
-import com.codewithben.schoolmanagementsystem.Entity.Attendance;
+import com.codewithben.schoolmanagementsystem.Entity.AttendanceRecords;
 import com.codewithben.schoolmanagementsystem.Repository.*;
 import com.codewithben.schoolmanagementsystem.Utility.UtilityClass;
 import jakarta.transaction.Transactional;
@@ -17,7 +16,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -37,7 +35,7 @@ public class StudentService {
 
     private final InstitutiionRepository institutionRepository;
 
-    private final AttendanceRepository attendanceRepository;
+    private final AttendanceRecordsRepository attendanceRecordsRepository;
 
     private final LoggingService loggingService;
 
@@ -169,68 +167,6 @@ public class StudentService {
 
         loggingService.logGeneralActivity(LogType.STUDENT, LogAction.READ, "N/A", staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok(students.size());
-    }
-
-    //This loads all the absentees for the day
-    public ResponseEntity<?> getAbsentees(String staffId) {
-
-        Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
-        if (staff == null) {
-            loggingService.logGeneralActivity(LogType.STUDENT, LogAction.READ, "Invalid staff Id", staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "Invalid Staff Id"
-            ));
-        }
-
-        List<Level> levels = staff.getInstitution().getLevel();
-        if (levels == null || levels.isEmpty()) {
-            loggingService.logGeneralActivity(LogType.STUDENT, LogAction.READ, "Institution has no classes yet", staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "Institution has no class yet"
-            ));
-        }
-
-        LocalDate currentDate = LocalDate.now();
-        List<TodaysAbsentees> todaysAbsentees = new ArrayList<>();
-
-        for (Level level : levels) {
-
-            List<Attendance> absentees =
-                    attendanceRepository.findByStatusAndDateMarkedAndLevel_levelID(
-                            AttendanceStatus.ABSENT,
-                            currentDate,
-                            level.getLevelID()
-                    );
-
-            if (absentees == null || absentees.isEmpty()) {
-                continue; // don't kill the whole response
-            }
-
-            for (Attendance attendance : absentees) {
-
-                String studentId = attendance.getStudent().getStudentId();
-                String studentName = attendance.getStudent().getFirstName() +
-                        " " + attendance.getStudent().getLastName();
-                String className = attendance.getLevel().getLevelName();
-                String instructorName = level.getStaff().getFirstName() +
-                        " " + level.getStaff().getLastName();
-                String instructorId = level.getStaff().getStaffId();
-
-                TodaysAbsentees view = TodaysAbsentees.builder()
-                        .studentId(studentId)
-                        .studentName(studentName)
-                        .studentGrade(className)
-                        .instructorName(instructorName)
-                        .instructorId(instructorId)
-                        .build();
-
-
-                todaysAbsentees.add(view);
-            }
-        }
-
-        loggingService.logGeneralActivity(LogType.STUDENT, LogAction.READ, "N/A", staffId, LogStatus.SUCCESS);
-        return ResponseEntity.ok(todaysAbsentees);
     }
 
     public ResponseEntity<?> updateStudentPersonalData(UpdateStudentPersonalData data, String staffId) {
