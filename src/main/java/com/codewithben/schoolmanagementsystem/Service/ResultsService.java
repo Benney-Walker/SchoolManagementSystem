@@ -211,7 +211,7 @@ public class ResultsService {
             String totalStudents = String.valueOf(result.getLevel().getStudents().size());
             String vacationDate = result.getSemester().getSemesterEndDate().toString();
             String attendancePresent = String.valueOf(
-                    attendanceService.getStudentPresentAttendance(studentId, result.getSemester().getSemesterID())
+                    attendanceService.getStudentPresentAttendanceCount(studentId, result.getSemester().getSemesterID())
             );
 
             String instructorName = result.getLevel().getStaff().getFirstName() +
