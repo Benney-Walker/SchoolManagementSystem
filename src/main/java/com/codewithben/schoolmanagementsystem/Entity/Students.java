@@ -67,7 +67,7 @@ public class Students {
     private StudentStatus studentStatus;
 
     @OneToMany(mappedBy = "student")
-    private List<Attendance> attendance;
+    private List<AttendanceRecords> attendanceRecords;
 
 
 }
