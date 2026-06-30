@@ -73,38 +73,36 @@ public class AttendanceService {
             ));
         }
 
-        LocalDate date = LocalDate.parse(attendanceDate, DateTimeFormatter.ISO_DATE);
+        List<StudentAttendance> studentsAttendanceRecords = new ArrayList<>();
 
-        List<Attendance> markedAttendance =
-                attendanceRepository.findByLevel_LevelIDAndDateMarked(levelId, date);
-
-        List<Students> students = utilityClass.getActiveStudents(level.getStudents());
-
-        List<StudentAttendance> attendanceList = new ArrayList<>();
-
-        for (Students student : students) {
-
-            String status = AttendanceStatus.ABSENT.name();
-
-            if (markedAttendance != null) {
-                for (Attendance attendance : markedAttendance) {
-                    if (attendance.getStudent().getStudentId().equals(student.getStudentId())) {
-                        status = attendance.getStatus().name();
-                        break;
-                    }
-                }
-            }
-
-            attendanceList.add(new StudentAttendance(
-                    level.getLevelID(),
-                    student.getStudentId(),
-                    student.getFirstName() + " " + student.getLastName(),
-                    status
-            ));
+        AttendanceDate  markedDate = attendanceDateRepository
+                .findByLevel_LevelIDAndSemester_SemesterIDAndAttendanceDate(
+                        levelId, semester.getSemesterID(), selectedDate
+                ).orElse(null);
+        if (markedDate == null) {
+            studentsAttendanceRecords = utilityClass.getActiveStudents(level.getStudents())
+                    .stream().map(s -> {
+                        return new StudentAttendance(
+                                levelId,
+                                s.getStudentId(),
+                                s.getFirstName() + " " + s.getLastName(),
+                                AttendanceStatus.ABSENT.name()
+                        );
+                    }).toList();
+        } else {
+            studentsAttendanceRecords = markedDate.getAttendanceRecords()
+                    .stream().map(record -> {
+                        return new StudentAttendance(
+                                levelId,
+                                record.getStudent().getStudentId(),
+                                record.getStudent().getFirstName() + " " + record.getStudent().getLastName(),
+                                record.getStatus().name()
+                        );
+                    }).toList();
         }
 
         loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.READ, "Fetched " + level.getLevelName() + " attendance records", staffId, LogStatus.SUCCESS);
-        return ResponseEntity.ok(attendanceList);
+        return ResponseEntity.ok(studentsAttendanceRecords);
     }
 
     public ResponseEntity<?> markStudentAttendance(String studentId, String levelId, String status, String date, String staffId) {
