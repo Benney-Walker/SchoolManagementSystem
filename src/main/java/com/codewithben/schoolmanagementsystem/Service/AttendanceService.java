@@ -162,30 +162,44 @@ public class AttendanceService {
             ));
         }
 
-        Attendance todaysAttendance = attendanceRepository.findByStudent_StudentIdAndDateMarked(
-                studentId, selectedDate
-        ).orElse(null);
-        if (todaysAttendance == null) {
-            todaysAttendance = new Attendance();
-            todaysAttendance.setStudent(student);
-            todaysAttendance.setSemester(semester);
-            todaysAttendance.setLevel(level);
-            todaysAttendance.setDateMarked(selectedDate);
-            todaysAttendance.setMarkedBy(staff);
+        AttendanceDate markedDate = attendanceDateRepository
+                .findByLevel_LevelIDAndSemester_SemesterIDAndAttendanceDate(
+                        levelId, semester.getSemesterID(), selectedDate
+                ).orElse(null);
+        if (markedDate == null) {
+            markedDate = new AttendanceDate();
+            markedDate.setLevel(level);
+            markedDate.setSemester(semester);
+            markedDate.setAttendanceDate(selectedDate);
+            markedDate.setStaff(staff);
+            attendanceDateRepository.save(markedDate);
 
-            List<Attendance> studentAttendance = student.getAttendance();
-            if (studentAttendance == null || studentAttendance.isEmpty()) {
-                studentAttendance = new ArrayList<>();
+            AttendanceRecords attendanceRecords = new AttendanceRecords();
+            attendanceRecords.setAttendanceDate(markedDate);
+            attendanceRecords.setStudent(student);
+            attendanceRecords.setStatus(AttendanceStatus.valueOf(status.toUpperCase()));
+            attendanceRecordsRepository.save(attendanceRecords);
+
+            loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.CREATE, "Marked attendance for " + level.getLevelName(), staffId, LogStatus.SUCCESS);
+            return ResponseEntity.ok().build();
+        } else {
+            AttendanceRecords record = attendanceRecordsRepository
+                    .findByAttendanceDate_DateIdAndStudent_StudentId(
+                            markedDate.getDateId(), studentId
+                    ).orElse(null);
+            if (record == null) {
+                record = new AttendanceRecords();
+                record.setAttendanceDate(markedDate);
+                record.setStudent(student);
+                record.setStatus(AttendanceStatus.valueOf(status.toUpperCase()));
+            } else {
+                record.setStatus(AttendanceStatus.valueOf(status.toUpperCase()));
             }
-            studentAttendance.add(todaysAttendance);
-            studentsRepository.save(student);
+            attendanceRecordsRepository.save(record);
+
+            loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.CREATE, "Updated attendance for " + level.getLevelName(), staffId, LogStatus.SUCCESS);
+            return ResponseEntity.ok().build();
         }
-
-        todaysAttendance.setStatus(AttendanceStatus.valueOf(status.toUpperCase()));
-        attendanceRepository.save(todaysAttendance);
-
-        loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.CREATE, "Marked attendance for " + level.getLevelName(), staffId, LogStatus.SUCCESS);
-        return ResponseEntity.ok().build();
     }
 
     public ResponseEntity<?> markStudentAttendance(List<MarkAttendance_List> attendanceList, String date, String staffId) {
