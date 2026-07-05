@@ -1,9 +1,9 @@
 package com.codewithben.schoolmanagementsystem.Controller;
 
 import com.codewithben.schoolmanagementsystem.DTO.Attendance.AttendanceRequestList;
-import com.codewithben.schoolmanagementsystem.DTO.Attendance.MarkAttendance_List;
 import com.codewithben.schoolmanagementsystem.DTO.Result.SaveStudentScores;
 import com.codewithben.schoolmanagementsystem.DTO.Students.AddNewStudent;
+import com.codewithben.schoolmanagementsystem.DTO.Students.StudentsScoresTable;
 import com.codewithben.schoolmanagementsystem.DTO.Students.UpdateStudentPersonalData;
 import com.codewithben.schoolmanagementsystem.Service.*;
 import lombok.AllArgsConstructor;
@@ -108,7 +108,7 @@ public class StudentController {
                                             @RequestHeader("levelId") String levelId,
                                             @RequestBody List<AttendanceRequestList> list) {
 
-        return attendanceService.markStudentAttendance(levelId, date, list, staffId);
+        return attendanceService.saveAttendance(levelId, date, list, staffId);
     }
 
     @GetMapping("/v1/attendance-records")
