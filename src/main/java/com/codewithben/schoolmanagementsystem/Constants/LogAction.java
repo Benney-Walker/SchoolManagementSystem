@@ -8,5 +8,6 @@ public enum LogAction {
     PROMOTE,
     LOGIN,
     RESET,
-    SUBSCRIPTION
+    SUBSCRIPTION,
+    SYNC
 }
