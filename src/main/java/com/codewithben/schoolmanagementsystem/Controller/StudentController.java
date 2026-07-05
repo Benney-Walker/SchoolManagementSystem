@@ -93,17 +93,6 @@ public class StudentController {
         return attendanceService.loadStudentsForAttendance(levelId, date, staffId);
     }
 
-    @PostMapping("/v1/mark-attendance")
-    public ResponseEntity<?> markAttendance(@RequestHeader("staffId") String staffId,
-                                            @RequestHeader("selectedId") String date,
-                                            @RequestBody MarkAttendance_List markAttendanceList) {
-        String studentId = markAttendanceList.getStudentId();
-        String levelId = markAttendanceList.getLevelId();
-        String status = markAttendanceList.getStatus().toUpperCase();
-
-        return attendanceService.markStudentAttendance(studentId, levelId, status, date, staffId);
-    }
-
     @PostMapping("/v2/mark-attendance")
     public ResponseEntity<?> markAttendance(@RequestHeader("staffId") String staffId,
                                             @RequestHeader("selectedDate") String date,
