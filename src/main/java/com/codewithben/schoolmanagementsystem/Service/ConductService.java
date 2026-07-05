@@ -78,6 +78,7 @@ public class ConductService {
             String emotional;
             String cognitiveSkills;
             String conductRemark;
+            String peculiarIssue;
 
             Conduct conduct = result.getConduct();
             if (conduct == null) {
@@ -88,6 +89,7 @@ public class ConductService {
                 emotional = ConductRatings.GOOD.name();
                 cognitiveSkills = ConductRatings.GOOD.name();
                 conductRemark = " ";
+                peculiarIssue = " ";
             } else {
 
                 regular = conduct.getRegular().toString();
@@ -97,6 +99,7 @@ public class ConductService {
                 emotional = conduct.getEmotional().toString();
                 cognitiveSkills = conduct.getCognitiveSkills().toString();
                 conductRemark = conduct.getClassTeacherRemark();
+                peculiarIssue = conduct.getPeculiarIssue();
             }
 
             StudentConductRecord studentConductRecord = StudentConductRecord.builder()
@@ -110,6 +113,7 @@ public class ConductService {
                     .emotional(emotional)
                     .cognitiveSkills(cognitiveSkills)
                     .conductRemark(conductRemark)
+                    .peculiarIssue(peculiarIssue)
                     .build();
 
             conductList.add(studentConductRecord);
@@ -143,6 +147,7 @@ public class ConductService {
             conduct.setEmotional(ConductRatings.valueOf(record.getEmotional()));
             conduct.setCognitiveSkills(ConductRatings.valueOf(record.getCognitiveSkills()));
             conduct.setClassTeacherRemark(record.getConductRemark());
+            conduct.setPeculiarIssue(record.getPeculiarIssue());
             conductRepository.save(conduct);
 
             studentResult.setConduct(conduct);
@@ -156,6 +161,7 @@ public class ConductService {
             conduct.setEmotional(ConductRatings.valueOf(record.getEmotional()));
             conduct.setCognitiveSkills(ConductRatings.valueOf(record.getCognitiveSkills()));
             conduct.setClassTeacherRemark(record.getConductRemark());
+            conduct.setPeculiarIssue(record.getPeculiarIssue());
             conductRepository.save(conduct);
         }
 
@@ -198,6 +204,7 @@ public class ConductService {
                 conduct.setEmotional(ConductRatings.valueOf(record.getEmotional()));
                 conduct.setCognitiveSkills(ConductRatings.valueOf(record.getCognitiveSkills()));
                 conduct.setClassTeacherRemark(record.getConductRemark());
+                conduct.setPeculiarIssue(record.getPeculiarIssue());
 
             } else {
                 conduct.setRegular(ConductRatings.valueOf(record.getRegular()));
@@ -207,6 +214,7 @@ public class ConductService {
                 conduct.setEmotional(ConductRatings.valueOf(record.getEmotional()));
                 conduct.setCognitiveSkills(ConductRatings.valueOf(record.getCognitiveSkills()));
                 conduct.setClassTeacherRemark(record.getConductRemark());
+                conduct.setPeculiarIssue(record.getPeculiarIssue());
             }
 
             conductList.add(conduct);
