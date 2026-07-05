@@ -5,7 +5,7 @@ import com.codewithben.schoolmanagementsystem.Constants.LogAction;
 import com.codewithben.schoolmanagementsystem.Constants.LogStatus;
 import com.codewithben.schoolmanagementsystem.Constants.LogType;
 import com.codewithben.schoolmanagementsystem.DTO.Attendance.AttendanceRequestList;
-import com.codewithben.schoolmanagementsystem.DTO.Attendance.MarkAttendance_List;
+import com.codewithben.schoolmanagementsystem.DTO.Attendance.DatesMarked;
 import com.codewithben.schoolmanagementsystem.DTO.Attendance.StudentAttendance;
 import com.codewithben.schoolmanagementsystem.DTO.Attendance.TodaysAbsentees;
 import com.codewithben.schoolmanagementsystem.Entity.*;
@@ -201,6 +201,7 @@ public class AttendanceService {
                          existingRecord.setStatus(AttendanceStatus.valueOf(record.getStatus().toUpperCase()));
                          attendanceRecordsRepository.save(existingRecord);
                          updatedRecordsStudents.add(existingRecord.getStudent().getFirstName());
+                         break;
                      }
                  }
             }
