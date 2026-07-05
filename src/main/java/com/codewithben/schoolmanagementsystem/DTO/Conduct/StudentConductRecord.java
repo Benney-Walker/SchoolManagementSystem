@@ -32,4 +32,6 @@ public class StudentConductRecord {
 
     // Free text
     private String conductRemark;
+
+    private String peculiarIssue;
 }
