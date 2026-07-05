@@ -75,7 +75,7 @@ public class AttendanceService {
             ));
         }
 
-        List<StudentAttendance> studentsAttendanceRecords = new ArrayList<>();
+        List<StudentAttendance> records;
 
         AttendanceDate  markedDate = attendanceDateRepository
                 .findByLevel_LevelIDAndSemester_SemesterIDAndAttendanceDate(
@@ -89,17 +89,15 @@ public class AttendanceService {
                         "message", "Class has no students yet"
                 ));
             }
-            studentsAttendanceRecords = activeStudents
-                    .stream().map(s -> {
-                        return new StudentAttendance(
-                                levelId,
-                                s.getStudentId(),
-                                s.getFirstName() + " " + s.getLastName(),
-                                AttendanceStatus.ABSENT.name()
-                        );
-                    }).toList();
+            records = activeStudents
+                    .stream().map(s -> new StudentAttendance(
+                            levelId,
+                            s.getStudentId(),
+                            s.getFirstName() + " " + s.getLastName(),
+                            AttendanceStatus.ABSENT.name()
+                    )).toList();
         } else {
-            studentsAttendanceRecords = markedDate.getAttendanceRecords()
+            records = markedDate.getAttendanceRecords()
                     .stream().map(record -> {
                         return new StudentAttendance(
                                 levelId,
