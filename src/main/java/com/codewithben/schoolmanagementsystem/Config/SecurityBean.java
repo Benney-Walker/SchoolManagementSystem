@@ -72,6 +72,7 @@ public class SecurityBean {
                         .requestMatchers("/api/student/**").hasAnyAuthority("PRINCIPAL", "ADMINISTRATOR", "ACCOUNTANT", "TEACHING_STAFF")
                         .requestMatchers("/api/staff/**").hasAnyAuthority("ADMINISTRATOR", "TEACHING_STAFF", "PRINCIPAL", "ACCOUNTANT")
                         .requestMatchers("/api/admin/**").hasAnyAuthority("ADMINISTRATOR", "PRINCIPAL", "ACCOUNTANT", "TEACHING_STAFF")
+                        .requestMatchers("/api/offline/**").hasAnyAuthority("ADMINISTRATOR", "TEACHING_STAFF", "ACCOUNTANT")
                         .anyRequest().authenticated()
                 ).sessionManagement( session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
