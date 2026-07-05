@@ -43,7 +43,7 @@ public class ScoresService {
     private final UtilityClass utilityClass;
 
     @Transactional
-    public ResponseEntity<?> addStudentSubjectScores(SaveStudentScores scores, String staffId, String subjectId, String semesterId) {
+    public ResponseEntity<?> saveScores(SaveStudentScores scores, String staffId, String subjectId, String semesterId) {
 
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if(staff == null){
