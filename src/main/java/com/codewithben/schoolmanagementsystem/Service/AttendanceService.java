@@ -212,6 +212,96 @@ public class AttendanceService {
         }
     }
 
+    public ResponseEntity<?> loadAttendanceRecords(String staffId, String levelId, String semesterId, String date) {
+
+        LocalDate formattedDate = LocalDate.parse(date, DateTimeFormatter.ISO_DATE);
+
+        AttendanceDate  markedDate = attendanceDateRepository
+                .findByLevel_LevelIDAndSemester_SemesterIDAndAttendanceDate(
+                        levelId, semesterId, formattedDate
+                ).orElse(null);
+        if (markedDate == null) {
+            loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.READ, "Attendance was not marked", staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                    "message", "Attendance was not marked for this date"
+            ));
+        }
+
+        if (markedDate.getAttendanceRecords() == null || markedDate.getAttendanceRecords().isEmpty()) {
+            loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.READ, "No records found for this class", staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                    "message", "No records found for this class"
+            ));
+        }
+
+        List<StudentAttendance> records = new ArrayList<>();
+        for (AttendanceRecords record : markedDate.getAttendanceRecords()) {
+            StudentAttendance existingRecord = StudentAttendance.builder()
+                    .studentId(record.getStudent().getStudentId())
+                    .studentName(
+                            record.getStudent().getFirstName() + " " +
+                                    record.getStudent().getLastName()
+                    )
+                    .status(record.getStatus().name())
+                    .build();
+            records.add(existingRecord);
+        }
+
+        loggingService.logGeneralActivity(
+                LogType.ATTENDANCE, LogAction.READ,
+                "Fetched " + markedDate.getLevel().getLevelName() + " attendance for " + date,
+                staffId, LogStatus.SUCCESS
+        );
+        return ResponseEntity.ok(records);
+    }
+
+    public ResponseEntity<?> loadDatesMarked(String staffId, String levelId) {
+        Level level = levelRepository.findByLevelID(levelId).orElse(null);
+        if (level == null) {
+            loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.READ, "Invalid class Id", staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                    "message", "Invalid class Id"
+            ));
+        }
+
+        Semester semester = utilityClass.getCurrentSemester(level.getInstitution());
+        if (semester == null) {
+            loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.READ, "Current term not added", staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                    "message", "Current term not added"
+            ));
+        }
+
+        List<AttendanceDate> datesMarked = attendanceDateRepository
+                .findByLevel_LevelIDAndSemester_SemesterIDOrderByAttendanceDateAsc(levelId, semester.getSemesterID());
+        if (datesMarked == null || datesMarked.isEmpty()) {
+            loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.READ, "No attendance marked for this term", staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                    "message", "No attendance marked for this term"
+            ));
+        }
+
+        List<DatesMarked> datesMarkedList = new ArrayList<>();
+        for (AttendanceDate attendanceDate : datesMarked) {
+            DatesMarked datemarked = DatesMarked.builder()
+                    .dateMarked(attendanceDate.getAttendanceDate().toString())
+                    .dayMarked(attendanceDate.getAttendanceDate().getDayOfWeek().name())
+                    .staffName(
+                            attendanceDate.getStaff().getFirstName() + " " +
+                                    attendanceDate.getStaff().getLastName()
+                    )
+                    .build();
+            datesMarkedList.add(datemarked);
+        }
+
+        loggingService.logGeneralActivity(
+                LogType.ATTENDANCE, LogAction.READ,
+                "Fetched the days" + level.getLevelName() + " attendance has been marked",
+                staffId, LogStatus.SUCCESS
+        );
+        return ResponseEntity.ok(datesMarkedList);
+    }
+
     //This loads all the absentees for the day
     public ResponseEntity<?> getAbsentees(String staffId) {
 
