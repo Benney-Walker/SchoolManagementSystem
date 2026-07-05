@@ -76,6 +76,13 @@ public class StudentController {
                                                @RequestBody SaveStudentScores score) {
 
         return scoresService.addStudentSubjectScores(score, staffId, subjectId, semesterId);
+    @PostMapping("/v1/save-scores")
+    public ResponseEntity<?> saveSubjectScores(@RequestHeader("staffId") String staffId,
+                                               @RequestHeader("subjectId") String subjectId,
+                                               @RequestHeader("semesterId") String semesterId,
+                                               @RequestBody List<StudentsScoresTable> scores) {
+
+        return scoresService.saveScores(staffId, subjectId, semesterId, scores);
     }
 
     @PutMapping("/v1/update-student-data")
