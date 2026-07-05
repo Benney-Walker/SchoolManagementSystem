@@ -18,4 +18,8 @@ public interface AttendanceDateRepository extends JpaRepository<AttendanceDate, 
     List<AttendanceDate> findByAttendanceDateAndSemester_Institution_InstitutionId(
             LocalDate date, String institutionId
     );
+
+    List<AttendanceDate> findByLevel_LevelIDAndSemester_SemesterIDOrderByAttendanceDateAsc(
+            String levelId, String semesterId
+    );
 }
