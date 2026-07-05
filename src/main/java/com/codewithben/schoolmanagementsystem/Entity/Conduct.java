@@ -44,4 +44,6 @@ public class Conduct {
 
     private String classTeacherRemark;
 
+    private String peculiarIssue;
+
 }
