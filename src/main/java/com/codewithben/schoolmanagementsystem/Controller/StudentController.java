@@ -111,6 +111,22 @@ public class StudentController {
         return attendanceService.markStudentAttendance(levelId, date, list, staffId);
     }
 
+    @GetMapping("/v1/attendance-records")
+    public ResponseEntity<?> loadAttendanceRecords(@RequestHeader("staffId") String staffId,
+                                                   @RequestParam String levelId,
+                                                   @RequestParam String semesterId,
+                                                   @RequestParam String date) {
+
+        return attendanceService.loadAttendanceRecords(staffId, levelId, semesterId, date);
+    }
+
+    @GetMapping("/v1/dates-marked/{levelId}")
+    public ResponseEntity<?> loadDatesMarked(@RequestHeader("staffId") String staffId,
+                                             @PathVariable String levelId) {
+
+        return attendanceService.loadDatesMarked(staffId, levelId);
+    }
+
     @GetMapping("/v1/load-students/{levelId}")
     public ResponseEntity<?> loadGradeStudents(@RequestHeader("staffId") String staffId,
                                                @PathVariable String levelId) {
