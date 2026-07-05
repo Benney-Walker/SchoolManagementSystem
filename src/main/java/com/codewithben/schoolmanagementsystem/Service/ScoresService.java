@@ -160,6 +160,123 @@ public class ScoresService {
         return ResponseEntity.ok().build();
     }
 
+    @Transactional
+    public ResponseEntity<?> saveScores(String staffId, String subjectId, String semesterId, List<StudentsScoresTable> scores) {
+
+        Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
+        if(staff == null){
+            loggingService.logGeneralActivity(LogType.SUBJECT_SCORE, LogAction.CREATE,"Invalid staff Id", staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Invalid staff Id"
+            ));
+        }
+
+        List<GradeSystem> gradeSystem = gradeSystemRepository.findAllByInstitution_InstitutionId(
+                staff.getInstitution().getInstitutionId()
+        );
+        if (gradeSystem == null || gradeSystem.isEmpty()) {
+            loggingService.logGeneralActivity(LogType.SUBJECT_SCORE, LogAction.CREATE,"No grading criteria saved on system", staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "No grading criteria saved on system"
+            ));
+        }
+
+        Subjects subject = subjectsRepository.findBySubjectId(subjectId).orElse(null);
+        if (subject == null) {
+            loggingService.logGeneralActivity(LogType.SUBJECT_SCORE, LogAction.CREATE,"Invalid staff Id", staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Invalid subject ID"
+            ));
+        }
+
+        Semester semester = semesterRepository.findBySemesterID(semesterId).orElse(null);
+        if (semester == null) {
+            loggingService.logGeneralActivity(LogType.SUBJECT_SCORE, LogAction.CREATE,"Invalid semester Id", staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Invalid term Id"
+            ));
+        }
+
+        for (StudentsScoresTable score : scores) {
+
+            Students student = studentsRepository.findByStudentId(score.getStudentId()).orElse(null);
+            if (student == null) {
+                loggingService.logGeneralActivity(LogType.SUBJECT_SCORE, LogAction.CREATE,"Invalid student Id", staffId, LogStatus.FAILED);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                        "message", "Invalid student Id"
+                ));
+            }
+            // Get or create Results for this student + semester + level
+            Results result = resultsRepository
+                    .findByStudent_StudentIdAndSemester_SemesterID(
+                            student.getStudentId(), semesterId)
+                    .orElse(null);
+
+            if (result == null) {
+                result = new Results();
+                result.setStudent(student);
+                result.setLevel(subject.getLevel());
+                result.setSemester(semester);
+                result.setCreatedAt(LocalDate.now());
+                result.setTotalScore(Double.valueOf(String.format("%.2f", 0.0)));
+                result.setAverageScore(Double.valueOf(String.format("%.2f", 0.0)));
+                result.setUpdatedBy(staff);
+            }
+
+            // Check if score already exists
+            SubjectScore subjectScore = subjectScoreRepository
+                    .findByStudent_StudentIdAndSubject_SubjectIdAndResults_ResultId(
+                            student.getStudentId(),
+                            subject.getSubjectId(),
+                            result.getResultId()
+                    ).orElse(new SubjectScore());
+
+            double projectWork = Double.parseDouble(score.getProjectScore());
+            double classTest1 = Double.parseDouble(score.getClassTest1Score());
+            double classTest2 = Double.parseDouble(score.getClassTest2Score());
+            double groupWork = Double.parseDouble(score.getGroupWorkScore());
+            double classScore = Double.parseDouble(score.getClassScore());
+            double examScore = Double.parseDouble(score.getExamScore());
+            double calculatedExamScore = Double.parseDouble(score.getCalculatedExamScore());
+            double totalScore =  classScore + calculatedExamScore;
+
+            subjectScore.setSubject(subject);
+            subjectScore.setStudent(student);
+            subjectScore.setResults(result);
+            subjectScore.setProjectWork(Double.parseDouble(String.format("%.2f", projectWork)));
+            subjectScore.setClassTest1(Double.parseDouble(String.format("%.2f", classTest1)));
+            subjectScore.setGroupWork(Double.parseDouble(String.format("%.2f", groupWork)));
+            subjectScore.setClassTest2(Double.parseDouble(String.format("%.2f", classTest2)));
+            subjectScore.setClassScore(Double.valueOf(String.format("%.2f", classScore)));
+            subjectScore.setExamScore(Double.parseDouble(String.format("%.2f", examScore)));
+            subjectScore.setCalculatedExamScore(calculatedExamScore);
+            subjectScore.setSemester(semester);
+            subjectScore.setGrade(
+                    utilityClass.extractGrade(totalScore, student.getInstitution().getInstitutionId())
+            );
+            subjectScore.setGradeDescriptor(
+                    utilityClass.extractDescription(totalScore, student.getInstitution().getInstitutionId())
+            );
+            subjectScore.setTotalScore(totalScore);
+
+            subjectScoreRepository.save(subjectScore);
+
+            //Add scores to results
+            List<SubjectScore> resultsScores = result.getSubjectScores();
+            if (resultsScores == null || resultsScores.isEmpty()) {
+                resultsScores = new ArrayList<>();
+            }
+            resultsScores.add(subjectScore);
+            result.setSubjectScores(resultsScores);
+            resultsRepository.save(result);
+
+            updateResultTotals(result, staff, subject);
+        }
+
+        loggingService.logGeneralActivity(LogType.SUBJECT_SCORE, LogAction.CREATE,"N/A", staffId, LogStatus.SUCCESS);
+        return ResponseEntity.ok().build();
+    }
+
     public ResponseEntity<?> loadStudentsForScores(String semesterId, String subjectId, String staffId) {
 
         Subjects subject = subjectsRepository.findBySubjectId(subjectId).orElse(null);
