@@ -109,7 +109,7 @@ public class AttendanceService {
         }
 
         loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.READ, "Fetched " + level.getLevelName() + " attendance records", staffId, LogStatus.SUCCESS);
-        return ResponseEntity.ok(studentsAttendanceRecords);
+        return ResponseEntity.ok(records);
     }
 
     public ResponseEntity<?> markStudentAttendance(String studentId, String levelId, String status, String date, String staffId) {
