@@ -1,5 +1,6 @@
 package com.codewithben.schoolmanagementsystem.Service;
 
+import com.codewithben.schoolmanagementsystem.Constants.AttendanceStatus;
 import com.codewithben.schoolmanagementsystem.Constants.LogAction;
 import com.codewithben.schoolmanagementsystem.Constants.LogStatus;
 import com.codewithben.schoolmanagementsystem.Constants.LogType;
@@ -15,6 +16,7 @@ import com.codewithben.schoolmanagementsystem.Repository.*;
 import com.codewithben.schoolmanagementsystem.Utility.UtilityClass;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -25,7 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-@AllArgsConstructor
+@RequiredArgsConstructor
 @Service
 public class ClassService {
     private final StaffsRepository staffsRepository;
@@ -37,6 +39,8 @@ public class ClassService {
     private final InstitutiionRepository institutiionRepository;
 
     private final SemesterRepository semesterRepository;
+
+    private final AttendanceRecordsRepository attendanceRecordsRepository;
 
     private final LoggingService loggingService;
 
