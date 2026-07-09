@@ -1,6 +1,8 @@
 package com.codewithben.schoolmanagementsystem.Controller;
 
 import com.codewithben.schoolmanagementsystem.DTO.Offline.OfflineAttendanceList;
+import com.codewithben.schoolmanagementsystem.DTO.Offline.OfflinePaymentList;
+import com.codewithben.schoolmanagementsystem.DTO.Offline.OfflineScoresList;
 import com.codewithben.schoolmanagementsystem.Service.OfflineReplayService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -20,5 +22,19 @@ public class OfflineReplayController {
                                                    @RequestBody List<OfflineAttendanceList> list) {
 
         return offlineReplayService.saveOfflineAttendanceRecords(staffId, list);
+    }
+
+    @PostMapping("/v1/sync-scores")
+    public ResponseEntity<?> saveScoresRecords(@RequestHeader("staffId")String staffId,
+                                               @RequestBody List<OfflineScoresList> list) {
+
+        return offlineReplayService.saveOfflineScores(staffId, list);
+    }
+
+    @PostMapping("/v1/sync-payment")
+    public ResponseEntity<?> savePaymentsRecords(@RequestHeader("staffId")String staffId,
+                                                 @RequestBody List<OfflinePaymentList> list) {
+
+        return offlineReplayService.saveOfflinePayments(staffId, list);
     }
 }
