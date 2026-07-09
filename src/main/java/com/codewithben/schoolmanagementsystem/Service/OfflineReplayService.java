@@ -116,4 +116,47 @@ public class OfflineReplayService {
         loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.SYNC, "Successfully synchronized attendance records", staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok().build();
     }
+
+    public ResponseEntity<?> saveOfflineScores(String staffId, List<OfflineScoresList> scores) {
+
+        if (scores == null || scores.isEmpty()) {
+            loggingService.logGeneralActivity(
+                    LogType.SUBJECT_SCORE, LogAction.SYNC,
+                    "Offline Records came empty",
+                    staffId, LogStatus.FAILED
+            );
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                    "message", "Offline Records came empty"
+            ));
+        }
+
+        int completed = 0;
+        for (OfflineScoresList record : scores) {
+
+            ResponseEntity<?> response = scoresService.saveScores(
+                    staffId, record.getSubjectId(), record.getSemesterId(), record.getScores()
+            );
+            if (response.getStatusCode() == HttpStatus.OK) {
+                completed++;
+            }
+        }
+
+        if (completed == scores.size()) {
+            loggingService.logGeneralActivity(
+                    LogType.SUBJECT_SCORE, LogAction.SYNC,
+                    "Offline Records synchronized",
+                    staffId, LogStatus.SUCCESS
+            );
+            return ResponseEntity.ok().build();
+        } else {
+            loggingService.logGeneralActivity(
+                    LogType.SUBJECT_SCORE, LogAction.SYNC,
+                    "Some records were not synchronized",
+                    staffId, LogStatus.FAILED
+            );
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                    "message", "Some records were not synchronized"
+            ));
+        }
+    }
 }
