@@ -203,10 +203,10 @@ public class UtilityClass {
         }
     }
 
-    public boolean isSchoolDay(LocalDate date) {
+    public boolean isWeekend(LocalDate date) {
         DayOfWeek day = date.getDayOfWeek();
 
-        return day != DayOfWeek.SATURDAY && day != DayOfWeek.SUNDAY;
+        return day == DayOfWeek.SATURDAY || day == DayOfWeek.SUNDAY;
     }
 
     public boolean isHoliday(Semester semester, LocalDate selectedDate) {
