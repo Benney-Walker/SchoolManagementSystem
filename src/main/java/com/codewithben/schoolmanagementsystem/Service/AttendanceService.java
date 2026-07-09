@@ -61,7 +61,7 @@ public class AttendanceService {
             ));
         }
 
-        if (!utilityClass.isSchoolDay(selectedDate)) {
+        if (utilityClass.isWeekend(selectedDate)) {
             loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.READ, "Attendance can't be marked on weekends", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
                     "message", "Attendance can't be marked on weekends"
@@ -122,7 +122,7 @@ public class AttendanceService {
         }
         //Check if date is accepted for attendance
         LocalDate selectedDate = LocalDate.parse(date, DateTimeFormatter.ISO_DATE);
-        if (!utilityClass.isSchoolDay(selectedDate)) {
+        if (utilityClass.isWeekend(selectedDate)) {
             loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.CREATE, "Attendance can't be marked on weekends", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
                     "message", "Attendance can't be marked on weekends"
@@ -273,6 +273,17 @@ public class AttendanceService {
             ));
         }
 
+        LocalDate startDate = semester.getSemesterStartDate();
+        LocalDate endDate = semester.getSemesterEndDate();
+
+        List<LocalDate> schoolDays = new ArrayList<>();
+        for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
+
+            if (!utilityClass.isWeekend(date) && !utilityClass.isHoliday(semester, date)) {
+                schoolDays.add(date);
+            }
+        }
+
         List<AttendanceDate> datesMarked = attendanceDateRepository
                 .findByLevel_LevelIDAndSemester_SemesterIDOrderByAttendanceDateAsc(levelId, semester.getSemesterID());
         if (datesMarked == null || datesMarked.isEmpty()) {
@@ -283,21 +294,35 @@ public class AttendanceService {
         }
 
         List<DatesMarked> datesMarkedList = new ArrayList<>();
-        for (AttendanceDate attendanceDate : datesMarked) {
+        boolean isMarked;
+        for (LocalDate date :  schoolDays) {
+            isMarked = false;
+
             DatesMarked datemarked = DatesMarked.builder()
-                    .dateMarked(attendanceDate.getAttendanceDate().toString())
-                    .dayMarked(attendanceDate.getAttendanceDate().getDayOfWeek().name())
-                    .staffName(
-                            attendanceDate.getStaff().getFirstName() + " " +
-                                    attendanceDate.getStaff().getLastName()
-                    )
+                    .dateMarked(date.toString())
+                    .dayMarked(date.getDayOfWeek().name())
                     .build();
+            for (AttendanceDate attendanceDate : datesMarked) {
+
+                if (attendanceDate.getAttendanceDate().equals(date)) {
+                    isMarked = true;
+                    datemarked.setStaffName(
+                            attendanceDate.getStaff().getFirstName() + " "
+                                    + attendanceDate.getStaff().getLastName()
+                    );
+                    break;
+                }
+            }
+            if (!isMarked) {
+                datemarked.setStaffName("NOT MARKED");
+            }
+
             datesMarkedList.add(datemarked);
         }
 
         loggingService.logGeneralActivity(
                 LogType.ATTENDANCE, LogAction.READ,
-                "Fetched the days" + level.getLevelName() + " attendance has been marked",
+                "Fetched the days " + level.getLevelName() + " attendance has been marked",
                 staffId, LogStatus.SUCCESS
         );
         return ResponseEntity.ok(datesMarkedList);
