@@ -9,15 +9,11 @@ import java.util.Optional;
 
 @Repository
 public interface SubjectScoreRepository extends JpaRepository<SubjectScore, Long> {
-    Optional<SubjectScore> findByStudent_StudentIdAndSubject_SubjectIdAndResults_ResultId(
-            String studentId, String subjectId, Long resultId
+    Optional<SubjectScore> findBySubject_SubjectIdAndResults_ResultId(
+            String subjectId, Long resultId
     );
 
     List<SubjectScore> findByResults_ResultId(long resultId);
-
-    Optional<SubjectScore> findByStudent_StudentIdAndSubject_SubjectId(
-            String studentId, String subjectId
-    );
 
     Optional<SubjectScore> findByStudent_StudentIdAndSubject_SubjectIdAndSemester_SemesterID(
             String studentId, String subjectId, String semesterId
