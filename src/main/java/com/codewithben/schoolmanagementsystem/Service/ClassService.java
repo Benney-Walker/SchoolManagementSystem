@@ -219,20 +219,30 @@ public class ClassService {
             ));
         }
 
-        List<GradeInformation> gradesInformation = getGradesInformation(levels);
+        String currentSemesterId =
+                utilityClass.getCurrentSemester(staff.getInstitution()) == null ? "" : utilityClass.getCurrentSemester(staff.getInstitution()).getSemesterID();
+
+        List<GradeInformation> gradesInformation = getGradesInformation(levels, currentSemesterId);
 
         loggingService.logGeneralActivity(LogType.CLASS, LogAction.READ, "Successfully loaded class information", staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok(gradesInformation);
     }
 
 
-    private List<GradeInformation> getGradesInformation(List<Level> levels) {
+    private List<GradeInformation> getGradesInformation(List<Level> levels, String currentSemesterId) {
         List<GradeInformation> gradesInformation = new ArrayList<>();
         for (Level level : levels) {
             String gradeId = level.getLevelID();
             String gradeName = level.getLevelName();
-            int countStudent = level.getStudents() == null ? 0 : level.getStudents().size();
-            String gradeStudentsCount = String.valueOf(countStudent);
+            String gradeStudentsCount = String.valueOf(
+                    level.getStudents() == null ? 0 : level.getStudents().size()
+            );
+
+            List<AttendanceRecords> markedRecords =
+                    attendanceRecordsRepository.findByAttendanceDate_Level_LevelIDAndAttendanceDate_Semester_SemesterID(
+                            level.getLevelID(), currentSemesterId
+                    );
+
             List<StudentRoaster> gradeStudents = new ArrayList<>();
 
             List<Students> students = level.getStudents() == null ?
@@ -240,15 +250,22 @@ public class ClassService {
                 for (Students gradeStudent : students) {
                     String studentId = gradeStudent.getStudentId();
                     String fullName = gradeStudent.getFirstName() + " " + gradeStudent.getLastName();
-                    String gender = gradeStudent.getGender();
-                    String homeTown = gradeStudent.getHomeTown();
-                    String parentName = gradeStudent.getParentName();
-                    String parentPhoneNumber = gradeStudent.getParentPhoneNumber();
 
-                    StudentRoaster student = new StudentRoaster(
-                            studentId, fullName, gender, homeTown, parentName, parentPhoneNumber
-                    );
-                    gradeStudents.add(student);
+                    int presentCount = 0;
+                    for (AttendanceRecords markedRecord : markedRecords) {
+                        if (markedRecord.getStudent().equals(gradeStudent) &&
+                                markedRecord.getStatus().equals(AttendanceStatus.PRESENT)) {
+                            presentCount++;
+                        }
+                    }
+
+                    StudentRoaster studentRoaster = StudentRoaster.builder()
+                            .studentId(studentId)
+                            .studentName(fullName)
+                            .presentCount(presentCount)
+                            .build();
+
+                    gradeStudents.add(studentRoaster);
                 }
 
             GradeInformation gradeInformation = new GradeInformation(
