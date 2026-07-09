@@ -1,9 +1,13 @@
 package com.codewithben.schoolmanagementsystem.DTO.Offline;
 
+import com.codewithben.schoolmanagementsystem.DTO.Attendance.AttendanceRequestList;
+import com.codewithben.schoolmanagementsystem.DTO.Attendance.StudentAttendance;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 @Data
 @Builder
@@ -11,13 +15,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class OfflineAttendanceList {
 
-    private String staffId;
-
-    private String studentId;
-
     private String levelId;
 
-    private String status;
-
     private String dateMarked;
+
+    private List<AttendanceRequestList> attendanceList;
 }
