@@ -471,8 +471,8 @@
             <element kind="staticText" uuid="4f928cb6-4720-4fcd-a9a9-c7d4206d085b" positionType="Float" x="10" y="400" width="110" height="15" bold="true">
                 <text><![CDATA[PECULIAR ISSUE:]]></text>
             </element>
-            <element kind="line" uuid="aedabe9a-776e-4beb-b3b9-581b669dc787" positionType="Float" x="120" y="413" width="425" height="1">
-                <pen lineWidth="1.0" lineStyle="Dotted"/>
+            <element kind="textField" uuid="aedabe9a-776e-4beb-b3b9-581b669dc787" positionType="Float" x="120" y="413" width="425" height="1">
+                <expression><![CDATA[$F{studentConductReport} != null ? $F{studentConductReport}.getPeculiarIssue() : ""]]></expression>
             </element>
             <element kind="staticText" uuid="1f49c9ca-7cdc-4bfd-b344-9b6c75c34d6e" positionType="Float" x="10" y="430" width="170" height="15" bold="true">
                 <text><![CDATA[FACILITATOR'S REMARKS:]]></text>
