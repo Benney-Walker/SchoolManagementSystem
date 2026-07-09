@@ -24,4 +24,6 @@ public class StudentConductReport {
     private String cognitiveSkills;
 
     private String facilitatorRemark;
+
+    private String peculiarIssue;
 }
