@@ -69,15 +69,6 @@ public class StudentController {
         return scoresService.loadStudentsForScores(semesterId, subjectId, staffId);
     }
 
-    @PostMapping("/v1/save-subject-scores")
-    public ResponseEntity<?> saveSubjectScores(@RequestHeader("staffId") String staffId,
-                                               @RequestHeader("subjectId") String subjectId,
-                                               @RequestHeader("semesterId") String semesterId,
-                                               @RequestBody SaveStudentScores score) {
-
-        return scoresService.saveScores(score, staffId, subjectId, semesterId);
-    }
-
     @PostMapping("/v1/save-scores")
     public ResponseEntity<?> saveSubjectScores(@RequestHeader("staffId") String staffId,
                                                @RequestHeader("subjectId") String subjectId,
