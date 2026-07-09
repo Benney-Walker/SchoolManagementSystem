@@ -14,13 +14,5 @@ public class StudentRoaster {
 
     private String studentName;
 
-    private String studentGender;
-
-    private String homeTown;
-
-    private String guardianName;
-
-    private String guardianContact;
-
-
+    private int presentCount;
 }
