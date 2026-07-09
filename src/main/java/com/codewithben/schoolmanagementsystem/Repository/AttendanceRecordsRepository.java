@@ -18,4 +18,8 @@ public interface AttendanceRecordsRepository extends JpaRepository<AttendanceRec
     List<AttendanceRecords> findByStudent_StudentIdAndStatusAndAttendanceDate_Semester_SemesterID(
             String studentId, AttendanceStatus status, String semesterId
     );
+
+    List<AttendanceRecords> findByAttendanceDate_Level_LevelIDAndAttendanceDate_Semester_SemesterID(
+            String levelId, String semesterId
+    );
 }
