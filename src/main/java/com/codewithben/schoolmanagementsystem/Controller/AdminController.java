@@ -136,7 +136,7 @@ public class AdminController {
         String subjectName = addNewSubject.getSubjectName();
         String levelId = addNewSubject.getGradeId();
 
-        return subjectsService.addNewSubjects(subjectName, levelId, staffId);
+        return subjectsService.addNewSubject(subjectName, levelId, staffId);
 
     }
 

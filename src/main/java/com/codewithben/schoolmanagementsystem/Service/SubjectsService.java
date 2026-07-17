@@ -30,8 +30,7 @@ public class SubjectsService {
 
     private final UtilityClass utilityClass;
 
-    public ResponseEntity<?> addNewSubjects(String subjectName, String levelId, String staffId) {
-        String logData = "Subject Name: " + subjectName + " Class Id: " + levelId;
+    public ResponseEntity<?> addNewSubject(String subjectName, String levelId, String staffId) {
 
         Level level = levelRepository.findByLevelID(levelId).orElse(null);
         if (level == null) {
