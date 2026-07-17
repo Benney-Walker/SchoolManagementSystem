@@ -208,7 +208,7 @@ public class ResultsService {
             String averageScore = result.getAverageScore().toString();
             String position = result.getPosition();
             String academicYear = result.getSemester().getAcademicYear();
-            String totalStudents = String.valueOf(result.getLevel().getStudents().size());
+            String totalStudents = String.valueOf(utilityClass.getActiveStudents(result.getLevel().getStudents()).size());
             String vacationDate = result.getSemester().getSemesterEndDate().toString();
             String attendancePresent = String.valueOf(
                     attendanceService.getStudentPresentAttendanceCount(studentId, result.getSemester().getSemesterID())
