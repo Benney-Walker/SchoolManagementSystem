@@ -105,7 +105,10 @@ public class StudentService {
             staff.getInstitution().setStudents(students);
             institutionRepository.save(staff.getInstitution());
 
-            loggingService.logGeneralActivity(LogType.STUDENT, LogAction.CREATE, "N/A", staffId, LogStatus.SUCCESS);
+            loggingService.logGeneralActivity(
+                    LogType.STUDENT, LogAction.CREATE,
+                    "Added new student: " + firstName + " " + lastName + " for " + level.getLevelName(),
+                    staffId, LogStatus.SUCCESS);
             return ResponseEntity.ok(studentId);
         }
 
@@ -125,7 +128,10 @@ public class StudentService {
             ));
         }
 
-        loggingService.logGeneralActivity(LogType.STUDENT, LogAction.READ, "N/A", staffId, LogStatus.SUCCESS);
+        loggingService.logGeneralActivity(
+                LogType.STUDENT, LogAction.READ,
+                "Fetched student information: " + student.getFirstName() + " " + student.getLastName(),
+                staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok(getStudentData(student));
     }
 
@@ -165,7 +171,10 @@ public class StudentService {
             ));
         }
 
-        loggingService.logGeneralActivity(LogType.STUDENT, LogAction.READ, "N/A", staffId, LogStatus.SUCCESS);
+        loggingService.logGeneralActivity(
+                LogType.STUDENT, LogAction.READ,
+                "Read total student count",
+                staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok(students.size());
     }
 
@@ -209,18 +218,20 @@ public class StudentService {
             throw new RuntimeException(e);
         }
 
-        loggingService.logGeneralActivity(LogType.STUDENT, LogAction.UPDATE, "N/A", staffId, LogStatus.SUCCESS);
+        loggingService.logGeneralActivity(
+                LogType.STUDENT, LogAction.UPDATE,
+                "Updated student information: " + data.getFirstName() + " " + data.getLastName(),
+                staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok().build();
     }
 
 
     public ResponseEntity<?> getGradeStudents(String levelId, String staffId) {
-        String logData = "Class Id: " + levelId;
 
         Level level = levelRepository.findByLevelID(levelId).orElse(null);
         if (level == null) {
             loggingService.logGeneralActivity(LogType.STUDENT, LogAction.READ, "Invalid class Id", staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
                     "message", "Invalid class Id"
             ));
         }
@@ -228,7 +239,7 @@ public class StudentService {
         List<Students> levelStudents = utilityClass.getActiveStudents(level.getStudents());
         if (levelStudents == null || levelStudents.isEmpty()) {
             loggingService.logGeneralActivity(LogType.STUDENT, LogAction.READ, "Class has no students", staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
                     "message", "Class has no students"
             ));
         }
@@ -242,7 +253,10 @@ public class StudentService {
             studentsHolders.add(stu);
         }
 
-        loggingService.logGeneralActivity(LogType.STUDENT, LogAction.READ, "Invalid class Id", staffId, LogStatus.SUCCESS);
+        loggingService.logGeneralActivity(
+                LogType.STUDENT, LogAction.READ,
+                "Fetched student: " + level.getLevelName(),
+                staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok(studentsHolders);
     }
 
@@ -267,7 +281,10 @@ public class StudentService {
         student.setLevel(level);
         studentsRepository.save(student);
 
-        loggingService.logGeneralActivity(LogType.STUDENT, LogAction.PROMOTE, "Invalid student Id", staffId, LogStatus.SUCCESS);
+        loggingService.logGeneralActivity(
+                LogType.STUDENT, LogAction.PROMOTE,
+                "Promoted " + student.getFirstName() + " " + student.getLastName() + " to " + level.getLevelName(),
+                staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok().build();
     }
 
