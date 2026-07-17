@@ -80,7 +80,10 @@ public class StaffService {
         newStaff.setRoles(saveStaffRoles(newStaff, staffRoles));
         staffsRepository.save(newStaff);
 
-        loggingService.logGeneralActivity(LogType.STAFF, LogAction.CREATE, "N/A", staffId, LogStatus.SUCCESS);
+        loggingService.logGeneralActivity(
+                LogType.STAFF, LogAction.CREATE,
+                "Added new staff: " + staff.getFirstName() + " " + staff.getLastName(),
+                staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok(staffID);
     }
 
@@ -124,7 +127,10 @@ public class StaffService {
         newPrincipal.setRoles(saveStaffRoles(newPrincipal, staffRoles));
         staffsRepository.save(newPrincipal);
 
-        loggingService.logGeneralActivity(LogType.STAFF, LogAction.CREATE, "New Subscription", "", LogStatus.SUCCESS);
+        loggingService.logGeneralActivity(
+                LogType.STAFF, LogAction.CREATE,
+                "Added new principal for new subscription: " + newPrincipal.getFirstName() + " " + newPrincipal.getLastName(),
+                "", LogStatus.SUCCESS);
         return ResponseEntity.ok(staffID);
     }
 
@@ -148,7 +154,6 @@ public class StaffService {
     }
 
     public ResponseEntity<?> findStaffById(String instructorId, String staffId) {
-        String logData = "Staff Id: " + instructorId;
 
         Staffs staff = staffsRepository.findByStaffId(instructorId).orElse(null);
         if (staff == null) {
@@ -177,16 +182,14 @@ public class StaffService {
         staffData.setStaffStatus(staff.getStaffStatus().name());
         staffData.setDateOfRegistration(staff.getDateOfRegistration().toString());
 
-        loggingService.logGeneralActivity(LogType.STAFF, LogAction.READ, "N/A", staffId, LogStatus.SUCCESS);
+        loggingService.logGeneralActivity(
+                LogType.STAFF, LogAction.READ,
+                "Fetched staff information: " + staff.getFirstName() + " " + staff.getLastName(),
+                staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok(staffData);
     }
 
     public ResponseEntity<?> updateStaffInfo(FindStaffDTO updateInfo, String staffId) {
-        String logData = "staff Id: " + updateInfo.getStaffId() + " first Name: " + updateInfo.getFirstName() +
-                " Surname: " + updateInfo.getSurname() + " gender: " + updateInfo.getGender() + " DOB: " + updateInfo.getDateOfBirth() +
-                " Email: " + updateInfo.getEmail() + " Contact: " + updateInfo.getPhoneNumber() +
-                " Roles: " + Arrays.toString(updateInfo.getStaffRoles().toArray()) + " Status: " + updateInfo.getStaffStatus() +
-                " DOR: " + updateInfo.getDateOfRegistration();
 
         Staffs staff = staffsRepository.findByStaffId(updateInfo.getStaffId()).orElse(null);
         if (staff == null) {
@@ -207,7 +210,10 @@ public class StaffService {
         staff.setStaffStatus(StaffStatus.valueOf(updateInfo.getStaffStatus()));
         staffsRepository.save(staff);
 
-        loggingService.logGeneralActivity(LogType.STAFF, LogAction.UPDATE, "N/A", staffId, LogStatus.SUCCESS);
+        loggingService.logGeneralActivity(
+                LogType.STAFF, LogAction.UPDATE,
+                "Updated staff information: " + staff.getFirstName() + " " + staff.getLastName(),
+                staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok().build();
     }
 
@@ -252,7 +258,10 @@ public class StaffService {
             ));
         }
 
-        loggingService.logGeneralActivity(LogType.STAFF, LogAction.READ, "N/A", staffId, LogStatus.SUCCESS);
+        loggingService.logGeneralActivity(
+                LogType.STAFF, LogAction.READ,
+                "Fetched total staff count",
+                staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok(staffs.size());
     }
 
@@ -282,12 +291,14 @@ public class StaffService {
             }
         }
 
-        loggingService.logGeneralActivity(LogType.STAFF, LogAction.READ, "N/A", staffId, LogStatus.SUCCESS);
+        loggingService.logGeneralActivity(
+                LogType.STAFF, LogAction.READ,
+                "Fetched total teaching staff count",
+                staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok(staffCount);
     }
 
     public ResponseEntity<?> resetStaffPassword(String newPasswordStaffId, String newPassword, String staffId) {
-        String logData = "staff Id: " + newPasswordStaffId + " New Password: " + "***********";
 
         Staffs staff = staffsRepository.findByStaffId(newPasswordStaffId).orElse(null);
         if (staff == null) {
@@ -307,11 +318,14 @@ public class StaffService {
         staff.setPassword(bCryptPasswordEncoder.encode(newPassword));
         staffsRepository.save(staff);
 
-        loggingService.logGeneralActivity(LogType.STAFF, LogAction.RESET, "N/A", staffId, LogStatus.SUCCESS);
+        loggingService.logGeneralActivity(
+                LogType.STAFF, LogAction.UPDATE,
+                "Password reset for " + staff.getFirstName() + " " + staff.getLastName(),
+                staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok().build();
     }
 
-    public ResponseEntity<?> loadAllStaffInfo(String staffId) {
+    public ResponseEntity<?> loadStaffList(String staffId) {
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staff == null) {
             loggingService.logGeneralActivity(LogType.STAFF, LogAction.READ, "Invalid staff Id", staffId, LogStatus.FAILED);
@@ -324,6 +338,7 @@ public class StaffService {
 
         List<StaffCaching> staffList = new ArrayList<>();
         for (Staffs staffMember : staffs) {
+
             List<String> roles = new ArrayList<>();
             List<StaffRolesEntity> staffRoles = staffMember.getRoles();
             for (StaffRolesEntity staffRole : staffRoles) {
@@ -342,7 +357,10 @@ public class StaffService {
             staffList.add(foundStaff);
         }
 
-        loggingService.logGeneralActivity(LogType.STAFF, LogAction.READ, "N/A", staffId, LogStatus.SUCCESS);
+        loggingService.logGeneralActivity(
+                LogType.STAFF, LogAction.READ,
+                "Fetched staff List",
+                staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok(getFinalStaffList(staffList));
     }
 
