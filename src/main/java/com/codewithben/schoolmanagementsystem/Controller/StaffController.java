@@ -107,7 +107,13 @@ public class StaffController {
     @GetMapping("/v1/load-staffs-info")
     public ResponseEntity<?> loadStaffCache(@RequestHeader("staffId") String staffId) {
 
-        return staffService.loadAllStaffInfo(staffId);
+        return staffService.loadStaffList(staffId);
+    }
+
+    @GetMapping("/v2/staff-list")
+    public ResponseEntity<?> loadStaffList(@RequestHeader("staffId") String staffId) {
+
+        return staffService.loadStaffList(staffId);
     }
 
     @GetMapping("/v1/load-semesters")
