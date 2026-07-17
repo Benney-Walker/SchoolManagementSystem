@@ -30,7 +30,6 @@ public class StudentConductRecord {
 
     private String cognitiveSkills;
 
-    // Free text
     private String conductRemark;
 
     private String peculiarIssue;
