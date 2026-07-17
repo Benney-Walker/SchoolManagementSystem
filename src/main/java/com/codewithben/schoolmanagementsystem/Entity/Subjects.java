@@ -1,9 +1,15 @@
 package com.codewithben.schoolmanagementsystem.Entity;
 
 import jakarta.persistence.*;
+import lombok.*;
 
 import java.util.List;
 
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 public class Subjects {
 
@@ -18,36 +24,4 @@ public class Subjects {
     @ManyToOne
     @JoinColumn(name = "Level_levelID")
     private Level level;
-
-    public String getSubjectId() {
-        return subjectId;
-    }
-
-    public void setSubjectId(String subjectId) {
-        this.subjectId = subjectId;
-    }
-
-    public String getSubjectName() {
-        return subjectName;
-    }
-
-    public void setSubjectName(String subjectName) {
-        this.subjectName = subjectName;
-    }
-
-    public List<SubjectScore> getSubjectScore() {
-        return subjectScore;
-    }
-
-    public void setSubjectScore(List<SubjectScore> subjectScore) {
-        this.subjectScore = subjectScore;
-    }
-
-    public Level getLevel() {
-        return level;
-    }
-
-    public void setLevel(Level level) {
-        this.level = level;
-    }
 }
