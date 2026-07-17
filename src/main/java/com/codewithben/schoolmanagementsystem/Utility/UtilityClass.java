@@ -141,13 +141,13 @@ public class UtilityClass {
         LocalDate currentDate = LocalDate.now();
 
         List<Semester> semesters = institution.getSemester();
-        if (semesters == null)
+        if (semesters == null || semesters.isEmpty())
             return null;
 
         for (Semester semester : semesters) {
             LocalDate startDate = semester.getSemesterStartDate();
             LocalDate endDate = semester.getSemesterEndDate();
-            LocalDate gradePeriod = endDate.plusDays(10);
+            LocalDate gradePeriod = endDate.plusDays(7);
 
             // Check if current date is within semester range (inclusive)
             if (currentDate.isEqual(startDate) || currentDate.isAfter(startDate)) {
