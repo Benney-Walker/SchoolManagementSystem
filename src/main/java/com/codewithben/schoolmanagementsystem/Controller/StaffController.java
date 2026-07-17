@@ -42,6 +42,7 @@ public class StaffController {
         return staffService.countTotalTeachingStaffs(staffId);
     }
 
+    //Unused endpoint
     @GetMapping("/v1/staff-list")
     public ResponseEntity<?> loadStaffInfo(@RequestHeader("staffid") String staffId) {
 
