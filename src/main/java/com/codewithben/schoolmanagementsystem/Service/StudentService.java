@@ -31,11 +31,9 @@ public class StudentService {
 
     private final UtilityClass utilityClass;
 
-    private final SemesterRepository semesterRepository;
+    private final ResultsRepository resultsRepository;
 
     private final InstitutiionRepository institutionRepository;
-
-    private final AttendanceRecordsRepository attendanceRecordsRepository;
 
     private final LoggingService loggingService;
 
@@ -260,30 +258,85 @@ public class StudentService {
         return ResponseEntity.ok(studentsHolders);
     }
 
-    public ResponseEntity<?> promoteStudent(String studentId, String levelId, String staffId) {
+    public ResponseEntity<?> promoteStudent(String studentId, String promotionClassId, String semesterId, String staffId) {
 
-        Level level = levelRepository.findByLevelID(levelId).orElse(null);
-        if (level == null) {
-            loggingService.logGeneralActivity(LogType.STUDENT, LogAction.PROMOTE, "Invalid class Id", staffId, LogStatus.FAILED);
+       Results result = resultsRepository.findByStudent_StudentIdAndSemester_SemesterID(
+               studentId, semesterId
+       ).orElse(null);
+       if (result == null) {
+           loggingService.logGeneralActivity(
+                   LogType.STUDENT, LogAction.UPDATE,
+                   "No reference results found for promotion",
+                   staffId, LogStatus.FAILED);
+           return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                   "message", "No reference results found for promotion"
+           ));
+       }
+
+       if (!result.getSemester().getSemesterName().equals("THIRD_TERM")) {
+           loggingService.logGeneralActivity(
+                   LogType.STUDENT, LogAction.UPDATE,
+                   "Promotions can only be done on Third Terms",
+                   staffId, LogStatus.FAILED);
+           return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(Map.of(
+                   "message", "Promotions can only be done on Third Terms"
+           ));
+       }
+
+        Level promotionClass = levelRepository.findByLevelID(promotionClassId).orElse(null);
+        if (promotionClass == null) {
+            loggingService.logGeneralActivity(LogType.STUDENT, LogAction.UPDATE, "Invalid promotion Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "Invalid class Id"
+                    "message", "Invalid Promotion class Id"
             ));
         }
 
-        Students student = studentsRepository.findByStudentId(studentId).orElse(null);
-        if (student == null) {
-            loggingService.logGeneralActivity(LogType.STUDENT, LogAction.PROMOTE, "Invalid student Id", staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "Invalid student Id"
-            ));
-        }
+        Students student = result.getStudent();
 
-        student.setLevel(level);
-        studentsRepository.save(student);
+        result.getStudent().setLevel(promotionClass);
+        studentsRepository.save(result.getStudent());
+
+        result.setPromotionTo(promotionClass.getLevelName());
+        resultsRepository.save(result);
 
         loggingService.logGeneralActivity(
                 LogType.STUDENT, LogAction.PROMOTE,
-                "Promoted " + student.getFirstName() + " " + student.getLastName() + " to " + level.getLevelName(),
+                "Promoted " + student.getFirstName() + " " + student.getLastName() + " to " + promotionClass.getLevelName(),
+                staffId, LogStatus.SUCCESS);
+        return ResponseEntity.ok().build();
+    }
+
+    public ResponseEntity<?> repeatStudent(String studentId, String semesterId, String staffId) {
+
+        Results result = resultsRepository.findByStudent_StudentIdAndSemester_SemesterID(
+                studentId, semesterId
+        ).orElse(null);
+        if (result == null) {
+            loggingService.logGeneralActivity(
+                    LogType.STUDENT, LogAction.UPDATE,
+                    "No reference results found for Repetition",
+                    staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "No reference results found for Repetition"
+            ));
+        }
+
+        if (!result.getSemester().getSemesterName().equals("THIRD_TERM")) {
+            loggingService.logGeneralActivity(
+                    LogType.STUDENT, LogAction.UPDATE,
+                    "Repetition can only be done on Third Terms",
+                    staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(Map.of(
+                    "message", "Repetition can only be done on Third Terms"
+            ));
+        }
+
+        result.setPromotionTo("Repeated");
+        resultsRepository.save(result);
+
+        loggingService.logGeneralActivity(
+                LogType.STUDENT, LogAction.PROMOTE,
+                "Repeated " + result.getStudent().getFirstName() + " " + result.getStudent().getLastName() + " at " + result.getLevel().getLevelName(),
                 staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok().build();
     }
