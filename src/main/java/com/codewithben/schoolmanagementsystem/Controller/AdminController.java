@@ -161,10 +161,7 @@ public class AdminController {
         return subjectsService.deleteSubjectData(subjectId, staffId);
     }
 
-    @GetMapping(
-            value = "/v2/generate-class-report",
-            produces = MediaType.APPLICATION_PDF_VALUE
-    )
+    @GetMapping(value = "/v2/generate-class-report")
     public ResponseEntity<?> generateBulkClassReports(@RequestHeader("staffId") String staffId,
                                                     @RequestParam String levelId,
                                                     @RequestParam String semesterId) {
@@ -172,10 +169,7 @@ public class AdminController {
         return reportService.generateClassBulkReport(staffId, levelId, semesterId);
     }
 
-    @GetMapping(
-            value = "/v2/generate-sba-report",
-            produces = MediaType.APPLICATION_PDF_VALUE
-    )
+    @GetMapping(value = "/v2/generate-sba-report")
     public ResponseEntity<?> generateSbaReport(@RequestHeader("staffId") String staffId,
                                                @RequestParam String levelId,
                                                @RequestParam String semesterId,
@@ -184,10 +178,7 @@ public class AdminController {
         return reportService.generateSbaReport(staffId, levelId, semesterId, subjectId);
     }
 
-    @GetMapping(
-            value = "/v2/generate-master-sheet",
-            produces = MediaType.APPLICATION_PDF_VALUE
-    )
+    @GetMapping(value = "/v2/generate-master-sheet")
     public ResponseEntity<?> generateMasterScoreSheet(@RequestHeader("staffId") String staffId,
                                                @RequestParam String levelId,
                                                @RequestParam String semesterId) {

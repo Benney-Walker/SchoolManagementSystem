@@ -13,6 +13,7 @@ import com.codewithben.schoolmanagementsystem.Utility.UtilityClass;
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -101,7 +102,7 @@ public class ReportService {
                     "Generated report card for " + studentResult.getStudent().getFirstName() + " " +
                             studentResult.getStudent().getLastName(), staffId, LogStatus.SUCCESS
             );
-            return ResponseEntity.ok().body(studentReport);
+            return ResponseEntity.ok().contentType(MediaType.APPLICATION_PDF).body(studentReport);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -176,7 +177,7 @@ public class ReportService {
                             studentResult.getStudent().getLastName(),
                     staffId, LogStatus.SUCCESS
             );
-            return ResponseEntity.ok().body(studentReport);
+            return ResponseEntity.ok().contentType(MediaType.APPLICATION_PDF).body(studentReport);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -228,7 +229,8 @@ public class ReportService {
         //retrieve results
         for (Results result : classResultsList) {
             if (result.getConduct() == null) {
-                loggingService.logGeneralActivity(LogType.REPORT, LogAction.READ, "No Conduct records found for " + result.getStudent().getFirstName(), staffId, LogStatus.FAILED);
+                String studentName = result.getStudent().getFirstName() + " " + result.getStudent().getLastName();
+                loggingService.logGeneralActivity(LogType.REPORT, LogAction.READ, "No Conduct records found for " + studentName, staffId, LogStatus.FAILED);
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                         "message", "No Conduct records found for " + result.getStudent().getFirstName()
                 ));
@@ -250,7 +252,7 @@ public class ReportService {
                     "Downloaded bulk report for " + level.getLevelName(),
                     staffId, LogStatus.SUCCESS
             );
-            return ResponseEntity.ok().body(studentBulkReportPdf);
+            return ResponseEntity.ok().contentType(MediaType.APPLICATION_PDF).body(studentBulkReportPdf);
         } catch (Exception e) {
             throw new RuntimeException("Error while generating report for " + e);
         }
@@ -310,7 +312,7 @@ public class ReportService {
                     "Generated Sba report for " + level.getLevelName() + "' " +
                             subject.getSubjectName(), staffId, LogStatus.SUCCESS
             );
-            return ResponseEntity.ok(sbaReportPdf);
+            return ResponseEntity.ok().contentType(MediaType.APPLICATION_PDF).body(sbaReportPdf);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -336,7 +338,7 @@ public class ReportService {
                     "Generated master score sheet for " + masterScoreSheet.getClassName(),
                     staffId, LogStatus.SUCCESS
             );
-            return ResponseEntity.ok(scoreSheetPdf);
+            return ResponseEntity.ok().contentType(MediaType.APPLICATION_PDF).body(scoreSheetPdf);
         } catch (Exception e)  {
             throw new RuntimeException("Error while generating report for " + e);
         }
