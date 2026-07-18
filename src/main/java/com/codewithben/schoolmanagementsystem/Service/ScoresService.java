@@ -42,6 +42,88 @@ public class ScoresService {
 
     private final UtilityClass utilityClass;
 
+    public ResponseEntity<?> loadStudentsForScores(String semesterId, String subjectId, String staffId) {
+
+        Subjects subject = subjectsRepository.findBySubjectId(subjectId).orElse(null);
+        if (subject == null) {
+            loggingService.logGeneralActivity(LogType.SUBJECT_SCORE, LogAction.READ, "Invalid subject Id", staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Invalid subject Id"
+            ));
+        }
+
+        //Gets the active students
+        List<Students> students =
+                utilityClass.getActiveStudents(subject.getLevel().getStudents());
+        if (students == null || students.isEmpty()) {
+            loggingService.logGeneralActivity(LogType.SUBJECT_SCORE, LogAction.READ, "Class has no students", staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Class has no students"
+            ));
+        }
+
+        String subjectName = subject.getSubjectName();
+        List<StudentsScoresTable> subjectStudents = new ArrayList<>();
+        for (Students student : students) {
+            String studentId = student.getStudentId();
+            String studentName = student.getFirstName() + " " + student.getLastName();
+
+            StudentsScoresTable scoresTable = new StudentsScoresTable();
+
+            // Check if student has scores for this subject
+            SubjectScore score = subjectScoreRepository.findByStudent_StudentIdAndSubject_SubjectIdAndSemester_SemesterID(
+                    studentId, subjectId, semesterId
+            ).orElse(null);
+
+            if (score == null) {
+
+                scoresTable.setStudentId(studentId);
+                scoresTable.setStudentName(studentName);
+                scoresTable.setClassTest1Score("0");
+                scoresTable.setClassTest2Score("0");
+                scoresTable.setProjectScore("0");
+                scoresTable.setGroupWorkScore("0");
+                scoresTable.setClassScore("0");
+                scoresTable.setExamScore("0");
+                scoresTable.setCalculatedExamScore("0");
+
+            } else {
+
+                scoresTable.setStudentId(studentId);
+                scoresTable.setStudentName(studentName);
+                scoresTable.setClassTest1Score(
+                        String.valueOf(score.getClassTest1())
+                );
+                scoresTable.setClassTest2Score(
+                        String.valueOf(score.getClassTest2())
+                );
+                scoresTable.setGroupWorkScore(
+                        String.valueOf(score.getGroupWork())
+                );
+                scoresTable.setProjectScore(
+                        String.valueOf(score.getProjectWork())
+                );
+                scoresTable.setClassScore(
+                        String.valueOf(score.getClassScore())
+                );
+                scoresTable.setExamScore(
+                        String.valueOf(score.getExamScore())
+                );
+                scoresTable.setCalculatedExamScore(
+                        String.valueOf(score.getCalculatedExamScore())
+                );
+
+            }
+
+            subjectStudents.add(scoresTable);
+        }
+
+        loggingService.logGeneralActivity(LogType.SUBJECT_SCORE, LogAction.READ, "N/A", staffId, LogStatus.SUCCESS);
+        return ResponseEntity.ok(
+                new SubjectScores(subjectName, subjectId, subjectStudents)
+        );
+    }
+
     @Transactional
     public ResponseEntity<?> saveScores(String staffId, String subjectId, String semesterId, List<StudentsScoresTable> scores) {
 
