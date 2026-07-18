@@ -10,6 +10,7 @@ import com.codewithben.schoolmanagementsystem.Entity.*;
 import com.codewithben.schoolmanagementsystem.Repository.*;
 import com.codewithben.schoolmanagementsystem.Utility.UtilityClass;
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -20,7 +21,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-@AllArgsConstructor
+@RequiredArgsConstructor
 @Service
 public class ResultsService {
 
@@ -34,6 +35,8 @@ public class ResultsService {
 
     private final AttendanceService attendanceService;
 
+    private final SubjectsRepository subjectsRepository;
+
     private final UtilityClass utilityClass;
 
     private final ConductService conductService;
@@ -44,21 +47,24 @@ public class ResultsService {
         if (semester == null) {
             loggingService.logGeneralActivity(LogType.RESULT, LogAction.READ, "Invalid Term Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "Invalid Semester ID"
+                    "message", "Invalid term Id"
+            ));
+        }
+
+        Results studentResult = resultsRepository.findByStudent_StudentIdAndSemester_SemesterID(studentId, semesterId).orElse(null);
+        if (studentResult == null) {
+            loggingService.logGeneralActivity(
+                    LogType.RESULT, LogAction.READ,
+                    "No record found for this student for this semester",
+                    staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "No record found for this student for this semester"
             ));
         }
 
         String totalAttendance = String.valueOf(
                 attendanceService.getTotalAttendanceCount(semester)
         );
-
-        Results studentResult = resultsRepository.findByStudent_StudentIdAndSemester_SemesterID(studentId, semesterId).orElse(null);
-        if (studentResult == null) {
-            loggingService.logGeneralActivity(LogType.RESULT, LogAction.READ, "No record found for this student for this semester", staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "No record found for this student for this semester"
-            ));
-        }
 
         if (studentResult.getConduct() == null) {
             loggingService.logGeneralActivity(LogType.RESULT, LogAction.READ, "Student conducts not uploaded yet", staffId, LogStatus.FAILED);
@@ -67,14 +73,17 @@ public class ResultsService {
             ));
         }
 
-        String resumingDate = utilityClass.getResumingDate(studentResult.getStudent().getLevel(),  semester);
+        String resumingDate = utilityClass.getResumingDate(semester);
 
-        GenerateStudentResult result = generateStudentResult(studentResult, resumingDate, totalAttendance, "-");
+        GenerateStudentResult result = generateStudentResult(studentResult, resumingDate, totalAttendance);
         result.setStudentConductReport(
                 conductService.getStudentConductReport(studentResult.getConduct())
         );
 
-        loggingService.logGeneralActivity(LogType.RESULT, LogAction.READ, "N/A", staffId, LogStatus.SUCCESS);
+        loggingService.logGeneralActivity(
+                LogType.RESULT, LogAction.READ,
+                "Downloaded report for " + studentResult.getStudent().getFirstName(),
+                staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok().header(
                 "school-name", studentResult.getStudent().getInstitution().getInstitutionName()
         ).body(result);
@@ -158,11 +167,22 @@ public class ResultsService {
             viewClassSemesterReports.add(results);
         }
 
-        loggingService.logGeneralActivity(LogType.RESULT, LogAction.READ, "N/A", staffId, LogStatus.SUCCESS);
+        loggingService.logGeneralActivity(
+                LogType.RESULT, LogAction.READ,
+                "Fetched " + level.getLevelName() + "'s terminal report",
+                staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok(viewClassSemesterReports);
     }
 
     public ResponseEntity<?> viewSba(String staffId, String levelId, String semesterId, String subjectId) {
+        Subjects subject = subjectsRepository.findBySubjectId(subjectId).orElse(null);
+        if (subject == null) {
+            loggingService.logGeneralActivity(LogType.RESULT, LogAction.READ,"Invalid subject Id", staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Invalid subject Id"
+            ));
+        }
+
         List<Results> resultsList = resultsRepository
                 .findByLevel_LevelIDAndSemester_SemesterID(levelId, semesterId);
         if (resultsList == null || resultsList.isEmpty()) {
@@ -172,9 +192,21 @@ public class ResultsService {
             ));
         }
 
+        if (!utilityClass.isClassResultsComplete(resultsList)) {
+            loggingService.logGeneralActivity(LogType.RESULT, LogAction.READ,
+                    "Results not complete! Positions or Promotions not done",
+                    staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                    "message", "Results not complete! Positions or Promotions not done"
+            ));
+        }
+
         List<SbaRecords> sbaRecords = generateSbaRecords(resultsList, subjectId);
 
-        loggingService.logGeneralActivity(LogType.RESULT, LogAction.READ,"N/A", staffId, LogStatus.SUCCESS);
+        loggingService.logGeneralActivity(
+                LogType.RESULT, LogAction.READ,
+                "Fetched sba records for " + subject.getSubjectName(),
+                staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok(sbaRecords);
     }
 
@@ -189,13 +221,27 @@ public class ResultsService {
             ));
         }
 
+        if (!utilityClass.isClassResultsComplete(resultsList)) {
+            loggingService.logGeneralActivity(LogType.RESULT, LogAction.READ,
+                    "Results not complete! Positions or Promotions not done",
+                    staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                    "message", "Results not complete! Positions or Promotions not done"
+            ));
+        }
+
+        String className = resultsList.getFirst().getLevel().getLevelName();
+
         MasterScoreSheet masterScoreSheet = generateMasterSheetRecord(resultsList);
-        loggingService.logGeneralActivity(LogType.RESULT, LogAction.READ,"N/A", staffId, LogStatus.SUCCESS);
+        loggingService.logGeneralActivity(
+                LogType.RESULT, LogAction.READ,
+                "Fetched master score records for " + className,
+                staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok(masterScoreSheet);
     }
 
     public GenerateStudentResult generateStudentResult(
-            Results result, String resumingDate, String totalAttendance, String promotedTo
+            Results result, String resumingDate, String totalAttendance
     ) {
 
         try {
@@ -213,6 +259,7 @@ public class ResultsService {
             String attendancePresent = String.valueOf(
                     attendanceService.getStudentPresentAttendanceCount(studentId, result.getSemester().getSemesterID())
             );
+            String promotedTo = result.getPromotionTo();
 
             String instructorName = result.getLevel().getStaff().getFirstName() +
                     " " + result.getLevel().getStaff().getLastName();
