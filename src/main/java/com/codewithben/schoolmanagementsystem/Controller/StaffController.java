@@ -96,14 +96,6 @@ public class StaffController {
         return resultsService.viewMasterScoreSheet(levelId, semesterId, staffId);
     }
 
-    @PostMapping("/v1/promote-student/{studentId}/{levelId}")
-    public ResponseEntity<?> movePassedStudents(@RequestHeader("staffId") String staffId,
-                                                @PathVariable String levelId,
-                                                @PathVariable String studentId) {
-
-        return studentService.promoteStudent(studentId, levelId, staffId);
-    }
-
     @GetMapping("/v1/load-staffs-info")
     public ResponseEntity<?> loadStaffCache(@RequestHeader("staffId") String staffId) {
 
