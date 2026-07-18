@@ -184,13 +184,27 @@ public class ScoresService {
                 result.setCreatedAt(LocalDate.now());
                 result.setTotalScore(Double.valueOf(String.format("%.2f", 0.0)));
                 result.setAverageScore(Double.valueOf(String.format("%.2f", 0.0)));
-                result.setUpdatedBy(staff);
                 resultsRepository.save(result);
             }
 
-            saveNewScore(subjectId, score, result, subject, student, semester);
+            SubjectScore subjectScore = subjectScoreRepository
+                    .findBySubject_SubjectIdAndResults_ResultId(
+                            subjectId,
+                            result.getResultId()
+                    ).orElse(new SubjectScore());
 
-            updateResultTotals(result, staff, subject);
+            saveNewScore(subjectScore, score, result, subject, student, semester);
+
+            if (result.getSubjectScores().size() == result.getLevel().getSubjects().size()) {
+                updateResultTotals(result);
+                result.setReady(true);
+            } else {
+                result.setReady(false);
+            }
+
+            result.setUpdatedBy(staff);
+            result.setUpdatedAt(LocalDate.now());
+            resultsRepository.save(result);
         }
 
         loggingService.logGeneralActivity(LogType.SUBJECT_SCORE, LogAction.CREATE,"N/A", staffId, LogStatus.SUCCESS);
@@ -198,12 +212,7 @@ public class ScoresService {
     }
 
 
-    public void saveNewScore(String subjectId, StudentsScoresTable score, Results result, Subjects subject, Students student, Semester semester) {
-        SubjectScore subjectScore = subjectScoreRepository
-                .findBySubject_SubjectIdAndResults_ResultId(
-                        subjectId,
-                        result.getResultId()
-                ).orElse(new SubjectScore());
+    public void saveNewScore(SubjectScore subjectScore, StudentsScoresTable score, Results result, Subjects subject, Students student, Semester semester) {
 
         double projectWork = Double.parseDouble(score.getProjectScore());
         double classTest1 = Double.parseDouble(score.getClassTest1Score());
@@ -236,94 +245,12 @@ public class ScoresService {
         subjectScoreRepository.save(subjectScore);
     }
 
-    public ResponseEntity<?> loadStudentsForScores(String semesterId, String subjectId, String staffId) {
-
-        Subjects subject = subjectsRepository.findBySubjectId(subjectId).orElse(null);
-        if (subject == null) {
-            loggingService.logGeneralActivity(LogType.SUBJECT_SCORE, LogAction.READ, "Invalid subject Id", staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "Invalid subject Id"
-            ));
-        }
-
-        //Gets the active students
-        List<Students> students =
-                utilityClass.getActiveStudents(subject.getLevel().getStudents());
-        if (students == null || students.isEmpty()) {
-            loggingService.logGeneralActivity(LogType.SUBJECT_SCORE, LogAction.READ, "Class has no students", staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "Class has no students"
-            ));
-        }
-
-        String subjectName = subject.getSubjectName();
-        List<StudentsScoresTable> subjectStudents = new ArrayList<>();
-        for (Students student : students) {
-            String studentId = student.getStudentId();
-            String studentName = student.getFirstName() + " " + student.getLastName();
-
-            StudentsScoresTable scoresTable = new StudentsScoresTable();
-
-            // Check if student has scores for this subject
-            SubjectScore score = subjectScoreRepository.findByStudent_StudentIdAndSubject_SubjectIdAndSemester_SemesterID(
-                    studentId, subjectId, semesterId
-            ).orElse(null);
-
-            if (score == null) {
-
-                scoresTable.setStudentId(studentId);
-                scoresTable.setStudentName(studentName);
-                scoresTable.setClassTest1Score("0");
-                scoresTable.setClassTest2Score("0");
-                scoresTable.setProjectScore("0");
-                scoresTable.setGroupWorkScore("0");
-                scoresTable.setClassScore("0");
-                scoresTable.setExamScore("0");
-                scoresTable.setCalculatedExamScore("0");
-
-            } else {
-
-                scoresTable.setStudentId(studentId);
-                scoresTable.setStudentName(studentName);
-                scoresTable.setClassTest1Score(
-                        String.valueOf(score.getClassTest1())
-                );
-                scoresTable.setClassTest2Score(
-                        String.valueOf(score.getClassTest2())
-                );
-                scoresTable.setGroupWorkScore(
-                        String.valueOf(score.getGroupWork())
-                );
-                scoresTable.setProjectScore(
-                        String.valueOf(score.getProjectWork())
-                );
-                scoresTable.setClassScore(
-                        String.valueOf(score.getClassScore())
-                );
-                scoresTable.setExamScore(
-                        String.valueOf(score.getExamScore())
-                );
-                scoresTable.setCalculatedExamScore(
-                        String.valueOf(score.getCalculatedExamScore())
-                );
-
-            }
-
-            subjectStudents.add(scoresTable);
-        }
-
-        loggingService.logGeneralActivity(LogType.SUBJECT_SCORE, LogAction.READ, "N/A", staffId, LogStatus.SUCCESS);
-        return ResponseEntity.ok(
-                new SubjectScores(subjectName, subjectId, subjectStudents)
-        );
-    }
-
     /* ===================================
                     HELPERS
     =====================================*/
 
-    public void updateResultTotals(Results result, Staffs staff, Subjects subject) {
-        List<SubjectScore> scores = subjectScoreRepository.findByResults_ResultId(result.getResultId());
+    public void updateResultTotals(Results result) {
+        List<SubjectScore> scores = result.getSubjectScores();
 
         double total = 0.0;
         if (scores == null || scores.isEmpty()) {
@@ -339,10 +266,6 @@ public class ScoresService {
             result.setAverageScore(total / scores.size());
         }
 
-        result.setUpdatedAt(LocalDate.now());
-        result.setUpdatedBy(staff);
         resultsRepository.save(result);
-
-        utilityClass.reArrangePositions(subject, result.getSemester());
     }
 }
