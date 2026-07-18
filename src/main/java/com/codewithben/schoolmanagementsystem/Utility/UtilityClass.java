@@ -1,9 +1,14 @@
 package com.codewithben.schoolmanagementsystem.Utility;
 
+import com.codewithben.schoolmanagementsystem.Constants.LogAction;
+import com.codewithben.schoolmanagementsystem.Constants.LogStatus;
+import com.codewithben.schoolmanagementsystem.Constants.LogType;
 import com.codewithben.schoolmanagementsystem.Constants.StudentStatus;
 import com.codewithben.schoolmanagementsystem.Entity.*;
 import com.codewithben.schoolmanagementsystem.Repository.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
 import java.time.DayOfWeek;
@@ -11,6 +16,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 @RequiredArgsConstructor
@@ -159,50 +165,6 @@ public class UtilityClass {
         return null;
     }
 
-    public void reArrangePositions(Subjects subject, Semester semester) {
-        Level level = subject.getLevel();
-
-        // 1. Fetch results sorted by score (High to Low)
-        List<Results> resultsList = resultsRepository
-                .findByLevel_LevelIDAndSemester_SemesterIDOrderByTotalScoreDesc(
-                        level.getLevelID(), semester.getSemesterID()
-                );
-
-        if (resultsList == null || resultsList.isEmpty()) {
-            return;
-        }
-
-        int currentRank = 0;
-        double lastScore = -1.0;
-
-        for (int i = 0; i < resultsList.size(); i++) {
-            Results currentResult = resultsList.get(i);
-            double score = currentResult.getTotalScore();
-            System.out.println("PRINT OUT OF TOTAL SCORE" + score);
-
-
-            if (score != lastScore) {
-                currentRank = i + 1;
-                lastScore = score;
-            }
-
-            currentResult.setPosition(ordinal(currentRank));
-            resultsRepository.save(currentResult);
-        }
-    }
-
-    private String ordinal(int number) {
-        if (number >= 11 && number <= 13) {
-            return number + "th";
-        }
-        switch (number % 10) {
-            case 1: return number + "st";
-            case 2: return number + "nd";
-            case 3: return number + "rd";
-            default: return number + "th";
-        }
-    }
-
     public boolean isWeekend(LocalDate date) {
         DayOfWeek day = date.getDayOfWeek();
 
@@ -231,14 +193,69 @@ public class UtilityClass {
         return studentsListForReport;
     }
 
-    public String getResumingDate(Level level, Semester semester) {
-        List<Semester> nextSemester = semesterRepository
-                .findByInstitution_InstitutionId(level.getInstitution().getInstitutionId());
+    public String getResumingDate(Semester semester) {
+        List<Semester> nextSemester = semester.getInstitution().getSemester();
         return nextSemester.stream()
                 .filter(s -> s.getSemesterStartDate().isAfter(semester.getSemesterEndDate()))
                 .min(Comparator.comparing(Semester::getSemesterStartDate))
                 .map(s -> s.getSemesterStartDate().toString())
                 .orElse(null);
+    }
+
+    private void reArrangePositions(List<Results> resultsList) {
+
+        if (resultsList == null || resultsList.isEmpty()) {
+            return;
+        }
+
+        int currentRank = 0;
+        double lastScore = -1.0;
+
+        for (int i = 0; i < resultsList.size(); i++) {
+            Results currentResult = resultsList.get(i);
+            double score = currentResult.getTotalScore();
+
+            if (score != lastScore) {
+                currentRank = i + 1;
+                lastScore = score;
+            }
+
+            currentResult.setPosition(ordinal(currentRank));
+            resultsRepository.save(currentResult);
+        }
+    }
+
+    private String ordinal(int number) {
+        if (number >= 11 && number <= 13) {
+            return number + "th";
+        }
+        switch (number % 10) {
+            case 1: return number + "st";
+            case 2: return number + "nd";
+            case 3: return number + "rd";
+            default: return number + "th";
+        }
+    }
+
+    //Checks if class results is complete
+    public boolean isClassResultsComplete(List<Results> classResultsList) {
+        boolean isArranged = false;
+        for (Results result : classResultsList) {
+            if (!result.isReady()) {
+                return false;
+            }
+
+            if (result.getSemester().getSemesterName().equals("THIRD_TERM") &&
+            result.getPromotionTo().equals("-")) return false;
+
+            isArranged = result.getPosition() != null && !result.getPosition().isEmpty();
+        }
+
+        classResultsList.sort(Comparator.comparing(Results::getTotalScore).reversed());
+        if (!isArranged) {
+            reArrangePositions(classResultsList);
+        }
+        return true;
     }
 
 }
