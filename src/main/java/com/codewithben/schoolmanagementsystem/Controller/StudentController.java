@@ -119,10 +119,27 @@ public class StudentController {
     }
 
     @GetMapping("/v1/load-students/{levelId}")
-    public ResponseEntity<?> loadGradeStudents(@RequestHeader("staffId") String staffId,
+    public ResponseEntity<?> loadClassStudents(@RequestHeader("staffId") String staffId,
                                                @PathVariable String levelId) {
 
         return studentService.getGradeStudents(levelId, staffId);
+    }
+
+    @PostMapping("/v1/promote-student")
+    public ResponseEntity<?> promoteStudent(@RequestHeader("staffId") String staffId,
+                                            @RequestParam String studentId,
+                                            @RequestParam String promotionClassId,
+                                            @RequestParam String semesterId) {
+
+        return studentService.promoteStudent(studentId, promotionClassId, semesterId, staffId);
+    }
+
+    @PostMapping("/v1/repeat-student")
+    public ResponseEntity<?> repeatStudent(@RequestHeader("staffId") String staffId,
+                                           @RequestParam String studentId,
+                                           @RequestParam String semesterId) {
+
+        return studentService.repeatStudent(studentId, semesterId, staffId);
     }
 
     @GetMapping(
@@ -135,5 +152,16 @@ public class StudentController {
                                                    @RequestParam String semesterId) {
 
         return reportService.generateStudentReport(studentId, semesterId, promotionId, staffId);
+    }
+
+    @GetMapping(
+            value = "/v3/generate-report-card",
+            produces = MediaType.APPLICATION_PDF_VALUE
+    )
+    public ResponseEntity<?> generateStudentReport(@RequestHeader("staffId") String staffId,
+                                                   @RequestParam String studentId,
+                                                   @RequestParam String semesterId) {
+
+        return reportService.generateStudentReport(studentId, semesterId, staffId);
     }
 }
