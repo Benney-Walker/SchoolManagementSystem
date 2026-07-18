@@ -50,4 +50,7 @@ public class Results {
 
     private String position;
 
+    private String promotionTo = "-";
+
+    private boolean isReady;
 }
