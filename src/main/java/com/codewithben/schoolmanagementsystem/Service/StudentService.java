@@ -273,6 +273,18 @@ public class StudentService {
            ));
        }
 
+       List<SubjectScore> scores = result.getSubjectScores();
+       List<Subjects> classSubjects = result.getLevel().getSubjects();
+       if (scores.size() != classSubjects.size()) {
+           loggingService.logGeneralActivity(
+                   LogType.STUDENT, LogAction.UPDATE,
+                   "Student result not complete",
+                   staffId, LogStatus.FAILED);
+           return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                   "message", "Student result not complete"
+           ));
+       }
+
        if (!result.getSemester().getSemesterName().equals("THIRD_TERM")) {
            loggingService.logGeneralActivity(
                    LogType.STUDENT, LogAction.UPDATE,
@@ -328,6 +340,18 @@ public class StudentService {
                     staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(Map.of(
                     "message", "Repetition can only be done on Third Terms"
+            ));
+        }
+
+        List<SubjectScore> scores = result.getSubjectScores();
+        List<Subjects> classSubjects = result.getLevel().getSubjects();
+        if (scores.size() != classSubjects.size()) {
+            loggingService.logGeneralActivity(
+                    LogType.STUDENT, LogAction.UPDATE,
+                    "Student result not complete",
+                    staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Student result not complete"
             ));
         }
 
