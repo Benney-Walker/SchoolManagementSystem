@@ -195,12 +195,16 @@ public class ScoresService {
 
             saveNewScore(subjectScore, score, result, subject, student, semester);
 
-            if (result.getSubjectScores().size() == result.getLevel().getSubjects().size()) {
+            /*if (result.getSubjectScores().size() == result.getLevel().getSubjects().size()) {
                 updateResultTotals(result);
                 result.setReady(true);
             } else {
                 result.setReady(false);
-            }
+            }*/
+
+            //Temporal fix
+            updateResultTotals(result);
+            result.setReady(true);
 
             result.setUpdatedBy(staff);
             result.setUpdatedAt(LocalDate.now());

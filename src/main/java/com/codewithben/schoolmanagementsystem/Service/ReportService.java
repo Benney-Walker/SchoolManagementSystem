@@ -129,6 +129,7 @@ public class ReportService {
         List<Results> classResultsList = resultsRepository.findByLevel_LevelIDAndSemester_SemesterID(
                 studentResult.getLevel().getLevelID(), semesterId
         );
+
         if (!utilityClass.isClassResultsComplete(classResultsList)) {
             loggingService.logGeneralActivity(LogType.REPORT, LogAction.READ,
                     "Results not complete! Positions or Promotions not done",
@@ -138,14 +139,14 @@ public class ReportService {
             ));
         }
 
-        if (semester.getSemesterName().equals("THIRD_TERM") && studentResult.getPromotionTo().equals("-")) {
+        /*if (semester.getSemesterName().equals("THIRD_TERM") && studentResult.getPromotionTo().equals("-")) {
             loggingService.logGeneralActivity(LogType.REPORT, LogAction.READ,
                     "Promotion activity not carried out",
                     staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
                     "message", "Promotion activity not carried out"
             ));
-        }
+        }*/
 
         String totalAttendance = String.valueOf(
                 attendanceService.getTotalAttendanceCount(semester)

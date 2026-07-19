@@ -245,8 +245,9 @@ public class UtilityClass {
                 return false;
             }
 
-            if (result.getSemester().getSemesterName().equals("THIRD_TERM") &&
-            result.getPromotionTo().equals("-")) return false;
+            //Temporal fix
+            /*if (result.getSemester().getSemesterName().equals("THIRD_TERM") &&
+            result.getPromotionTo().equals("-")) return false;*/
 
             isArranged = result.getPosition() != null && !result.getPosition().isEmpty();
         }

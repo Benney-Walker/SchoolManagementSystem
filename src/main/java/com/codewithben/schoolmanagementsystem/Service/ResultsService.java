@@ -192,14 +192,14 @@ public class ResultsService {
             ));
         }
 
-        if (!utilityClass.isClassResultsComplete(resultsList)) {
+        /*if (!utilityClass.isClassResultsComplete(resultsList)) {
             loggingService.logGeneralActivity(LogType.RESULT, LogAction.READ,
                     "Results not complete! Positions or Promotions not done",
                     staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
                     "message", "Results not complete! Positions or Promotions not done"
             ));
-        }
+        }*/
 
         List<SbaRecords> sbaRecords = generateSbaRecords(resultsList, subjectId);
 
@@ -221,14 +221,14 @@ public class ResultsService {
             ));
         }
 
-        if (!utilityClass.isClassResultsComplete(resultsList)) {
+        /*if (!utilityClass.isClassResultsComplete(resultsList)) {
             loggingService.logGeneralActivity(LogType.RESULT, LogAction.READ,
                     "Results not complete! Positions or Promotions not done",
                     staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
                     "message", "Results not complete! Positions or Promotions not done"
             ));
-        }
+        }*/
 
         String className = resultsList.getFirst().getLevel().getLevelName();
 
