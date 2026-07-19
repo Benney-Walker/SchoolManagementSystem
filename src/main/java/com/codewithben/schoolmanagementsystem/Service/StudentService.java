@@ -273,9 +273,7 @@ public class StudentService {
            ));
        }
 
-       List<SubjectScore> scores = result.getSubjectScores();
-       List<Subjects> classSubjects = result.getLevel().getSubjects();
-       if (scores.size() != classSubjects.size()) {
+       if (!result.isReady()) {
            loggingService.logGeneralActivity(
                    LogType.STUDENT, LogAction.UPDATE,
                    "Student result not complete",
@@ -343,9 +341,7 @@ public class StudentService {
             ));
         }
 
-        List<SubjectScore> scores = result.getSubjectScores();
-        List<Subjects> classSubjects = result.getLevel().getSubjects();
-        if (scores.size() != classSubjects.size()) {
+        if (!result.isReady()) {
             loggingService.logGeneralActivity(
                     LogType.STUDENT, LogAction.UPDATE,
                     "Student result not complete",
