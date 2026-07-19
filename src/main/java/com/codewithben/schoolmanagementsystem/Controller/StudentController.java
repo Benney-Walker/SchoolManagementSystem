@@ -125,7 +125,7 @@ public class StudentController {
         return studentService.getGradeStudents(levelId, staffId);
     }
 
-    @PostMapping("/v1/promote-student")
+    @PutMapping("/v1/promote-student")
     public ResponseEntity<?> promoteStudent(@RequestHeader("staffId") String staffId,
                                             @RequestParam String studentId,
                                             @RequestParam String promotionClassId,
@@ -134,7 +134,7 @@ public class StudentController {
         return studentService.promoteStudent(studentId, promotionClassId, semesterId, staffId);
     }
 
-    @PostMapping("/v1/repeat-student")
+    @PutMapping("/v1/repeat-student")
     public ResponseEntity<?> repeatStudent(@RequestHeader("staffId") String staffId,
                                            @RequestParam String studentId,
                                            @RequestParam String semesterId) {
