@@ -221,8 +221,9 @@ public class UtilityClass {
             }
 
             currentResult.setPosition(ordinal(currentRank));
-            resultsRepository.save(currentResult);
         }
+
+        resultsRepository.saveAll(resultsList);
     }
 
     private String ordinal(int number) {
