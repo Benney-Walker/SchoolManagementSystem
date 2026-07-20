@@ -230,12 +230,12 @@ public class ScoresService {
         subjectScore.setSubject(subject);
         subjectScore.setStudent(student);
         subjectScore.setResults(result);
-        subjectScore.setProjectWork(Double.parseDouble(String.format("%.2f", projectWork)));
-        subjectScore.setClassTest1(Double.parseDouble(String.format("%.2f", classTest1)));
-        subjectScore.setGroupWork(Double.parseDouble(String.format("%.2f", groupWork)));
-        subjectScore.setClassTest2(Double.parseDouble(String.format("%.2f", classTest2)));
-        subjectScore.setClassScore(Double.valueOf(String.format("%.2f", classScore)));
-        subjectScore.setExamScore(Double.parseDouble(String.format("%.2f", examScore)));
+        subjectScore.setProjectWork(Double.parseDouble(String.format("%.1f", projectWork)));
+        subjectScore.setClassTest1(Double.parseDouble(String.format("%.1f", classTest1)));
+        subjectScore.setGroupWork(Double.parseDouble(String.format("%.1f", groupWork)));
+        subjectScore.setClassTest2(Double.parseDouble(String.format("%.1f", classTest2)));
+        subjectScore.setClassScore(Double.valueOf(String.format("%.1f", classScore)));
+        subjectScore.setExamScore(Double.parseDouble(String.format("%.1f", examScore)));
         subjectScore.setCalculatedExamScore(calculatedExamScore);
         subjectScore.setSemester(semester);
         subjectScore.setGrade(
@@ -266,8 +266,8 @@ public class ScoresService {
                 total += score.getTotalScore();
             }
 
-            result.setTotalScore(total);
-            result.setAverageScore(total / scores.size());
+            result.setTotalScore(Double.parseDouble(String.format("%.1f", total)));
+            result.setAverageScore(Double.parseDouble(String.format("%.1f", total / scores.size())));
         }
 
         resultsRepository.save(result);
