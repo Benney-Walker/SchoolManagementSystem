@@ -41,7 +41,7 @@ public class Results {
     private LocalDate updatedAt;
 
     @ManyToOne
-    @JoinColumn
+    @JoinColumn(name = "updated_by_staff_id", nullable = false)
     private Staffs updatedBy;
 
     private Double totalScore;
