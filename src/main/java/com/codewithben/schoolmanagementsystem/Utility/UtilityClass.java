@@ -240,7 +240,6 @@ public class UtilityClass {
 
     //Checks if class results is complete
     public boolean isClassResultsComplete(List<Results> classResultsList) {
-        boolean isArranged = false;
         for (Results result : classResultsList) {
             if (!result.isReady()) {
                 return false;
@@ -249,14 +248,10 @@ public class UtilityClass {
             //Temporal fix
             /*if (result.getSemester().getSemesterName().equals("THIRD_TERM") &&
             result.getPromotionTo().equals("-")) return false;*/
-
-            isArranged = result.getPosition() != null && !result.getPosition().isEmpty();
         }
 
         classResultsList.sort(Comparator.comparing(Results::getTotalScore).reversed());
-        if (!isArranged) {
-            reArrangePositions(classResultsList);
-        }
+        reArrangePositions(classResultsList);
         return true;
     }
 
