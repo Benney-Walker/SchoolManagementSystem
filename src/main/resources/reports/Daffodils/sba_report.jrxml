@@ -21,6 +21,7 @@
         <field name="classScore" class="java.lang.String"/>
         <field name="examScore" class="java.lang.String"/>
         <field name="calculatedExamScore" class="java.lang.String"/>
+        <field name="totalScore" class="java.lang.String"/>
     </dataset>
     <parameter name="schoolName" class="java.lang.String">
         <defaultValueExpression><![CDATA["DAFFODILS INTERNATIONAL SCHOOL"]]></defaultValueExpression>
@@ -191,6 +192,18 @@
                         <detailCell height="40" style="Table_TD">
                             <element kind="textField" uuid="a293908b-9809-4112-2334-455667788990" x="2" y="2" width="48" height="36" fontSize="9.0">
                                 <expression><![CDATA[$F{calculatedExamScore}]]></expression>
+                            </element>
+                        </detailCell>
+                    </column>
+                    <column kind="single" uuid="9e584c47-aec0-4dc2-8e3a-fb535ef93e5e" width="52">
+                        <columnHeader height="40" style="Table_CH">
+                            <element kind="staticText" uuid="9182897a-8798-4001-1223-344556677889" x="2" y="2" width="48" height="36" fontSize="9.0">
+                                <text><![CDATA[Total Score]]></text>
+                            </element>
+                        </columnHeader>
+                        <detailCell height="40" style="Table_TD">
+                            <element kind="textField" uuid="0b63a482-30f4-4dea-b1a7-f5901cea6c6b" x="2" y="2" width="48" height="36" fontSize="9.0">
+                                <expression><![CDATA[$F{totalScore}]]></expression>
                             </element>
                         </detailCell>
                     </column>
