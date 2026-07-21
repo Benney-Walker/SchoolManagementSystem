@@ -181,6 +181,7 @@ public class ScoresService {
                 result.setStudent(student);
                 result.setLevel(subject.getLevel());
                 result.setSemester(semester);
+                result.setUpdatedBy(staff);
                 result.setCreatedAt(LocalDate.now());
                 result.setTotalScore(Double.valueOf(String.format("%.2f", 0.0)));
                 result.setAverageScore(Double.valueOf(String.format("%.2f", 0.0)));
@@ -203,7 +204,7 @@ public class ScoresService {
             }*/
 
             //Temporal fix
-            updateResultTotals(result);
+            updateResultTotals(result, staff);
             result.setReady(true);
 
             result.setUpdatedBy(staff);
@@ -253,7 +254,7 @@ public class ScoresService {
                     HELPERS
     =====================================*/
 
-    public void updateResultTotals(Results result) {
+    public void updateResultTotals(Results result, Staffs updatedBy) {
         List<SubjectScore> scores = result.getSubjectScores();
 
         double total = 0.0;
@@ -266,6 +267,7 @@ public class ScoresService {
                 total += score.getTotalScore();
             }
 
+            result.setUpdatedBy(updatedBy);
             result.setTotalScore(Double.parseDouble(String.format("%.1f", total)));
             result.setAverageScore(Double.parseDouble(String.format("%.1f", total / scores.size())));
         }
