@@ -28,4 +28,6 @@ public class SbaRecords {
     private String examScore;
 
     private String calculatedExamScore;
+
+    private String totalScore;
 }

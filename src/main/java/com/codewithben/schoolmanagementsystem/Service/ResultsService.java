@@ -313,6 +313,7 @@ public class ResultsService {
                 String classScore = "";
                 String examScore = "";
                 String calculatedExamScore = "";
+                String totalScore = "";
 
                 List<SubjectScore> subjectScores = results.getSubjectScores();
                 for (SubjectScore subjectScore : subjectScores) {
@@ -324,6 +325,7 @@ public class ResultsService {
                         classScore = subjectScore.getClassScore().toString();
                         examScore = subjectScore.getExamScore().toString();
                         calculatedExamScore = subjectScore.getCalculatedExamScore().toString();
+                        totalScore = subjectScore.getTotalScore().toString();
                         break;
                     }
                 }
@@ -338,6 +340,7 @@ public class ResultsService {
                         .examScore(examScore)
                         .classScore(classScore)
                         .calculatedExamScore(calculatedExamScore)
+                        .totalScore(totalScore)
                         .build();
                 sbaRecords.add(sbaRecord);
             }
