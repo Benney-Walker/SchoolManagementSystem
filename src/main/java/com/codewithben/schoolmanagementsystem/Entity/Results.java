@@ -48,6 +48,8 @@ public class Results {
 
     private Double averageScore;
 
+    private int classSize;
+
     private String position;
 
     private String promotionTo = "-";
