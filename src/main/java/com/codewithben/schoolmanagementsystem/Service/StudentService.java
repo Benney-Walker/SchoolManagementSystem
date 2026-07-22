@@ -303,11 +303,12 @@ public class StudentService {
 
         Students student = result.getStudent();
 
-        result.getStudent().setLevel(promotionClass);
-        studentsRepository.save(result.getStudent());
-
         result.setPromotionTo(promotionClass.getLevelName());
+        result.setClassSize(utilityClass.getActiveStudents(student.getLevel().getStudents()).size());
         resultsRepository.save(result);
+
+        student.setLevel(promotionClass);
+        studentsRepository.save(student);
 
         loggingService.logGeneralActivity(
                 LogType.STUDENT, LogAction.PROMOTE,
@@ -352,6 +353,7 @@ public class StudentService {
         }
 
         result.setPromotionTo("Repeated");
+        result.setClassSize(utilityClass.getActiveStudents(result.getStudent().getLevel().getStudents()).size());
         resultsRepository.save(result);
 
         loggingService.logGeneralActivity(
