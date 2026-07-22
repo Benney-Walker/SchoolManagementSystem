@@ -62,6 +62,19 @@ public class ResultsService {
             ));
         }
 
+        List<Results> classResultsList = resultsRepository.findByLevel_LevelIDAndSemester_SemesterID(
+                studentResult.getLevel().getLevelID(), semesterId
+        );
+
+        if (!utilityClass.isClassResultsComplete(classResultsList)) {
+            loggingService.logGeneralActivity(LogType.REPORT, LogAction.READ,
+                    "Results not complete! Positions or Promotions not done",
+                    staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                    "message", "Results not complete! Positions or Promotions not done"
+            ));
+        }
+
         String totalAttendance = String.valueOf(
                 attendanceService.getTotalAttendanceCount(semester)
         );
@@ -118,6 +131,15 @@ public class ResultsService {
             ));
         }
 
+        if (!utilityClass.isClassResultsComplete(studentResults)) {
+            loggingService.logGeneralActivity(LogType.REPORT, LogAction.READ,
+                    "Results not complete! Positions or Promotions not done",
+                    staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                    "message", "Results not complete! Positions or Promotions not done"
+            ));
+        }
+
         for (Results result : studentResults) {
 
             String studentId = result.getStudent().getStudentId();
@@ -128,7 +150,7 @@ public class ResultsService {
             String totalScore = result.getTotalScore().toString();
             String averageScore = result.getAverageScore().toString();
             String position = result.getPosition();
-            String totalStudents = String.valueOf(studentResults.size());
+            String totalStudents = String.valueOf(result.getClassSize());
             String semesterRemark = "Not field yet";
 
             List<ViewStudentsSubjectsResults> scoresList = new ArrayList<>();
@@ -254,7 +276,7 @@ public class ResultsService {
             String averageScore = result.getAverageScore().toString();
             String position = result.getPosition();
             String academicYear = result.getSemester().getAcademicYear();
-            String totalStudents = String.valueOf(utilityClass.getActiveStudents(result.getLevel().getStudents()).size());
+            String totalStudents = String.valueOf(result.getClassSize());
             String vacationDate = result.getSemester().getSemesterEndDate().toString();
             String attendancePresent = String.valueOf(
                     attendanceService.getStudentPresentAttendanceCount(studentId, result.getSemester().getSemesterID())
