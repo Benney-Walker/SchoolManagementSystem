@@ -270,6 +270,7 @@ public class ScoresService {
             result.setUpdatedBy(updatedBy);
             result.setTotalScore(Double.parseDouble(String.format("%.1f", total)));
             result.setAverageScore(Double.parseDouble(String.format("%.1f", total / scores.size())));
+            result.setClassSize(utilityClass.getActiveStudents(result.getLevel().getStudents()).size());
         }
 
         resultsRepository.save(result);
