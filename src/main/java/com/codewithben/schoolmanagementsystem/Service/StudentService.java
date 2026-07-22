@@ -304,7 +304,6 @@ public class StudentService {
         Students student = result.getStudent();
 
         result.setPromotionTo(promotionClass.getLevelName());
-        result.setClassSize(utilityClass.getActiveStudents(student.getLevel().getStudents()).size());
         resultsRepository.save(result);
 
         student.setLevel(promotionClass);
