@@ -29,28 +29,40 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String authHeader = request.getHeader("Authorization");
 
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        // No bearer token, or the request is already authenticated: nothing to do.
+        if (authHeader == null || !authHeader.startsWith("Bearer ")
+                || SecurityContextHolder.getContext().getAuthentication() != null) {
             filterChain.doFilter(request, response);
             return;
         }
 
         String token = authHeader.substring(7);
 
-        String username = jwtUtility.extractUsername(token);
-        List<String> roles = jwtUtility.extractRoles(token);
+        if (!jwtUtility.validateToken(token)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
-        List<GrantedAuthority> authorities = roles.stream()
-                .map(SimpleGrantedAuthority::new)
-                .collect(Collectors.toUnmodifiableList());
+        try {
+            String username = jwtUtility.extractUsername(token);
+            List<String> roles = jwtUtility.extractRoles(token);
 
-        UsernamePasswordAuthenticationToken authentication =
-                new UsernamePasswordAuthenticationToken(
-                        username,
-                        null,
-                        authorities
-                );
+            List<GrantedAuthority> authorities = (roles == null ? List.<String>of() : roles).stream()
+                    .map(SimpleGrantedAuthority::new)
+                    .collect(Collectors.toUnmodifiableList());
 
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+            UsernamePasswordAuthenticationToken authentication =
+                    new UsernamePasswordAuthenticationToken(
+                            username,
+                            null,
+                            authorities
+                    );
+
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+        } catch (Exception e) {
+            // Defensive: never let token parsing bubble up as a 500.
+            SecurityContextHolder.clearContext();
+        }
 
         filterChain.doFilter(request, response);
     }
