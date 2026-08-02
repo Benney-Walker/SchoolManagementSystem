@@ -46,8 +46,6 @@ public class Staffs {
     @Column(nullable = false)
     private LocalDate dateOfRegistration;
 
-    private String status;
-
     @ManyToOne
     @JoinColumn(nullable = false, name = "Institution_institutionId")
     private Institution institution;
