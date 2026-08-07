@@ -4,6 +4,7 @@ import com.codewithben.schoolmanagementsystem.DTO.Offline.OfflineAttendanceList;
 import com.codewithben.schoolmanagementsystem.DTO.Offline.OfflinePaymentList;
 import com.codewithben.schoolmanagementsystem.DTO.Offline.OfflineScoresList;
 import com.codewithben.schoolmanagementsystem.Service.OfflineReplayService;
+import com.codewithben.schoolmanagementsystem.Utility.AuthenticatedStaffProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,23 +18,31 @@ public class OfflineReplayController {
 
     private final OfflineReplayService offlineReplayService;
 
+    private final AuthenticatedStaffProvider authenticatedStaffProvider;
+
     @PostMapping("/v1/sync-attendance")
-    public ResponseEntity<?> saveAttendanceRecords(@RequestHeader("staffId")String staffId,
+    public ResponseEntity<?> saveAttendanceRecords(@RequestHeader("staffId")String Id,
                                                    @RequestBody List<OfflineAttendanceList> list) {
+
+        String staffId = authenticatedStaffProvider.getStaffId();
 
         return offlineReplayService.saveOfflineAttendanceRecords(staffId, list);
     }
 
     @PostMapping("/v1/sync-scores")
-    public ResponseEntity<?> saveScoresRecords(@RequestHeader("staffId")String staffId,
+    public ResponseEntity<?> saveScoresRecords(@RequestHeader("staffId")String Id,
                                                @RequestBody List<OfflineScoresList> list) {
+
+        String staffId = authenticatedStaffProvider.getStaffId();
 
         return offlineReplayService.saveOfflineScores(staffId, list);
     }
 
     @PostMapping("/v1/sync-payment")
-    public ResponseEntity<?> savePaymentsRecords(@RequestHeader("staffId")String staffId,
+    public ResponseEntity<?> savePaymentsRecords(@RequestHeader("staffId")String Id,
                                                  @RequestBody List<OfflinePaymentList> list) {
+
+        String staffId = authenticatedStaffProvider.getStaffId();
 
         return offlineReplayService.saveOfflinePayments(staffId, list);
     }
