@@ -11,6 +11,7 @@ import com.codewithben.schoolmanagementsystem.DTO.Subject.SubjectDTO;
 import com.codewithben.schoolmanagementsystem.Repository.LevelRepository;
 import com.codewithben.schoolmanagementsystem.Repository.SemesterRepository;
 import com.codewithben.schoolmanagementsystem.Service.*;
+import com.codewithben.schoolmanagementsystem.Utility.AuthenticatedStaffProvider;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import org.springframework.http.MediaType;
@@ -46,18 +47,19 @@ public class AdminController {
 
     private final SubjectsService subjectsService;
 
-
+    private final AuthenticatedStaffProvider authenticatedStaffProvider;
 
     @PostMapping("/v1/reset-staff-password")
-    public ResponseEntity<?> recoverStaffPassword(@RequestHeader("staffId") String staffId,
+    public ResponseEntity<?> recoverStaffPassword(@RequestHeader("staffId") String Id,
                                                   @RequestParam String newPasswordStaffId,
                                                   @RequestParam String newPassword) {
+        String staffId = authenticatedStaffProvider.getStaffId();
 
         return staffService.resetStaffPassword(newPasswordStaffId, newPassword, staffId);
     }
 
     @PostMapping("/v1/add-semester")
-    public ResponseEntity<?> addNewSemester(@RequestHeader("staffId") String staffId,
+    public ResponseEntity<?> addNewSemester(@RequestHeader("staffId") String Id,
                                             @RequestBody AddNewSemester addNewSemester) {
 
         String semesterName = addNewSemester.getSemesterName();
@@ -65,138 +67,171 @@ public class AdminController {
         LocalDate endDate = LocalDate.parse(addNewSemester.getEndDate());
         String academicYear = addNewSemester.getAcademicYear();
 
+        String staffId = authenticatedStaffProvider.getStaffId();
+
         return classService.addNewSemester(semesterName, startDate, endDate, academicYear, staffId);
     }
 
     @PostMapping("/v1/new-grading-criteria")
-    public ResponseEntity<?> setGradingCriteria(@RequestHeader("staffId") String staffId,
+    public ResponseEntity<?> setGradingCriteria(@RequestHeader("staffId") String Id,
                                                 @RequestBody GradingCriteria gradingCriteria) {
+        String staffId = authenticatedStaffProvider.getStaffId();
 
         return institutionService.saveGradingCriteria(gradingCriteria, staffId);
     }
 
     @GetMapping("/v1/load-grading-criteria")
-    public ResponseEntity<?> loadAllGradingCriteria(@RequestHeader("staffId") String staffId) {
+    public ResponseEntity<?> loadAllGradingCriteria(@RequestHeader("staffId") String Id) {
+
+        String staffId = authenticatedStaffProvider.getStaffId();
 
         return institutionService.loadAllGradingCriteria(staffId);
     }
 
     @PutMapping("/v1/update-grading-criteria")
-    public ResponseEntity<?> updateGradingCriteria(@RequestHeader("staffId") String staffId,
+    public ResponseEntity<?> updateGradingCriteria(@RequestHeader("staffId") String Id,
                                                    @RequestBody GradingCriteria gradingCriteria) {
+
+        String staffId = authenticatedStaffProvider.getStaffId();
 
         return institutionService.updateGradingCriteria(gradingCriteria, staffId);
     }
 
     @GetMapping("/v1/find-class-info/{levelId}")
-    public ResponseEntity<?> findClassInfo(@RequestHeader("staffId") String staffId,
+    public ResponseEntity<?> findClassInfo(@RequestHeader("staffId") String Id,
                                            @PathVariable String levelId) {
+
+        String staffId = authenticatedStaffProvider.getStaffId();
 
         return classService.findClassInfo(levelId, staffId);
     }
 
     @PutMapping("/v1/update-class-info")
-    public ResponseEntity<?> updateClassInfo(@RequestHeader("staffId") String staffId,
+    public ResponseEntity<?> updateClassInfo(@RequestHeader("staffId") String Id,
                                              @RequestBody FindAndUpdateClassInfo updateInfo) {
+
+        String staffId = authenticatedStaffProvider.getStaffId();
 
         return classService.updateClassInfo(updateInfo, staffId);
     }
 
     @PutMapping("/v1/update-staff-info")
-    public ResponseEntity<?> updateStaffInfo(@RequestHeader("staffId") String staffId,
+    public ResponseEntity<?> updateStaffInfo(@RequestHeader("staffId") String Id,
                                              @RequestBody FindStaffDTO info) {
+
+        String staffId = authenticatedStaffProvider.getStaffId();
 
         return staffService.updateStaffInfo(info, staffId);
     }
 
     @GetMapping("/v1/search-semester/{semesterId}")
-    public ResponseEntity<?> searchSemesterInfo(@RequestHeader("staffId") String staffId,
+    public ResponseEntity<?> searchSemesterInfo(@RequestHeader("staffId") String Id,
                                                 @PathVariable String semesterId) {
+        String staffId = authenticatedStaffProvider.getStaffId();
+
         return classService.findSemesterInfo(semesterId, staffId);
     }
 
     @PutMapping("/v1/update-semester-info")
-    public ResponseEntity<?> updateSemesterInfo(@RequestHeader("staffId") String staffId,
+    public ResponseEntity<?> updateSemesterInfo(@RequestHeader("staffId") String Id,
                                                 @RequestBody FindSemester updateInfo) {
+
+        String staffId = authenticatedStaffProvider.getStaffId();
 
         return classService.updateSemesterInfo(updateInfo, staffId);
     }
 
     @PostMapping("/v1/add-new-class")
-    public ResponseEntity<?> addNewClass(@RequestHeader("staffId") String staffId,
+    public ResponseEntity<?> addNewClass(@RequestHeader("staffId") String Id,
                                          @RequestParam String gradeName,
                                          @RequestParam String instructorId) {
+        String staffId = authenticatedStaffProvider.getStaffId();
 
         return classService.addNewClass(gradeName, instructorId, staffId);
     }
 
     @PostMapping("/v1/add-subject")
-    public ResponseEntity<?> saveNewSubject(@RequestHeader("staffId") String staffId,
+    public ResponseEntity<?> saveNewSubject(@RequestHeader("staffId") String Id,
                                             @RequestBody AddNewSubject addNewSubject) {
         String subjectName = addNewSubject.getSubjectName();
         String levelId = addNewSubject.getGradeId();
+
+        String staffId = authenticatedStaffProvider.getStaffId();
 
         return subjectsService.addNewSubject(subjectName, levelId, staffId);
 
     }
 
     @GetMapping("/v1/load-subject-data/{subjectId}")
-    public ResponseEntity<?> loadSubjectData(@RequestHeader("staffId") String staffId,
+    public ResponseEntity<?> loadSubjectData(@RequestHeader("staffId") String Id,
                                              @PathVariable String subjectId) {
+
+        String staffId = authenticatedStaffProvider.getStaffId();
 
         return subjectsService.loadSubjectData(subjectId, staffId);
     }
 
     @PutMapping("/v1/update-subject-details")
-    public ResponseEntity<?> updateSubjectData(@RequestHeader("staffId") String staffId,
+    public ResponseEntity<?> updateSubjectData(@RequestHeader("staffId") String Id,
                                                @RequestBody SubjectDTO subjectDTO) {
+
+        String staffId = authenticatedStaffProvider.getStaffId();
 
         return subjectsService.updateSubjectData(subjectDTO, staffId);
     }
 
     @DeleteMapping("/v1/delete-subject/{subjectId}")
-    public ResponseEntity<?> deleteSubjectData(@RequestHeader("staffId") String staffId,
+    public ResponseEntity<?> deleteSubjectData(@RequestHeader("staffId") String Id,
                                                @PathVariable String subjectId) {
+
+        String staffId = authenticatedStaffProvider.getStaffId();
 
         return subjectsService.deleteSubjectData(subjectId, staffId);
     }
 
     @GetMapping(value = "/v2/generate-class-report")
-    public ResponseEntity<?> generateBulkClassReports(@RequestHeader("staffId") String staffId,
+    public ResponseEntity<?> generateBulkClassReports(@RequestHeader("staffId") String Id,
                                                     @RequestParam String levelId,
                                                     @RequestParam String semesterId) {
+        String staffId = authenticatedStaffProvider.getStaffId();
 
         return reportService.generateClassBulkReport(staffId, levelId, semesterId);
     }
 
     @GetMapping(value = "/v2/generate-sba-report")
-    public ResponseEntity<?> generateSbaReport(@RequestHeader("staffId") String staffId,
+    public ResponseEntity<?> generateSbaReport(@RequestHeader("staffId") String Id,
                                                @RequestParam String levelId,
                                                @RequestParam String semesterId,
                                                @RequestParam String subjectId) {
+        String staffId = authenticatedStaffProvider.getStaffId();
 
         return reportService.generateSbaReport(staffId, levelId, semesterId, subjectId);
     }
 
     @GetMapping(value = "/v2/generate-master-sheet")
-    public ResponseEntity<?> generateMasterScoreSheet(@RequestHeader("staffId") String staffId,
+    public ResponseEntity<?> generateMasterScoreSheet(@RequestHeader("staffId") String Id,
                                                @RequestParam String levelId,
                                                @RequestParam String semesterId) {
+        String staffId = authenticatedStaffProvider.getStaffId();
 
         return reportService.generateMasterScoreSheet(levelId, semesterId, staffId);
     }
 
     @GetMapping("/v1/recent-logs")
-    public ResponseEntity<?> getRecentActivities(@RequestHeader("staffId") String staffId) {
+    public ResponseEntity<?> getRecentActivities(@RequestHeader("staffId") String Id) {
+
+        String staffId = authenticatedStaffProvider.getStaffId();
 
         return loggingService.getRecentActivity(staffId);
     }
 
     @GetMapping("/v1/get-staff-logs")
-    public ResponseEntity<?> getStaffLogs(@RequestHeader("staffId") String staffId,
+    public ResponseEntity<?> getStaffLogs(@RequestHeader("staffId") String Id,
                                           @RequestParam String selectedStaffId,
                                           @RequestParam String fromDate,
                                           @RequestParam String toDate) {
+
+        String staffId = authenticatedStaffProvider.getStaffId();
 
          return loggingService.getStaffLogsBetween(
                  staffId, selectedStaffId, LocalDate.parse(fromDate), LocalDate.parse(toDate)
@@ -204,29 +239,35 @@ public class AdminController {
     }
 
     @GetMapping("/v1/get-timely-logs")
-    public ResponseEntity<?> getTimelyLogs(@RequestHeader("staffId") String staffId,
+    public ResponseEntity<?> getTimelyLogs(@RequestHeader("staffId") String Id,
                                            @RequestParam String fromDate,
                                            @RequestParam String toDate) {
+        String staffId = authenticatedStaffProvider.getStaffId();
 
         return loggingService.getLogsBetween(staffId, LocalDate.parse(fromDate), LocalDate.parse(toDate));
     }
 
     @PostMapping("/v1/add-holiday")
-    public ResponseEntity<?> addNewHoliday(@RequestHeader("staffId")String staffId,
+    public ResponseEntity<?> addNewHoliday(@RequestHeader("staffId")String Id,
                                            @RequestBody Holiday holiday) {
+        String staffId = authenticatedStaffProvider.getStaffId();
 
         return holidayService.addNewHoliday(staffId, holiday);
     }
 
     @GetMapping("/v1/load-holidays")
-    public ResponseEntity<?> loadHolidays(@RequestHeader("staffId") String staffId) {
+    public ResponseEntity<?> loadHolidays(@RequestHeader("staffId") String Id) {
+
+        String staffId = authenticatedStaffProvider.getStaffId();
 
         return holidayService.loadAllHolidays(staffId);
     }
 
     @PutMapping("/v1/update-holiday")
-    public ResponseEntity<?> updateHoliday(@RequestHeader("staffId")String staffId,
+    public ResponseEntity<?> updateHoliday(@RequestHeader("staffId")String Id,
                                            @RequestBody Holiday holiday) {
+
+        String staffId = authenticatedStaffProvider.getStaffId();
 
         return holidayService.updateHoliday(staffId, holiday);
     }
