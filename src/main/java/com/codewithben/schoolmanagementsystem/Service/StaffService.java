@@ -44,18 +44,21 @@ public class StaffService {
             ));
         }
 
+        boolean duplicateExist = staffsRepository
+                .existsByFirstNameAndLastNameAndInstitution_InstitutionId(
+                        firstName, surName, staff.getInstitution().getInstitutionId()
+                );
+        if (duplicateExist) {
+            loggingService.logGeneralActivity(LogType.STAFF, LogAction.CREATE, "Staff already exist", staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                    "message", "Staff already exist"
+            ));
+        }
 
         if (staffsRepository.existsByPhoneNumberAndInstitution_InstitutionId(phoneNumber, staff.getInstitution().getInstitutionId())) {
             loggingService.logGeneralActivity(LogType.STAFF, LogAction.CREATE, "Phone number already exist", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
                     "message", "Phone number already exist"
-            ));
-        }
-
-        if (staffsRepository.existsByFirstNameAndLastName(firstName, surName)) {
-            loggingService.logGeneralActivity(LogType.STAFF, LogAction.CREATE, "Staff already exist", staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
-                    "message", "Staff already exist"
             ));
         }
 
@@ -65,7 +68,6 @@ public class StaffService {
         newStaff.setFirstName(firstName.toUpperCase());
         newStaff.setLastName(surName.toUpperCase());
         newStaff.setGender(gender.toUpperCase());
-        newStaff.setStatus("NULL");
         newStaff.setDateOfBirth(LocalDate.parse(dateOfBirth));
         newStaff.setEmail(email);
 
@@ -91,18 +93,20 @@ public class StaffService {
                                          String email, String password, String phoneNumber,
                                          List<String> staffRoles) {
 
+        boolean duplicateExist = staffsRepository.existsByFirstNameAndLastNameAndInstitution_InstitutionId(
+                firstName, surName, institution.getInstitutionId()
+        );
+        if (duplicateExist) {
+            loggingService.logNewSubscription(LogType.STAFF, LogAction.CREATE, "Staff already exist", LogStatus.FAILED, institution);
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                    "message", "Staff already exist"
+            ));
+        }
 
         if (staffsRepository.existsByPhoneNumberAndInstitution_InstitutionId(phoneNumber, institution.getInstitutionId())) {
             loggingService.logNewSubscription(LogType.STAFF, LogAction.CREATE, "Phone number already exist", LogStatus.FAILED, institution);
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
                     "message", "Phone number already exist"
-            ));
-        }
-
-        if (staffsRepository.existsByFirstNameAndLastName(firstName, surName)) {
-            loggingService.logNewSubscription(LogType.STAFF, LogAction.CREATE, "Staff already exist", LogStatus.FAILED, institution);
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
-                    "message", "Staff already exist"
             ));
         }
 
@@ -112,7 +116,6 @@ public class StaffService {
         newPrincipal.setFirstName(firstName.toUpperCase());
         newPrincipal.setLastName(surName.toUpperCase());
         newPrincipal.setGender(gender.toUpperCase());
-        newPrincipal.setStatus("NULL");
         newPrincipal.setDateOfBirth(LocalDate.parse(dateOfBirth));
         newPrincipal.setEmail(email);
 
