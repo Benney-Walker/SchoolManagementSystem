@@ -14,5 +14,6 @@ public interface StaffsRepository extends JpaRepository<Staffs, Long> {
 
     boolean existsByFirstNameAndLastName(String firstName, String lastName);
 
-    boolean existsByStaffId(String staffId);
+    boolean existsByFirstNameAndLastNameAndInstitution_InstitutionId(
+            String firstName, String lastName, String institutionId);
 }
