@@ -65,55 +65,61 @@ public class StudentService {
             ));
         }
 
-        Students student = studentsRepository.findByFirstNameAndLastName(firstName, lastName).orElse(null);
-        if (student == null) {
-            String studentId = utilityClass.generateEntityId("STUDENT");
+        LocalDate dob = LocalDate.parse(dateOfBirth);
 
-            //Saving new student
-            student = new Students();
-            student.setStudentId(studentId);
-            student.setFirstName(firstName);
-            student.setLastName(lastName);
-            student.setGender(gender);
-            student.setDateOfBirth(LocalDate.parse(dateOfBirth));
-            student.setHomeTown(hometown);
-            student.setParentName(parentName);
-            student.setParentPhoneNumber(parentContact);
-            student.setLevel(level);
-            student.setRegistrationDate(LocalDate.now());
-            student.setInstitution(staff.getInstitution());
-            student.setStudentStatus(StudentStatus.ACTIVE);
-            studentsRepository.saveAndFlush(student);
-
-            //Add student to level list
-            List<Students> levelStudents = level.getStudents();
-            if (levelStudents == null) {
-                levelStudents = new ArrayList<>();
-            }
-            levelStudents.add(student);
-            level.setStudents(levelStudents);
-            levelRepository.save(level);
-
-            //Adding student to institution
-            List<Students> students = staff.getInstitution().getStudents();
-            if (students == null) {
-                students = new ArrayList<>();
-            }
-            students.add(student);
-            staff.getInstitution().setStudents(students);
-            institutionRepository.save(staff.getInstitution());
-
-            loggingService.logGeneralActivity(
-                    LogType.STUDENT, LogAction.CREATE,
-                    "Added new student: " + firstName + " " + lastName + " for " + level.getLevelName(),
-                    staffId, LogStatus.SUCCESS);
-            return ResponseEntity.ok(studentId);
+        boolean duplicateExists = studentsRepository
+                .existsByFirstNameAndLastNameAndDateOfBirthAndInstitution_InstitutionId(
+                        firstName, lastName, dob, staff.getInstitution().getInstitutionId()
+                );
+        if (duplicateExists) {
+            loggingService.logGeneralActivity(LogType.STUDENT, LogAction.CREATE, "Student already exist", staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                    "message", "Student already exist"
+            ));
         }
 
-        loggingService.logGeneralActivity(LogType.STUDENT, LogAction.CREATE, "Student already exist", staffId, LogStatus.FAILED);
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
-                "message", "Student already exist"
-        ));
+        String studentId = utilityClass.generateEntityId("STUDENT");
+
+        //Saving new student
+        Students student = new Students();
+        student.setStudentId(studentId);
+        student.setFirstName(firstName);
+        student.setLastName(lastName);
+        student.setGender(gender);
+        student.setDateOfBirth(LocalDate.parse(dateOfBirth));
+        student.setHomeTown(hometown);
+        student.setParentName(parentName);
+        student.setParentPhoneNumber(parentContact);
+        student.setLevel(level);
+        student.setRegistrationDate(LocalDate.now());
+        student.setInstitution(staff.getInstitution());
+        student.setStudentStatus(StudentStatus.ACTIVE);
+        studentsRepository.saveAndFlush(student);
+
+        //Add student to level list
+        List<Students> levelStudents = level.getStudents();
+        if (levelStudents == null) {
+            levelStudents = new ArrayList<>();
+        }
+        levelStudents.add(student);
+        level.setStudents(levelStudents);
+        levelRepository.save(level);
+
+        //Adding student to institution
+        List<Students> students = staff.getInstitution().getStudents();
+        if (students == null) {
+            students = new ArrayList<>();
+        }
+        students.add(student);
+        staff.getInstitution().setStudents(students);
+        institutionRepository.save(staff.getInstitution());
+
+        loggingService.logGeneralActivity(
+                LogType.STUDENT, LogAction.CREATE,
+                "Added new student: " + firstName + " " + lastName + " for " + level.getLevelName(),
+                staffId, LogStatus.SUCCESS);
+        return ResponseEntity.ok(studentId);
+
     }
 
     public ResponseEntity<?> findStudent(String studentId, String staffId) {
