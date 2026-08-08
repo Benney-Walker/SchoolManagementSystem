@@ -46,7 +46,7 @@ public class StaffService {
 
         boolean duplicateExist = staffsRepository
                 .existsByFirstNameAndLastNameAndInstitution_InstitutionId(
-                        firstName, surName, staff.getInstitution().getInstitutionId()
+                        firstName.toUpperCase(), surName.toUpperCase(), staff.getInstitution().getInstitutionId()
                 );
         if (duplicateExist) {
             loggingService.logGeneralActivity(LogType.STAFF, LogAction.CREATE, "Staff already exist", staffId, LogStatus.FAILED);
@@ -94,7 +94,7 @@ public class StaffService {
                                          List<String> staffRoles) {
 
         boolean duplicateExist = staffsRepository.existsByFirstNameAndLastNameAndInstitution_InstitutionId(
-                firstName, surName, institution.getInstitutionId()
+                firstName.toUpperCase(), surName.toUpperCase(), institution.getInstitutionId()
         );
         if (duplicateExist) {
             loggingService.logNewSubscription(LogType.STAFF, LogAction.CREATE, "Staff already exist", LogStatus.FAILED, institution);
