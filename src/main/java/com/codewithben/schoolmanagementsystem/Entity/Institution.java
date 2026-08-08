@@ -16,7 +16,7 @@ public class Institution {
     @Id
     private String institutionId;
 
-    @Column(length = 100, nullable = false)
+    @Column(length = 100, nullable = false, unique = true)
     private String institutionName;
 
     @OneToMany(mappedBy = "institution")
