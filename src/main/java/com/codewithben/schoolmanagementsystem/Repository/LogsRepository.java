@@ -10,7 +10,7 @@ import java.util.List;
 @Repository
 public interface LogsRepository extends JpaRepository<Logs, Long> {
 
-    List<Logs> findByInstitution_InstitutionIdAndActionDateOrderByActionIdDesc(
+    List<Logs> findFirst15ByInstitution_InstitutionIdAndActionDateOrderByActionIdDesc(
             String institutionId, LocalDate date
     );
 
