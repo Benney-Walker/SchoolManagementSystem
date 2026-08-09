@@ -1,6 +1,7 @@
 package com.codewithben.schoolmanagementsystem.Utility;
 
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -12,6 +13,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -51,11 +53,12 @@ public class GlobalExceptionHandler {
 
         error.put("timestamp", LocalDateTime.now());
         error.put("status", 500);
-        error.put("error", ex.getMessage());
+        error.put("error", "Internal Server Error");
         error.put("message", "Internal Server Error. Contact developer");
         error.put("path", request.getRequestURI());
 
-        System.out.println(error);
+        // Full detail (including stack trace) goes to the log, not to the client.
+        log.error("Unhandled exception on {} {}", request.getMethod(), request.getRequestURI(), ex);
         return ResponseEntity.status(500).body(error);
     }
 }
