@@ -36,6 +36,11 @@ public class LoggingService {
 
         try {
             Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
+
+            if (isSkippableRead(action, status)) {
+                return;
+            }
+
             if (staff == null) {
                 logger.warn("Skipped audit log ({} {}): no staff found for staffId='{}'", type, action, staffId);
                 return;
@@ -214,5 +219,7 @@ public class LoggingService {
         return staff.getFirstName() + " " + staff.getLastName();
     }
 
-
+    private boolean isSkippableRead(LogAction action, LogStatus status) {
+        return action == LogAction.READ && status == LogStatus.SUCCESS;
+    }
 }
