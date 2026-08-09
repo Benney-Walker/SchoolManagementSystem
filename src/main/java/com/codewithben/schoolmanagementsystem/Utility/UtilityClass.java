@@ -1,14 +1,10 @@
 package com.codewithben.schoolmanagementsystem.Utility;
 
-import com.codewithben.schoolmanagementsystem.Constants.LogAction;
-import com.codewithben.schoolmanagementsystem.Constants.LogStatus;
-import com.codewithben.schoolmanagementsystem.Constants.LogType;
 import com.codewithben.schoolmanagementsystem.Constants.StudentStatus;
 import com.codewithben.schoolmanagementsystem.Entity.*;
 import com.codewithben.schoolmanagementsystem.Repository.*;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.time.DayOfWeek;
@@ -16,9 +12,9 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
+@Slf4j
 @RequiredArgsConstructor
 @Component
 public class UtilityClass {
@@ -73,7 +69,7 @@ public class UtilityClass {
             String prefix = "SE";
             long entityCode = 100700L;
             newCode = getStringCode(entityName, prefix, entityCode);
-            
+
         } else if (entityName.equals("TRANSACTION")) {
             String prefix = "TX";
             long entityCode = 100800300L;
@@ -94,7 +90,7 @@ public class UtilityClass {
 
             return prefix + String.valueOf(code);
         }catch (Exception ex) {
-            System.out.println("Exception: " + ex.getMessage());
+            log.error("Failed to generate entity ID for entityName='{}' (prefix='{}')", entityName, prefix, ex);
             return null;
         }
     }
