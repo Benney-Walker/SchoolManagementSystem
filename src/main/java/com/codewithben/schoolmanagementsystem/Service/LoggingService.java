@@ -28,16 +28,6 @@ public class LoggingService {
 
     private static final Logger logger = LoggerFactory.getLogger(LoggingService.class);
 
-    // Null-safe display name for a log's creator. Subscription/onboarding logs
-    // have no associated staff, so guard against a null staff reference.
-    private String resolveCreatedBy(Logs log) {
-        Staffs staff = log.getStaff();
-        if (staff == null) {
-            return "System";
-        }
-        return staff.getFirstName() + " " + staff.getLastName();
-    }
-
     private final LogsRepository logsRepository;
 
     private final StaffsRepository staffsRepository;
@@ -96,7 +86,7 @@ public class LoggingService {
             ));
         }
 
-        List<Logs> recentLogs = logsRepository.findByInstitution_InstitutionIdAndActionDateOrderByActionIdDesc(
+        List<Logs> recentLogs = logsRepository.findFirst15ByInstitution_InstitutionIdAndActionDateOrderByActionIdDesc(
                 staff.getInstitution().getInstitutionId(), LocalDate.now()
         );
         if (recentLogs == null || recentLogs.isEmpty()) {
@@ -107,12 +97,8 @@ public class LoggingService {
         }
 
         List<LogsDTO> logList = new ArrayList<>();
-        int count = 0;
         //Retrieve logs
         for (Logs log : recentLogs) {
-            if (count >= 15) {
-                break;
-            }
 
             LogsDTO logsDTO = LogsDTO.builder()
                     .id(log.getActionId())
@@ -125,10 +111,9 @@ public class LoggingService {
                     .build();
 
             logList.add(logsDTO);
-            count++;
         }
 
-        logGeneralActivity(LogType.LOG, LogAction.READ,"N/A", staffId, LogStatus.SUCCESS);
+        logGeneralActivity(LogType.LOG, LogAction.READ,"Fetched recent activities", staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok(logList);
     }
 
@@ -148,9 +133,9 @@ public class LoggingService {
                 );
 
         if (staffLogsList == null || staffLogsList.isEmpty()) {
-            logGeneralActivity(LogType.LOG, LogAction.READ,"Staff has no logs today", staffId, LogStatus.FAILED);
+            logGeneralActivity(LogType.LOG, LogAction.READ,"No logs exits for this period", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "Staff has no logs today"
+                    "message", "No logs exits for this period"
             ));
         }
 
@@ -169,7 +154,10 @@ public class LoggingService {
             logsList.add(staffLog);
         }
 
-        logGeneralActivity(LogType.LOG, LogAction.READ,"N/A", staffId, LogStatus.SUCCESS);
+        logGeneralActivity(
+                LogType.LOG, LogAction.READ,
+                "Fetched logs for " + staff.getFirstName() + " " + staff.getLastName() + " between " + from.toString() + " and " + to.toString(),
+                staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok(logsList);
     }
 
@@ -177,7 +165,7 @@ public class LoggingService {
 
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staff == null) {
-            logGeneralActivity(LogType.LOG, LogAction.READ,"N/A", staffId, LogStatus.FAILED);
+            logGeneralActivity(LogType.LOG, LogAction.READ,"Invalid staff Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Invalid staff Id"
             ));
@@ -188,7 +176,7 @@ public class LoggingService {
         );
 
         if (logsList == null || logsList.isEmpty()) {
-            logGeneralActivity(LogType.LOG, LogAction.READ,"N/A", staffId, LogStatus.FAILED);
+            logGeneralActivity(LogType.LOG, LogAction.READ,"No logs found", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "No logs found"
             ));
@@ -211,7 +199,20 @@ public class LoggingService {
             logList.add(logsDTO);
         }
 
-        logGeneralActivity(LogType.LOG, LogAction.READ,"N/A", staffId, LogStatus.SUCCESS);
+        logGeneralActivity(
+                LogType.LOG, LogAction.READ,
+                "Fetched logs between " + from.toString() + " and " + to.toString(),
+                staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok(logList);
     }
+
+    private String resolveCreatedBy(Logs log) {
+        Staffs staff = log.getStaff();
+        if (staff == null) {
+            return "System";
+        }
+        return staff.getFirstName() + " " + staff.getLastName();
+    }
+
+
 }
