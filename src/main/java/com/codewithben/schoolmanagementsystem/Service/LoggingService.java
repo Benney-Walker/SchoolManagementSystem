@@ -10,6 +10,8 @@ import com.codewithben.schoolmanagementsystem.Entity.Staffs;
 import com.codewithben.schoolmanagementsystem.Repository.LogsRepository;
 import com.codewithben.schoolmanagementsystem.Repository.StaffsRepository;
 import lombok.AllArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -24,6 +26,18 @@ import java.util.Map;
 @Service
 public class LoggingService {
 
+    private static final Logger logger = LoggerFactory.getLogger(LoggingService.class);
+
+    // Null-safe display name for a log's creator. Subscription/onboarding logs
+    // have no associated staff, so guard against a null staff reference.
+    private String resolveCreatedBy(Logs log) {
+        Staffs staff = log.getStaff();
+        if (staff == null) {
+            return "System";
+        }
+        return staff.getFirstName() + " " + staff.getLastName();
+    }
+
     private final LogsRepository logsRepository;
 
     private final StaffsRepository staffsRepository;
@@ -33,7 +47,8 @@ public class LoggingService {
         try {
             Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
             if (staff == null) {
-                throw new RuntimeException("Could not log activity! Contact developer!");
+                logger.warn("Skipped audit log ({} {}): no staff found for staffId='{}'", type, action, staffId);
+                return;
             }
             Logs log = new Logs();
             log.setStaff(staff);
@@ -46,8 +61,9 @@ public class LoggingService {
             log.setStatus(status);
 
             logsRepository.save(log);
-        } catch (IllegalArgumentException e) {
-            throw new RuntimeException(e);
+        } catch (Exception e) {
+            // Audit logging is best-effort: log the failure, never propagate it.
+            logger.error("Failed to write audit log ({} {}) for staffId='{}'", type, action, staffId, e);
         }
     }
 
@@ -64,9 +80,9 @@ public class LoggingService {
             log.setStatus(status);
 
             logsRepository.save(log);
-        } catch (RuntimeException e) {
-
-            throw new RuntimeException(e);
+        } catch (Exception e) {
+            // Best-effort: a failed audit write must not break onboarding.
+            logger.error("Failed to write subscription audit log ({} {})", type, action, e);
         }
     }
 
@@ -105,8 +121,7 @@ public class LoggingService {
                     .type(log.getType().name())
                     .message(log.getActionData())
                     .status(log.getStatus().name())
-                    .createdBy(log.getStaff().getFirstName() +
-                            " " + log.getStaff().getLastName())
+                    .createdBy(resolveCreatedBy(log))
                     .build();
 
             logList.add(logsDTO);
@@ -149,7 +164,7 @@ public class LoggingService {
                     .type(log.getType().name())
                     .message(log.getActionData())
                     .status(log.getStatus().name())
-                    .createdBy(log.getStaff().getFirstName())
+                    .createdBy(resolveCreatedBy(log))
                     .build();
             logsList.add(staffLog);
         }
@@ -190,8 +205,7 @@ public class LoggingService {
                     .type(log.getType().name())
                     .message(log.getActionData())
                     .status(log.getStatus().name())
-                    .createdBy(log.getStaff().getFirstName() +
-                            " " + log.getStaff().getLastName())
+                    .createdBy(resolveCreatedBy(log))
                     .build();
 
             logList.add(logsDTO);
