@@ -1,95 +1,39 @@
 package com.codewithben.schoolmanagementsystem.DTO.Students;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class AddNewStudent {
+
+    @NotBlank(message = "First name is required")
     private String firstName;
 
+    @NotBlank(message = "Last name is required")
     private String lastName;
 
+    @NotBlank(message = "Gender is required")
     private String gender;
 
+    @NotBlank(message = "Date of birth is required")
     private String dateOfBirth;
 
     private String hometown;
 
+    @NotBlank(message = "Parent name is required")
     private String parentName;
 
+    @NotBlank(message = "Guardian contact is required")
+    @Pattern(regexp = "\\d{10}", message = "Guardian contact must be 10 digits")
     private String guardianContact;
 
+    @NotBlank(message = "Class (level) is required")
     private String levelId;
-
-    public AddNewStudent(String firstName, String lastName, String gender, String dateOfBirth, String hometown, String parentName,
-                         String guardianContact, String levelId) {
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.gender = gender;
-        this.dateOfBirth = dateOfBirth;
-        this.hometown = hometown;
-        this.parentName = parentName;
-        this.guardianContact = guardianContact;
-        this.levelId = levelId;
-    }
-
-    public String getFirstName() {
-        return firstName;
-    }
-
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
-
-    public String getLastName() {
-        return lastName;
-    }
-
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
-    }
-
-    public String getGender() {
-        return gender;
-    }
-
-    public void setGender(String gender) {
-        this.gender = gender;
-    }
-
-    public String getDateOfBirth() {
-        return dateOfBirth;
-    }
-
-    public void setDateOfBirth(String dateOfBirth) {
-        this.dateOfBirth = dateOfBirth;
-    }
-
-    public String getHomeTown() {
-        return hometown;
-    }
-
-    public void setHomeTown(String homeTown) {
-        this.hometown = homeTown;
-    }
-
-    public String getParentName() {
-        return parentName;
-    }
-
-    public void setParentName(String parentName) {
-        this.parentName = parentName;
-    }
-
-    public String getGuardianContact() {
-        return guardianContact;
-    }
-
-    public void setGuardianContact(String guardianContact) {
-        this.guardianContact = guardianContact;
-    }
-
-    public String getLevelId() {
-        return levelId;
-    }
-
-    public void setLevelId(String level) {
-        this.levelId = level;
-    }
 }

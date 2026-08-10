@@ -6,6 +6,7 @@ import com.codewithben.schoolmanagementsystem.DTO.Students.AddNewStudent;
 import com.codewithben.schoolmanagementsystem.DTO.Students.StudentsScoresTable;
 import com.codewithben.schoolmanagementsystem.DTO.Students.UpdateStudentPersonalData;
 import com.codewithben.schoolmanagementsystem.Service.*;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -47,13 +48,13 @@ public class StudentController {
 
     @PostMapping("/v1/add-new-student")
     public ResponseEntity<?> enrollNewStudent(@RequestHeader("staffId") String staffId,
-                                              @RequestBody AddNewStudent addNewStudent) {
+                                              @Valid @RequestBody AddNewStudent addNewStudent) {
         String firstName = addNewStudent.getFirstName();
         String lastName = addNewStudent.getLastName();
         String levelId = addNewStudent.getLevelId();
         String gender = addNewStudent.getGender();
         String dateOfBirth = addNewStudent.getDateOfBirth();
-        String hometown = addNewStudent.getHomeTown();
+        String hometown = addNewStudent.getHometown();
         String parentName = addNewStudent.getParentName();
         String guardianContact = addNewStudent.getGuardianContact();
 
