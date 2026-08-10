@@ -1,63 +1,29 @@
 package com.codewithben.schoolmanagementsystem.DTO.Semester;
 
+import jakarta.validation.constraints.NotBlank;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class FindSemester {
+
+    @NotBlank(message = "Semester ID is required")
     private String semesterID;
 
+    @NotBlank(message = "Semester name is required")
     private String semesterName;
 
+    @NotBlank(message = "Start date is required")
     private String semesterStartDate;
 
+    @NotBlank(message = "End date is required")
     private String semesterEndDate;
 
+    @NotBlank(message = "Academic year is required")
     private String academicYear;
-
-    public FindSemester() {}
-
-    public FindSemester(String semesterID, String semesterName, String semesterStartDate, String semesterEndDate, String academicYear) {
-        this.semesterID = semesterID;
-        this.semesterName = semesterName;
-        this.semesterStartDate = semesterStartDate;
-        this.semesterEndDate = semesterEndDate;
-        this.academicYear = academicYear;
-    }
-
-    public void setSemesterID(String semesterID) {
-        this.semesterID = semesterID;
-    }
-
-    public String getSemesterID() {
-        return semesterID;
-    }
-
-    public String getSemesterName() {
-        return semesterName;
-    }
-
-    public void setSemesterName(String semesterName) {
-        this.semesterName = semesterName;
-    }
-
-    public String getSemesterStartDate() {
-        return semesterStartDate;
-    }
-
-    public void setSemesterStartDate(String semesterStartDate) {
-        this.semesterStartDate = semesterStartDate;
-    }
-
-    public String getSemesterEndDate() {
-        return semesterEndDate;
-    }
-
-    public void setSemesterEndDate(String semesterEndDate) {
-        this.semesterEndDate = semesterEndDate;
-    }
-
-    public String getAcademicYear() {
-        return academicYear;
-    }
-
-    public void setAcademicYear(String academicYear) {
-        this.academicYear = academicYear;
-    }
 }

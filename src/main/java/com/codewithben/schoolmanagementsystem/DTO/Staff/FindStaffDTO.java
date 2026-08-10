@@ -1,123 +1,50 @@
 package com.codewithben.schoolmanagementsystem.DTO.Staff;
 
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Pattern;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.util.List;
 
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class FindStaffDTO {
 
+    @NotBlank(message = "Staff ID is required")
     private String staffId;
 
+    @NotBlank(message = "First name is required")
     private String firstName;
 
+    @NotBlank(message = "Surname is required")
     private String surname;
 
+    @NotBlank(message = "Gender is required")
     private String gender;
 
+    @NotBlank(message = "Date of birth is required")
     private String dateOfBirth;
 
+    @NotBlank(message = "Email is required")
+    @Email(message = "Email must be a valid email address")
     private String email;
 
+    @NotBlank(message = "Phone number is required")
+    @Pattern(regexp = "\\d{10}", message = "Phone number must be 10 digits")
     private String phoneNumber;
 
+    @NotEmpty(message = "At least one role is required")
     private List<String> staffRoles;
 
+    @NotBlank(message = "Staff status is required")
     private String staffStatus;
 
     private String dateOfRegistration;
-
-    public FindStaffDTO() {}
-
-    public FindStaffDTO(String staffId, String firstName, String surname,
-                        String gender, String dateOfBirth, String email, String phoneNumber, List<String> staffRoles,
-                        String staffStatus, String dateOfRegistration) {
-        this.staffId = staffId;
-        this.firstName = firstName;
-        this.surname = surname;
-        this.gender = gender;
-        this.dateOfBirth = dateOfBirth;
-        this.email = email;
-        this.phoneNumber = phoneNumber;
-        this.staffRoles = staffRoles;
-        this.staffStatus = staffStatus;
-        this.dateOfRegistration = dateOfRegistration;
-    }
-
-    public String getStaffId() {
-        return staffId;
-    }
-
-    public void setStaffId(String staffId) {
-        this.staffId = staffId;
-    }
-
-    public String getFirstName() {
-        return firstName;
-    }
-
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
-
-    public String getSurname() {
-        return surname;
-    }
-
-    public void setSurname(String surname) {
-        this.surname = surname;
-    }
-
-    public String getGender() {
-        return gender;
-    }
-
-    public void setGender(String gender) {
-        this.gender = gender;
-    }
-
-    public String getDateOfBirth() {
-        return dateOfBirth;
-    }
-
-    public void setDateOfBirth(String dateOfBirth) {
-        this.dateOfBirth = dateOfBirth;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getPhoneNumber() {
-        return phoneNumber;
-    }
-
-    public void setPhoneNumber(String phoneNumber) {
-        this.phoneNumber = phoneNumber;
-    }
-
-    public List<String> getStaffRoles() {
-        return staffRoles;
-    }
-
-    public void setStaffRoles(List<String> staffRoles) {
-        this.staffRoles = staffRoles;
-    }
-
-    public String getStaffStatus() {
-        return staffStatus;
-    }
-
-    public void setStaffStatus(String staffStatus) {
-        this.staffStatus = staffStatus;
-    }
-
-    public String getDateOfRegistration() {
-        return dateOfRegistration;
-    }
-
-    public void setDateOfRegistration(String dateOfRegistration) {
-        this.dateOfRegistration = dateOfRegistration;
-    }
 }

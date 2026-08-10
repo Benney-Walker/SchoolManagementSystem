@@ -4,6 +4,7 @@ import com.codewithben.schoolmanagementsystem.DTO.Conduct.StudentConductRecord;
 import com.codewithben.schoolmanagementsystem.DTO.Staff.NewStaff;
 import com.codewithben.schoolmanagementsystem.Service.*;
 import com.codewithben.schoolmanagementsystem.Utility.AuthenticatedStaffProvider;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import org.springframework.http.ResponseEntity;
@@ -168,7 +169,7 @@ public class StaffController {
 
     @PostMapping("/v1/add-new-staff")
     public ResponseEntity<?> enrollNewStaff(@RequestHeader("staffId")String Id,
-                                            @RequestBody NewStaff newStaff) {
+                                            @Valid @RequestBody NewStaff newStaff) {
 
         String firstName = newStaff.getFirstName();
         String lastName = newStaff.getLastName();
@@ -187,8 +188,8 @@ public class StaffController {
 
     @GetMapping("/v1/conduct-records")
     public ResponseEntity<?> getStudentsConduct(@RequestHeader("staffId")String Id,
-                                               @RequestParam String levelId,
-                                               @RequestParam String semesterId) {
+                                                @RequestParam String levelId,
+                                                @RequestParam String semesterId) {
 
         String staffId = authenticatedStaffProvider.getStaffId();
 
@@ -197,7 +198,7 @@ public class StaffController {
 
     @PutMapping("/v1/save-conduct-record")
     public ResponseEntity<?> saveStudentConduct(@RequestHeader("staffId")String Id,
-                                                @RequestBody StudentConductRecord record) {
+                                                @Valid @RequestBody StudentConductRecord record) {
 
         String staffId = authenticatedStaffProvider.getStaffId();
 
@@ -206,7 +207,7 @@ public class StaffController {
 
     @PutMapping("/v2/save-conduct-record")
     public ResponseEntity<?> saveStudentConduct(@RequestHeader("staffId")String Id,
-                                                @RequestBody List<StudentConductRecord> records) {
+                                                @Valid @RequestBody List<@Valid StudentConductRecord> records) {
 
         String staffId = authenticatedStaffProvider.getStaffId();
 
