@@ -1,50 +1,27 @@
 package com.codewithben.schoolmanagementsystem.DTO.Semester;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class AddNewSemester {
+    
+    @NotBlank(message = "Semester name is required")
     private String semesterName;
 
+    @NotBlank(message = "Start date is required")
     private String startDate;
 
+    @NotBlank(message = "End date is required")
     private String endDate;
 
+    @NotBlank(message = "Academic year is required")
     private String academicYear;
-
-    public AddNewSemester(String semesterName, String startDate, String endDate, String academicYear) {
-        this.semesterName = semesterName;
-        this.startDate = startDate;
-        this.endDate = endDate;
-        this.academicYear = academicYear;
-    }
-
-    public String getSemesterName() {
-        return semesterName;
-    }
-
-    public void setSemesterName(String semesterName) {
-        this.semesterName = semesterName;
-    }
-
-    public String getStartDate() {
-        return startDate;
-    }
-
-    public void setStartDate(String startDate) {
-        this.startDate = startDate;
-    }
-
-    public String getEndDate() {
-        return endDate;
-    }
-
-    public void setEndDate(String endDate) {
-        this.endDate = endDate;
-    }
-
-    public String getAcademicYear() {
-        return academicYear;
-    }
-
-    public void setAcademicYear(String academicYear) {
-        this.academicYear = academicYear;
-    }
 }

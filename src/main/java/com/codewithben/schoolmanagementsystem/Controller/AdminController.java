@@ -8,13 +8,13 @@ import com.codewithben.schoolmanagementsystem.DTO.Semester.FindSemester;
 import com.codewithben.schoolmanagementsystem.DTO.Staff.FindStaffDTO;
 import com.codewithben.schoolmanagementsystem.DTO.Subject.AddNewSubject;
 import com.codewithben.schoolmanagementsystem.DTO.Subject.SubjectDTO;
+import jakarta.validation.Valid;
 import com.codewithben.schoolmanagementsystem.Repository.LevelRepository;
 import com.codewithben.schoolmanagementsystem.Repository.SemesterRepository;
 import com.codewithben.schoolmanagementsystem.Service.*;
 import com.codewithben.schoolmanagementsystem.Utility.AuthenticatedStaffProvider;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -60,7 +60,7 @@ public class AdminController {
 
     @PostMapping("/v1/add-semester")
     public ResponseEntity<?> addNewSemester(@RequestHeader("staffId") String Id,
-                                            @RequestBody AddNewSemester addNewSemester) {
+                                            @Valid @RequestBody AddNewSemester addNewSemester) {
 
         String semesterName = addNewSemester.getSemesterName();
         LocalDate startDate = LocalDate.parse(addNewSemester.getStartDate());
@@ -74,7 +74,7 @@ public class AdminController {
 
     @PostMapping("/v1/new-grading-criteria")
     public ResponseEntity<?> setGradingCriteria(@RequestHeader("staffId") String Id,
-                                                @RequestBody GradingCriteria gradingCriteria) {
+                                                @Valid @RequestBody GradingCriteria gradingCriteria) {
         String staffId = authenticatedStaffProvider.getStaffId();
 
         return institutionService.saveGradingCriteria(gradingCriteria, staffId);
@@ -90,7 +90,7 @@ public class AdminController {
 
     @PutMapping("/v1/update-grading-criteria")
     public ResponseEntity<?> updateGradingCriteria(@RequestHeader("staffId") String Id,
-                                                   @RequestBody GradingCriteria gradingCriteria) {
+                                                   @Valid @RequestBody GradingCriteria gradingCriteria) {
 
         String staffId = authenticatedStaffProvider.getStaffId();
 
@@ -108,7 +108,7 @@ public class AdminController {
 
     @PutMapping("/v1/update-class-info")
     public ResponseEntity<?> updateClassInfo(@RequestHeader("staffId") String Id,
-                                             @RequestBody FindAndUpdateClassInfo updateInfo) {
+                                             @Valid @RequestBody FindAndUpdateClassInfo updateInfo) {
 
         String staffId = authenticatedStaffProvider.getStaffId();
 
@@ -117,7 +117,7 @@ public class AdminController {
 
     @PutMapping("/v1/update-staff-info")
     public ResponseEntity<?> updateStaffInfo(@RequestHeader("staffId") String Id,
-                                             @RequestBody FindStaffDTO info) {
+                                             @Valid @RequestBody FindStaffDTO info) {
 
         String staffId = authenticatedStaffProvider.getStaffId();
 
@@ -134,7 +134,7 @@ public class AdminController {
 
     @PutMapping("/v1/update-semester-info")
     public ResponseEntity<?> updateSemesterInfo(@RequestHeader("staffId") String Id,
-                                                @RequestBody FindSemester updateInfo) {
+                                                @Valid @RequestBody FindSemester updateInfo) {
 
         String staffId = authenticatedStaffProvider.getStaffId();
 
@@ -152,7 +152,7 @@ public class AdminController {
 
     @PostMapping("/v1/add-subject")
     public ResponseEntity<?> saveNewSubject(@RequestHeader("staffId") String Id,
-                                            @RequestBody AddNewSubject addNewSubject) {
+                                            @Valid @RequestBody AddNewSubject addNewSubject) {
         String subjectName = addNewSubject.getSubjectName();
         String levelId = addNewSubject.getGradeId();
 
@@ -173,7 +173,7 @@ public class AdminController {
 
     @PutMapping("/v1/update-subject-details")
     public ResponseEntity<?> updateSubjectData(@RequestHeader("staffId") String Id,
-                                               @RequestBody SubjectDTO subjectDTO) {
+                                               @Valid @RequestBody SubjectDTO subjectDTO) {
 
         String staffId = authenticatedStaffProvider.getStaffId();
 
@@ -191,8 +191,8 @@ public class AdminController {
 
     @GetMapping(value = "/v2/generate-class-report")
     public ResponseEntity<?> generateBulkClassReports(@RequestHeader("staffId") String Id,
-                                                    @RequestParam String levelId,
-                                                    @RequestParam String semesterId) {
+                                                      @RequestParam String levelId,
+                                                      @RequestParam String semesterId) {
         String staffId = authenticatedStaffProvider.getStaffId();
 
         return reportService.generateClassBulkReport(staffId, levelId, semesterId);
@@ -210,8 +210,8 @@ public class AdminController {
 
     @GetMapping(value = "/v2/generate-master-sheet")
     public ResponseEntity<?> generateMasterScoreSheet(@RequestHeader("staffId") String Id,
-                                               @RequestParam String levelId,
-                                               @RequestParam String semesterId) {
+                                                      @RequestParam String levelId,
+                                                      @RequestParam String semesterId) {
         String staffId = authenticatedStaffProvider.getStaffId();
 
         return reportService.generateMasterScoreSheet(levelId, semesterId, staffId);
@@ -233,9 +233,9 @@ public class AdminController {
 
         String staffId = authenticatedStaffProvider.getStaffId();
 
-         return loggingService.getStaffLogsBetween(
-                 staffId, selectedStaffId, LocalDate.parse(fromDate), LocalDate.parse(toDate)
-         );
+        return loggingService.getStaffLogsBetween(
+                staffId, selectedStaffId, LocalDate.parse(fromDate), LocalDate.parse(toDate)
+        );
     }
 
     @GetMapping("/v1/get-timely-logs")
@@ -249,7 +249,7 @@ public class AdminController {
 
     @PostMapping("/v1/add-holiday")
     public ResponseEntity<?> addNewHoliday(@RequestHeader("staffId")String Id,
-                                           @RequestBody Holiday holiday) {
+                                           @Valid @RequestBody Holiday holiday) {
         String staffId = authenticatedStaffProvider.getStaffId();
 
         return holidayService.addNewHoliday(staffId, holiday);
@@ -265,7 +265,7 @@ public class AdminController {
 
     @PutMapping("/v1/update-holiday")
     public ResponseEntity<?> updateHoliday(@RequestHeader("staffId")String Id,
-                                           @RequestBody Holiday holiday) {
+                                           @Valid @RequestBody Holiday holiday) {
 
         String staffId = authenticatedStaffProvider.getStaffId();
 

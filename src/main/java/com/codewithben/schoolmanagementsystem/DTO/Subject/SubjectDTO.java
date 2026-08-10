@@ -1,40 +1,23 @@
 package com.codewithben.schoolmanagementsystem.DTO.Subject;
 
+import jakarta.validation.constraints.NotBlank;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class SubjectDTO {
 
+    @NotBlank(message = "Subject ID is required")
     private String subjectId;
 
+    @NotBlank(message = "Subject name is required")
     private String subjectName;
 
+    @NotBlank(message = "Class (level) is required")
     private String levelId;
-
-    public SubjectDTO(String subjectId, String subjectName, String levelId) {
-        this.subjectId = subjectId;
-        this.subjectName = subjectName;
-        this.levelId = levelId;
-    }
-
-    public String getSubjectId() {
-        return subjectId;
-    }
-
-    public void setSubjectId(String subjectId) {
-        this.subjectId = subjectId;
-    }
-
-    public String getSubjectName() {
-        return subjectName;
-    }
-
-    public void setSubjectName(String subjectName) {
-        this.subjectName = subjectName;
-    }
-
-    public String getLevelId() {
-        return levelId;
-    }
-
-    public void setLevelId(String levelId) {
-        this.levelId = levelId;
-    }
 }
