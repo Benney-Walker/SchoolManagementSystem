@@ -16,9 +16,7 @@ import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @AllArgsConstructor
 @Service
@@ -161,22 +159,26 @@ public class ScoresService {
             ));
         }
 
+        Set<Results> affectedResults = new LinkedHashSet<>();
+
         for (StudentsScoresTable score : scores) {
 
-            Students student = studentsRepository.findByStudentId(score.getStudentId()).orElse(null);
-            if (student == null) {
-                loggingService.logGeneralActivity(LogType.SUBJECT_SCORE, LogAction.CREATE,"Invalid student Id", staffId, LogStatus.FAILED);
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                        "message", "Invalid student Id"
-                ));
-            }
             // Get or create Results for this student + semester + level
             Results result = resultsRepository
                     .findByStudent_StudentIdAndSemester_SemesterID(
-                            student.getStudentId(), semesterId)
+                            score.getStudentId(), semesterId)
                     .orElse(null);
 
             if (result == null) {
+
+                Students student = studentsRepository.findByStudentId(score.getStudentId()).orElse(null);
+                if (student == null) {
+                    loggingService.logGeneralActivity(LogType.SUBJECT_SCORE, LogAction.CREATE,"Invalid student Id", staffId, LogStatus.FAILED);
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                            "message", "Invalid student Id"
+                    ));
+                }
+
                 result = new Results();
                 result.setStudent(student);
                 result.setLevel(subject.getLevel());
@@ -194,25 +196,30 @@ public class ScoresService {
                             result.getResultId()
                     ).orElse(new SubjectScore());
 
-            saveNewScore(subjectScore, score, result, subject, student, semester);
+            saveNewScore(subjectScore, score, result, subject, result.getStudent(), semester);
 
-            /*if (result.getSubjectScores().size() == result.getLevel().getSubjects().size()) {
-                updateResultTotals(result);
-                result.setReady(true);
-            } else {
-                result.setReady(false);
-            }*/
-
-            //Temporal fix
-            updateResultTotals(result, staff);
-            result.setReady(true);
-
-            result.setUpdatedBy(staff);
-            result.setUpdatedAt(LocalDate.now());
-            resultsRepository.save(result);
+            affectedResults.add(result);
         }
 
-        loggingService.logGeneralActivity(LogType.SUBJECT_SCORE, LogAction.CREATE,"N/A", staffId, LogStatus.SUCCESS);
+        subjectScoreRepository.flush();
+
+        int subjectsInLevel = subject.getLevel().getSubjects().size();
+        for (Results result : affectedResults) {
+            updateResultTotals(result, staff);
+
+            long scoresSubjects = subjectScoreRepository.countByResults_ResultId(result.getResultId());
+            result.setReady(scoresSubjects == subjectsInLevel);
+
+            result.setUpdatedAt(LocalDate.now());
+            result.setUpdatedBy(staff);
+        }
+
+        resultsRepository.saveAll(affectedResults);
+
+        loggingService.logGeneralActivity(
+                LogType.SUBJECT_SCORE, LogAction.CREATE,
+                "Saved " + subject.getSubjectName() + " scores for " + subject.getLevel().getLevelName(),
+                staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok().build();
     }
 
