@@ -143,15 +143,6 @@ public class StudentController {
         return studentService.repeatStudent(studentId, semesterId, staffId);
     }
 
-    @GetMapping(value = "/v2/generate-report-card")
-    public ResponseEntity<?> generateStudentReport(@RequestHeader("staffId") String staffId,
-                                                   @RequestHeader("promotionId") String promotionId,
-                                                   @RequestParam String studentId,
-                                                   @RequestParam String semesterId) {
-
-        return reportService.generateStudentReport(studentId, semesterId, promotionId, staffId);
-    }
-
     @GetMapping(value = "/v3/generate-report-card")
     public ResponseEntity<?> generateStudentReport(@RequestHeader("staffId") String staffId,
                                                    @RequestParam String studentId,
