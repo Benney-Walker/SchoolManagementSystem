@@ -5,6 +5,7 @@ import com.codewithben.schoolmanagementsystem.DTO.Fees.NewFeesPaymentDTO;
 import com.codewithben.schoolmanagementsystem.DTO.Fees.StudentPaymentRecords;
 import com.codewithben.schoolmanagementsystem.Service.FeesService;
 import com.codewithben.schoolmanagementsystem.Utility.AuthenticatedStaffProvider;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,9 +22,9 @@ public class FinanceController {
 
     @PostMapping("/v1/add-new-fees")
     public ResponseEntity<?> addNewFees(@RequestHeader("staffId") String Id,
-                                     @RequestParam String gradeId,
-                                     @RequestParam String semesterId,
-                                     @RequestParam String feesAmount) {
+                                        @RequestParam String gradeId,
+                                        @RequestParam String semesterId,
+                                        @RequestParam String feesAmount) {
 
         String staffId = authenticatedStaffProvider.getStaffId();
 
@@ -43,7 +44,7 @@ public class FinanceController {
 
     @PostMapping("/v1/add-fees-payment")
     public ResponseEntity<?> addNewFeePayment(@RequestHeader("staffId") String Id,
-                                              @RequestBody NewFeesPaymentDTO data) {
+                                              @Valid @RequestBody NewFeesPaymentDTO data) {
         String studentId = data.getStudentId();
         Double amountPaid = data.getAmountPaid();
         String personWhoPaid = data.getPayerName();
@@ -69,7 +70,7 @@ public class FinanceController {
 
     @PutMapping("/v1/update-payment-details")
     public ResponseEntity<?> updatePaymentRecords(@RequestHeader("staffId") String Id,
-                                                  @RequestBody StudentPaymentRecords update) {
+                                                  @Valid @RequestBody StudentPaymentRecords update) {
 
         String staffId = authenticatedStaffProvider.getStaffId();
 
@@ -139,7 +140,7 @@ public class FinanceController {
 
     @PutMapping("/v2/update-semester-fees")
     public ResponseEntity<?> updateFeesAmount(@RequestHeader("staffId") String Id,
-                                              @RequestBody FetchFeesDetails fetchFeesDetails) {
+                                              @Valid @RequestBody FetchFeesDetails fetchFeesDetails) {
         String staffId = authenticatedStaffProvider.getStaffId();
 
         return feesService.updateSemesterFees(fetchFeesDetails, staffId);
