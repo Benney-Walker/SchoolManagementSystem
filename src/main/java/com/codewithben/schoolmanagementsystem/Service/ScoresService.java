@@ -203,9 +203,10 @@ public class ScoresService {
 
         subjectScoreRepository.flush();
 
+        int classSize = utilityClass.getActiveStudents(subject.getLevel().getStudents()).size();
         int subjectsInLevel = subject.getLevel().getSubjects().size();
         for (Results result : affectedResults) {
-            updateResultTotals(result, staff);
+            updateResultTotals(result, staff, classSize);
 
             long scoresSubjects = subjectScoreRepository.countByResults_ResultId(result.getResultId());
             result.setReady(scoresSubjects == subjectsInLevel);
@@ -261,7 +262,7 @@ public class ScoresService {
                     HELPERS
     =====================================*/
 
-    public void updateResultTotals(Results result, Staffs updatedBy) {
+    public void updateResultTotals(Results result, Staffs updatedBy, int classSize) {
         List<SubjectScore> scores = result.getSubjectScores();
 
         double total = 0.0;
@@ -277,7 +278,7 @@ public class ScoresService {
             result.setUpdatedBy(updatedBy);
             result.setTotalScore(Double.parseDouble(String.format("%.1f", total)));
             result.setAverageScore(Double.parseDouble(String.format("%.1f", total / scores.size())));
-            result.setClassSize(utilityClass.getActiveStudents(result.getLevel().getStudents()).size());
+            result.setClassSize(classSize);
         }
 
         resultsRepository.save(result);
