@@ -25,7 +25,7 @@ public class AuthenticationSuccessListener implements ApplicationListener<Authen
         loggingService.logGeneralActivity(
                 LogType.STAFF,
                 LogAction.LOGIN,
-                "N/A",
+                "Login successful",
                 auth.getName(),
                 LogStatus.SUCCESS
         );
