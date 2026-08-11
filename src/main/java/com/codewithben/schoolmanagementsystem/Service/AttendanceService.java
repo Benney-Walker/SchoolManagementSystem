@@ -41,6 +41,8 @@ public class AttendanceService {
 
     private final StaffsRepository staffsRepository;
 
+    private final SemesterRepository semesterRepository;
+
     public ResponseEntity<?> loadStudentsForAttendance(String levelId, String attendanceDate, String staffId) {
 
         LocalDate selectedDate = LocalDate.parse(attendanceDate, DateTimeFormatter.ISO_DATE);
@@ -256,20 +258,13 @@ public class AttendanceService {
         return ResponseEntity.ok(records);
     }
 
-    public ResponseEntity<?> loadDatesMarked(String staffId, String levelId) {
-        Level level = levelRepository.findByLevelID(levelId).orElse(null);
-        if (level == null) {
-            loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.READ, "Invalid class Id", staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
-                    "message", "Invalid class Id"
-            ));
-        }
+    public ResponseEntity<?> loadDatesMarked(String staffId, String levelId, String semesterId) {
 
-        Semester semester = utilityClass.getCurrentSemester(level.getInstitution());
+        Semester semester = semesterRepository.findBySemesterID(semesterId).orElse(null);
         if (semester == null) {
-            loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.READ, "Current term not added", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.READ, "Invalid term Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
-                    "message", "Current term not added"
+                    "message", "Invalid term id " + semesterId
             ));
         }
 
@@ -285,7 +280,7 @@ public class AttendanceService {
         }
 
         List<AttendanceDate> datesMarked = attendanceDateRepository
-                .findByLevel_LevelIDAndSemester_SemesterIDOrderByAttendanceDateAsc(levelId, semester.getSemesterID());
+                .findByLevel_LevelIDAndSemester_SemesterIDOrderByAttendanceDateAsc(levelId, semesterId);
         if (datesMarked == null || datesMarked.isEmpty()) {
             loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.READ, "No attendance marked for this term", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
@@ -322,7 +317,7 @@ public class AttendanceService {
 
         loggingService.logGeneralActivity(
                 LogType.ATTENDANCE, LogAction.READ,
-                "Fetched the days " + level.getLevelName() + " attendance has been marked",
+                "Fetched the days attendance has been marked",
                 staffId, LogStatus.SUCCESS
         );
         return ResponseEntity.ok(datesMarkedList);
