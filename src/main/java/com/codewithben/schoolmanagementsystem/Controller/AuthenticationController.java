@@ -4,6 +4,7 @@ import com.codewithben.schoolmanagementsystem.Constants.LogAction;
 import com.codewithben.schoolmanagementsystem.Constants.LogStatus;
 import com.codewithben.schoolmanagementsystem.Constants.LogType;
 import com.codewithben.schoolmanagementsystem.DTO.Auth.InstitutionRegistrationDTO;
+import com.codewithben.schoolmanagementsystem.DTO.Auth.RefreshRequest;
 import com.codewithben.schoolmanagementsystem.DTO.Staff.NewPrincipal;
 import com.codewithben.schoolmanagementsystem.DTO.Auth.LoginRequest;
 import com.codewithben.schoolmanagementsystem.DTO.Auth.LoginResponse;
@@ -14,6 +15,7 @@ import com.codewithben.schoolmanagementsystem.Service.InstitutionService;
 import com.codewithben.schoolmanagementsystem.Service.LoggingService;
 import com.codewithben.schoolmanagementsystem.Service.StaffService;
 import com.codewithben.schoolmanagementsystem.Utility.JwtUtility;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -117,5 +119,34 @@ public class AuthenticationController {
                             .build()
             );
 
+    }
+
+    @PostMapping("/v1/refresh-token")
+    public ResponseEntity<?> refreshAccessToken(@Valid @RequestBody RefreshRequest refreshRequest) {
+        String refreshToken = refreshRequest.getRefreshToken();
+
+        if (!jwtUtility.isRefreshToken(refreshToken)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                    "message", "Invalid refresh token"
+            ));
+        }
+
+        String staffId = jwtUtility.extractUsername(refreshToken);
+        Staffs staff = staffService.getStaffDetails(staffId);
+        if (staff == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                    "message", "Invalid or expired refresh token"
+            ));
+        }
+
+        List<String> rolesList = staff.getRoles().stream()
+                .map(role -> role.getStaffRole().name())
+                .toList();
+
+        String newAccessToken = jwtUtility.generateAccessToken(staffId, rolesList);
+
+        return ResponseEntity.ok(Map.of(
+                "authToken", newAccessToken
+        ));
     }
 }
