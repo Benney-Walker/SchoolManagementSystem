@@ -196,12 +196,21 @@ public class StaffController {
         return conductService.getStudentsConduct(levelId, semesterId, staffId);
     }
 
-    @PutMapping("/v2/save-conduct-record")
+    @PutMapping("/v1/save-conduct-record")
+    public ResponseEntity<?> saveStudentConduct(@RequestHeader("staffId")String Id,
+                                                @Valid @RequestBody StudentConductRecord record) {
+
+        String staffId = authenticatedStaffProvider.getStaffId();
+
+        return conductService.saveStudentConducts(staffId, record);
+    }
+
+    /*@PutMapping("/v2/save-conduct-record")
     public ResponseEntity<?> saveStudentConduct(@RequestHeader("staffId")String Id,
                                                 @Valid @RequestBody List<@Valid StudentConductRecord> records) {
 
         String staffId = authenticatedStaffProvider.getStaffId();
 
         return conductService.saveStudentConducts(staffId, records);
-    }
+    }*/
 }

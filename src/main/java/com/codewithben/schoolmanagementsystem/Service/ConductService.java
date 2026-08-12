@@ -169,7 +169,7 @@ public class ConductService {
         return ResponseEntity.ok().build();
     }
 
-    public ResponseEntity<?> saveStudentConducts(String staffId, List<StudentConductRecord> records) {
+    /*public ResponseEntity<?> saveStudentConducts(String staffId, List<StudentConductRecord> records) {
 
         if (records == null || records.isEmpty()) {
             loggingService.logGeneralActivity(LogType.CONDUCT, LogAction.CREATE, "Conduct records empty", staffId, LogStatus.FAILED);
@@ -224,7 +224,7 @@ public class ConductService {
 
         loggingService.logGeneralActivity(LogType.CONDUCT, LogAction.CREATE, "Added students conduct records for " + levelName, staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok().build();
-    }
+    }*/
 
     public StudentConductReport getStudentConductReport(Conduct conduct) {
 
