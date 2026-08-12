@@ -34,7 +34,7 @@ public class InstitutionService {
     private final LoggingService loggingService;
 
 
-    public ResponseEntity<?> addNewInstitution(String institutionName, String logData) {
+    public ResponseEntity<?> addNewInstitution(String institutionName) {
         Institution institution = institutiionRepository.findByInstitutionName(institutionName).orElse(null);
         if (institution == null) {
             institution = new Institution();
@@ -42,12 +42,9 @@ public class InstitutionService {
             institution.setInstitutionId(id);
             institution.setInstitutionName(institutionName);
             institutiionRepository.save(institution);
-
-            loggingService.logGeneralActivity(LogType.INSTITUTION, LogAction.CREATE, "N/A", "N/A", LogStatus.SUCCESS);
             return ResponseEntity.ok(id);
         }
 
-        loggingService.logGeneralActivity(LogType.INSTITUTION, LogAction.CREATE, "N/A", "N/A", LogStatus.FAILED);
         return ResponseEntity.status(HttpStatus.CONFLICT).body("Institution already exist");
     }
 
