@@ -54,5 +54,9 @@ public class Results {
 
     private String promotionTo = "-";
 
+    private int presentAttendanceCount;
+
+    private int totalAttendanceCount;
+
     private boolean isReady;
 }
