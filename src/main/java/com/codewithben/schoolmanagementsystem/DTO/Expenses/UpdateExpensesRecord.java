@@ -11,17 +11,20 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class NewExpenses {
+public class UpdateExpensesRecord {
+
+    @NotBlank(message = "Expenses Id is required")
+    private String expensesId;
 
     @NotBlank(message = "Description is required")
     private String description;
 
-    @NotBlank(message = "Extra info is required")
-    private String extraInfo;
-
     @NotBlank(message = "Amount is required")
     @Pattern(regexp = "\\d+(\\.\\d{1,2})?", message = "Invalid amount value")
     private int amountSpent;
+
+    @NotBlank(message = "Extra info is required")
+    private String extraInfo;
 
     @NotBlank(message = "Term is required")
     private String semesterId;
