@@ -1,5 +1,6 @@
 package com.codewithben.schoolmanagementsystem.DTO.Expenses;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,7 +12,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ExpensesRecord {
 
-    private long expenseId;
+    private String expensesId;
 
     private String description;
 
