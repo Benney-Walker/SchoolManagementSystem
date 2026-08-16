@@ -15,5 +15,6 @@ public enum LogType {
     STAFF,
     STUDENT,
     SUBJECT,
-    SUBJECT_SCORE
+    SUBJECT_SCORE,
+    EXPENSES
 }

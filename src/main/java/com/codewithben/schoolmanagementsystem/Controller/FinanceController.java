@@ -1,8 +1,11 @@
 package com.codewithben.schoolmanagementsystem.Controller;
 
+import com.codewithben.schoolmanagementsystem.DTO.Expenses.ExpensesRecord;
+import com.codewithben.schoolmanagementsystem.DTO.Expenses.NewExpenses;
 import com.codewithben.schoolmanagementsystem.DTO.Fees.FetchFeesDetails;
 import com.codewithben.schoolmanagementsystem.DTO.Fees.NewFeesPaymentDTO;
 import com.codewithben.schoolmanagementsystem.DTO.Fees.StudentPaymentRecords;
+import com.codewithben.schoolmanagementsystem.Service.ExpensesService;
 import com.codewithben.schoolmanagementsystem.Service.FeesService;
 import com.codewithben.schoolmanagementsystem.Utility.AuthenticatedStaffProvider;
 import jakarta.validation.Valid;
@@ -18,6 +21,8 @@ public class FinanceController {
     private final FeesService feesService;
 
     private final AuthenticatedStaffProvider authenticatedStaffProvider;
+
+    private final ExpensesService expensesService;
 
 
     @PostMapping("/v1/add-new-fees")
@@ -151,5 +156,29 @@ public class FinanceController {
         String staffId = authenticatedStaffProvider.getStaffId();
 
         return feesService.getRecentPayments(staffId);
+    }
+
+    @PostMapping("/v1/add-new-expenses")
+    public ResponseEntity<?> addNewExpenses(@Valid @RequestBody NewExpenses newExpenses) {
+
+        String staffId = authenticatedStaffProvider.getStaffId();
+
+        return expensesService.addNewExpenses(newExpenses, staffId);
+    }
+
+    @GetMapping("/v1/read-expenses-records/{semesterId}")
+    public ResponseEntity<?> readExpensesRecords(@PathVariable String semesterId) {
+
+        String staffId = authenticatedStaffProvider.getStaffId();
+
+        return expensesService.readExpenses(semesterId, staffId);
+    }
+
+    @PatchMapping("/v1/update-expense-record")
+    public ResponseEntity<?> updateExpensesRecord(@Valid @RequestBody ExpensesRecord expensesRecord) {
+
+        String staffId = authenticatedStaffProvider.getStaffId();
+
+        return expensesService.updateExpenseRecord(expensesRecord, staffId);
     }
 }

@@ -32,4 +32,10 @@ public class Semester {
     @ManyToOne
     @JoinColumn(name = "Institution_institutionId")
     private Institution institution;
+
+    @OneToMany(mappedBy = "semester")
+    private List<Expenses> expenses;
+
+    @OneToMany(mappedBy = "semester")
+    private List<Fees> fees;
 }
