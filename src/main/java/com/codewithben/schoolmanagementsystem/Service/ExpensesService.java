@@ -23,11 +23,11 @@ import java.util.Map;
 @Service
 public class ExpensesService {
 
-    private ExpensesRepo expensesRepo;
+    private final ExpensesRepo expensesRepo;
 
-    private LoggingService loggingService;
+    private final LoggingService loggingService;
 
-    private SemesterRepository semesterRepository;
+    private final SemesterRepository semesterRepository;
 
     public ResponseEntity<?> addNewExpenses(NewExpenses newExpenses, String staffId) {
 
