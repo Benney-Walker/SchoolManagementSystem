@@ -12,5 +12,5 @@ public interface ExpensesRepo extends JpaRepository<Expenses, Long> {
 
     List<Expenses> findBySemester_SemesterID(String semesterId);
 
-    Optional<Expenses> findByExpenseId(Long expenseId);
+    Optional<Expenses> findByExpenseId(String expenseId);
 }
