@@ -5,6 +5,7 @@ import com.codewithben.schoolmanagementsystem.Constants.LogStatus;
 import com.codewithben.schoolmanagementsystem.Constants.LogType;
 import com.codewithben.schoolmanagementsystem.DTO.Expenses.ExpensesRecord;
 import com.codewithben.schoolmanagementsystem.DTO.Expenses.NewExpenses;
+import com.codewithben.schoolmanagementsystem.DTO.Expenses.UpdateExpensesRecord;
 import com.codewithben.schoolmanagementsystem.Entity.Expenses;
 import com.codewithben.schoolmanagementsystem.Entity.Semester;
 import com.codewithben.schoolmanagementsystem.Repository.ExpensesRepo;
@@ -57,6 +58,7 @@ public class ExpensesService {
                 .extraInfo(extraInfo)
                 .semester(semester)
                 .expenseDate(LocalDate.now())
+                .institution(semester.getInstitution())
                 .build();
         expensesRepo.save(expenses);
 
@@ -89,7 +91,7 @@ public class ExpensesService {
         List<ExpensesRecord> records = new ArrayList<>();
         for (Expenses expenses : expensesList) {
             ExpensesRecord record = ExpensesRecord.builder()
-                    .expenseId(expenses.getExpenseId())
+                    .expensesId(expenses.getExpenseId())
                     .description(expenses.getDescription())
                     .amountSpent(expenses.getAmountSpent())
                     .extraInfo(expenses.getExtraInfo())
@@ -101,7 +103,7 @@ public class ExpensesService {
         return ResponseEntity.ok(records);
     }
 
-    public ResponseEntity<?> updateExpenseRecord(ExpensesRecord expensesRecord, String staffId) {
+    public ResponseEntity<?> updateExpenseRecord(UpdateExpensesRecord expensesRecord, String staffId) {
 
         Semester semester = semesterRepository.findBySemesterID(expensesRecord.getSemesterId()).orElse(null);
         if(semester == null){
@@ -117,7 +119,7 @@ public class ExpensesService {
             ));
         }
 
-        Expenses existingRecord = expensesRepo.findByExpenseId(expensesRecord.getExpenseId()).orElse(null);
+        Expenses existingRecord = expensesRepo.findByExpenseId(expensesRecord.getExpensesId()).orElse(null);
         if(existingRecord == null){
             loggingService.logGeneralActivity(
                     LogType.EXPENSES,
@@ -134,7 +136,6 @@ public class ExpensesService {
         existingRecord.setDescription(expensesRecord.getDescription());
         existingRecord.setAmountSpent(expensesRecord.getAmountSpent());
         existingRecord.setExtraInfo(expensesRecord.getExtraInfo());
-        existingRecord.setExpenseDate(LocalDate.parse(expensesRecord.getExpenseDate()));
         existingRecord.setSemester(semester);
         expensesRepo.save(existingRecord);
 
