@@ -2,11 +2,15 @@ package com.codewithben.schoolmanagementsystem.Controller;
 
 import com.codewithben.schoolmanagementsystem.DTO.Expenses.ExpensesRecord;
 import com.codewithben.schoolmanagementsystem.DTO.Expenses.NewExpenses;
+import com.codewithben.schoolmanagementsystem.DTO.Expenses.UpdateExpensesRecord;
 import com.codewithben.schoolmanagementsystem.DTO.Fees.FetchFeesDetails;
 import com.codewithben.schoolmanagementsystem.DTO.Fees.NewFeesPaymentDTO;
 import com.codewithben.schoolmanagementsystem.DTO.Fees.StudentPaymentRecords;
+import com.codewithben.schoolmanagementsystem.DTO.SpecialPayments.NewSpecialPayment;
+import com.codewithben.schoolmanagementsystem.DTO.SpecialPayments.UpdateSpecialPayment;
 import com.codewithben.schoolmanagementsystem.Service.ExpensesService;
 import com.codewithben.schoolmanagementsystem.Service.FeesService;
+import com.codewithben.schoolmanagementsystem.Service.SpecialPaymentService;
 import com.codewithben.schoolmanagementsystem.Utility.AuthenticatedStaffProvider;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -23,6 +27,8 @@ public class FinanceController {
     private final AuthenticatedStaffProvider authenticatedStaffProvider;
 
     private final ExpensesService expensesService;
+
+    private final SpecialPaymentService specialPaymentService;
 
 
     @PostMapping("/v1/add-new-fees")
@@ -175,10 +181,34 @@ public class FinanceController {
     }
 
     @PatchMapping("/v1/update-expense-record")
-    public ResponseEntity<?> updateExpensesRecord(@Valid @RequestBody ExpensesRecord expensesRecord) {
+    public ResponseEntity<?> updateExpensesRecord(@Valid @RequestBody UpdateExpensesRecord updateExpensesRecord) {
 
         String staffId = authenticatedStaffProvider.getStaffId();
 
-        return expensesService.updateExpenseRecord(expensesRecord, staffId);
+        return expensesService.updateExpenseRecord(updateExpensesRecord, staffId);
+    }
+
+    @PostMapping("/v1/add-special-fee")
+    public ResponseEntity<?> addSpecialPayment(@Valid @RequestBody NewSpecialPayment newSpecialPayment) {
+
+        String staffId = authenticatedStaffProvider.getStaffId();
+
+        return specialPaymentService.addSpecialPayment(newSpecialPayment, staffId);
+    }
+
+    @GetMapping("/v1/load-special-fees/{paymentType}")
+    public ResponseEntity<?> loadSpecialPayments(@PathVariable String paymentType) {
+
+        String staffId = authenticatedStaffProvider.getStaffId();
+
+        return specialPaymentService.loadSpecialPayments(paymentType, staffId);
+    }
+
+    @PatchMapping("/v1/update-special-fee")
+    public ResponseEntity<?> updateSpecialPayment(@Valid @RequestBody UpdateSpecialPayment updateSpecialPayment) {
+
+        String staffId = authenticatedStaffProvider.getStaffId();
+
+        return specialPaymentService.updateSpecialPayment(updateSpecialPayment, staffId);
     }
 }

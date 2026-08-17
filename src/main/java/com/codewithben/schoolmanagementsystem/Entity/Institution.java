@@ -36,4 +36,10 @@ public class Institution {
 
     @OneToMany(mappedBy = "institution")
     private List<PaymentRecords> paymentRecords;
+
+    @OneToMany(mappedBy = "institution")
+    private List<Expenses> expenses;
+
+    @OneToMany(mappedBy = "institution")
+    private List<SpecialPayment> specialPayment;
 }

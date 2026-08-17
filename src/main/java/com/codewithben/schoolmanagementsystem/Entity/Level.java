@@ -33,4 +33,7 @@ public class Level {
 
     @OneToMany(mappedBy = "level")
     private List<Fees> fees;
+
+    @OneToMany(mappedBy = "level", cascade = CascadeType.ALL)
+    private List<LevelSpecialPayment> levelSpecialPayments;
 }
