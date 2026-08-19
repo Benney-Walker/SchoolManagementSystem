@@ -1,5 +1,6 @@
 package com.codewithben.schoolmanagementsystem.DTO.Students;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
@@ -36,4 +37,7 @@ public class AddNewStudent {
 
     @NotBlank(message = "Class (level) is required")
     private String levelId;
+
+    @JsonProperty("isNew")
+    private boolean isNew;
 }
