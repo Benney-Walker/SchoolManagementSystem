@@ -21,7 +21,7 @@ public class Expenses {
     private String description;
 
     @Column(nullable = false)
-    private int amountSpent;
+    private float amountSpent;
 
     @Column(length = 500)
     private String extraInfo;
