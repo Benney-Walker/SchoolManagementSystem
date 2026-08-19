@@ -18,7 +18,7 @@ public class LevelSpecialPayment {
     private String id;
 
     @Column(nullable = false)
-    private int amount;
+    private double amount;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "level_id", nullable = false)
