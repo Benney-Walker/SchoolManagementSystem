@@ -1,5 +1,6 @@
 package com.codewithben.schoolmanagementsystem.Service;
 
+import com.codewithben.schoolmanagementsystem.DTO.Expenses.ExpensesRecord;
 import com.codewithben.schoolmanagementsystem.DTO.Report.GenerateStudentResult;
 import com.codewithben.schoolmanagementsystem.DTO.Report.SbaReport;
 import net.sf.jasperreports.engine.*;
@@ -21,6 +22,8 @@ public class JasperReportService {
     private JasperReport cachedStudentReport;
 
     private JasperReport cachedSbaReport;
+
+    private JasperReport cachedExpensesReport;
 
     public byte[] generateStudentReportCard(
             GenerateStudentResult generateStudentResults,
@@ -80,6 +83,23 @@ public class JasperReportService {
         return JasperExportManager.exportReportToPdf(print);
     }
 
+    public byte[] generateExpensesReport(List<ExpensesRecord> expensesReport, String schoolName) throws Exception {
+        JasperReport jasperReport = getCompiledExpensesReport();
+
+        JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(
+                Collections.singletonList(expensesReport)
+        );
+
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("schoolName", schoolName);
+        parameters.put("logoPath", "reports/Daffodils/daffodils_Logo.png");
+
+        JasperPrint print =
+                JasperFillManager.fillReport(jasperReport, parameters, dataSource);
+
+        return JasperExportManager.exportReportToPdf(print);
+    }
+
 
     /*================================================
                         HELPERS
@@ -87,7 +107,7 @@ public class JasperReportService {
     private JasperReport getCompiledStudentReport() throws JRException, IOException {
         if (cachedStudentReport == null) {
             InputStream template = getClass()
-                    .getResourceAsStream("/reports/Daffodils/student_report_card.jasper");
+                    .getResourceAsStream("/reports/student_report_card.jasper");
             if (template == null) {
                 throw new FileNotFoundException("Report template not found");
             }
@@ -99,12 +119,26 @@ public class JasperReportService {
     private JasperReport getCompiledSbaReport() throws JRException, IOException {
         if (cachedSbaReport == null) {
             InputStream template = getClass()
-                    .getResourceAsStream("/reports/Daffodils/sba_report.jasper");
+                    .getResourceAsStream("/reports/sba_report.jasper");
             if (template == null) {
                 throw new FileNotFoundException("Report template not found");
             }
             cachedSbaReport = (JasperReport)  JRLoader.loadObject(template);
         }
         return cachedSbaReport;
+    }
+
+    private JasperReport getCompiledExpensesReport() throws JRException, IOException {
+        if (cachedExpensesReport == null) {
+            InputStream template = getClass()
+                    .getResourceAsStream("reports/expenses_report.jasper");
+            if (template == null) {
+                throw new FileNotFoundException("Report template not found");
+            }
+
+            cachedExpensesReport = (JasperReport) JRLoader.loadObject(template);
+        }
+
+        return cachedExpensesReport;
     }
 }
