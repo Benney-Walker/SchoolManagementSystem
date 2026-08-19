@@ -15,7 +15,7 @@ public class SpecialPaymentRecord {
 
     private String type;
 
-    private int amount;
+    private double amount;
 
     private String levelName;
 
