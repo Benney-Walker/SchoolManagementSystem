@@ -180,6 +180,14 @@ public class FinanceController {
         return expensesService.readExpenses(semesterId, staffId);
     }
 
+    @GetMapping("/v1/total-expenses")
+    public ResponseEntity<?> totalSemesterExpenses() {
+
+        String staffId = authenticatedStaffProvider.getStaffId();
+
+        return expensesService.totalSemesterExpenses(staffId);
+    }
+
     @PatchMapping("/v1/update-expense-record")
     public ResponseEntity<?> updateExpensesRecord(@Valid @RequestBody UpdateExpensesRecord updateExpensesRecord) {
 
@@ -210,5 +218,13 @@ public class FinanceController {
         String staffId = authenticatedStaffProvider.getStaffId();
 
         return specialPaymentService.updateSpecialPayment(updateSpecialPayment, staffId);
+    }
+
+    @GetMapping("/v1/generate-expenses-report/{semesterId}")
+    public ResponseEntity<?> generateExpensesReport(@PathVariable String semesterId) {
+
+        String staffId = authenticatedStaffProvider.getStaffId();
+
+        return expensesService.generateExpensesReport(semesterId, staffId);
     }
 }
