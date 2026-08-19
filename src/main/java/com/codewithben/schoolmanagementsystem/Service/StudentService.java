@@ -40,7 +40,7 @@ public class StudentService {
     //Method for adding new student
     @Transactional
     public ResponseEntity<?> addNewStudent(String firstName, String lastName, String gender, String dateOfBirth, String hometown,
-                                           String parentName, String parentContact, String levelId, String staffId) {
+                                           String parentName, String parentContact, String levelId, boolean isNew, String staffId) {
 
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staff == null) {
@@ -84,9 +84,11 @@ public class StudentService {
         student.setParentName(parentName);
         student.setParentPhoneNumber(parentContact);
         student.setLevel(level);
+        student.setNew(isNew);
         student.setRegistrationDate(LocalDate.now());
         student.setInstitution(staff.getInstitution());
         student.setStudentStatus(StudentStatus.ACTIVE);
+
         studentsRepository.saveAndFlush(student);
 
         //Add student to level list

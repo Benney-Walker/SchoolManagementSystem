@@ -50,6 +50,8 @@ public class Students {
     @ManyToOne
     private Level level;
 
+    private boolean isNew;
+
     @OneToMany(mappedBy = "student")
     private List<SubjectScore> subjectScore;
 
