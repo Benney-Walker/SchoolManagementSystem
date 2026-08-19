@@ -65,7 +65,7 @@ public class GlobalExceptionHandler {
         error.put("message", "Validation failed");
         error.put("errors", fieldErrors);
         error.put("path", request.getRequestURI());
-
+        
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
