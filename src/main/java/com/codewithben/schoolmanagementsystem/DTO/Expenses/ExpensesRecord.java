@@ -16,11 +16,9 @@ public class ExpensesRecord {
 
     private String description;
 
-    private int amountSpent;
+    private float amountSpent;
 
     private String extraInfo;
 
     private String expenseDate;
-
-    private String semesterId;
 }
