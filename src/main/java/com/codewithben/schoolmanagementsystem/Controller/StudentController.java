@@ -56,8 +56,7 @@ public class StudentController {
     }
 
     @PostMapping("/v1/add-new-student")
-    public ResponseEntity<?> enrollNewStudent(@RequestHeader("staffId") String Id,
-                                              @Valid @RequestBody AddNewStudent addNewStudent) {
+    public ResponseEntity<?> enrollNewStudent(@Valid @RequestBody AddNewStudent addNewStudent) {
         String firstName = addNewStudent.getFirstName();
         String lastName = addNewStudent.getLastName();
         String levelId = addNewStudent.getLevelId();
@@ -66,11 +65,12 @@ public class StudentController {
         String hometown = addNewStudent.getHometown();
         String parentName = addNewStudent.getParentName();
         String guardianContact = addNewStudent.getGuardianContact();
+        boolean isNew = addNewStudent.isNew();
 
         String staffId  = authenticatedStaffProvider.getStaffId();
 
         return studentService.addNewStudent(firstName, lastName, gender, dateOfBirth, hometown, parentName,
-                    guardianContact, levelId, staffId);
+                    guardianContact, levelId, isNew, staffId);
     }
 
     @GetMapping("/v1/load-subject-students/{subjectId}/{semesterId}")
