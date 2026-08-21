@@ -7,5 +7,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class RabbitMQConsumer {
 
+    @RabbitListener(queues = RabbitMQConfig.FEE_CREATION_QUEUE_NAME)
+    public void consumeFeeCreationEvent(Object payload) {
 
+    }
 }
