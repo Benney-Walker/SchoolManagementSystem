@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class NewFeesPaymentDTO {
+public class NewPayment {
     @NotBlank(message = "Student ID is required")
     private String studentId;
 
