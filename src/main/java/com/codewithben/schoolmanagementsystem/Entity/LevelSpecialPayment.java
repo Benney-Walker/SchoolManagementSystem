@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Getter
 @Setter
@@ -14,7 +15,7 @@ import java.time.LocalDate;
 public class LevelSpecialPayment {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private String id;
 
     @Column(nullable = false)
@@ -27,6 +28,9 @@ public class LevelSpecialPayment {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "special_payment_id", nullable = false)
     private SpecialPayment specialPayment;
+
+    @OneToMany(mappedBy = "levelSpecialPayment")
+    private List<StudentFeeRecord> studentFeeRecord;
 
     private String description;
 

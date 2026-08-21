@@ -31,6 +31,10 @@ public class StudentFeeRecord {
     @JoinColumn(name = "fees_feesId")
     private Fees fees;
 
+    @ManyToOne
+    @JoinColumn(name = "level_special_payment")
+    private LevelSpecialPayment levelSpecialPayment;
+
     @OneToMany(mappedBy = "feeRecord")
     private List<PaymentRecords> paymentRecords;
 
