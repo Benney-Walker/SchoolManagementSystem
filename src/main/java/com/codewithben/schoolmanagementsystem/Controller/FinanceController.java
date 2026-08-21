@@ -1,10 +1,10 @@
 package com.codewithben.schoolmanagementsystem.Controller;
 
-import com.codewithben.schoolmanagementsystem.DTO.Expenses.ExpensesRecord;
 import com.codewithben.schoolmanagementsystem.DTO.Expenses.NewExpenses;
 import com.codewithben.schoolmanagementsystem.DTO.Expenses.UpdateExpensesRecord;
 import com.codewithben.schoolmanagementsystem.DTO.Fees.FetchFeesDetails;
-import com.codewithben.schoolmanagementsystem.DTO.Fees.NewFeesPaymentDTO;
+import com.codewithben.schoolmanagementsystem.DTO.Fees.NewFees;
+import com.codewithben.schoolmanagementsystem.DTO.Fees.NewPayment;
 import com.codewithben.schoolmanagementsystem.DTO.Fees.StudentPaymentRecords;
 import com.codewithben.schoolmanagementsystem.DTO.SpecialPayments.NewSpecialPayment;
 import com.codewithben.schoolmanagementsystem.DTO.SpecialPayments.UpdateSpecialPayment;
@@ -30,32 +30,17 @@ public class FinanceController {
 
     private final SpecialPaymentService specialPaymentService;
 
-
-    @PostMapping("/v1/add-new-fees")
-    public ResponseEntity<?> addNewFees(@RequestHeader("staffId") String Id,
-                                        @RequestParam String gradeId,
-                                        @RequestParam String semesterId,
-                                        @RequestParam String feesAmount) {
-
-        String staffId = authenticatedStaffProvider.getStaffId();
-
-        return feesService.addNewSemesterFees(Double.parseDouble(feesAmount), semesterId, gradeId, staffId);
-    }
-
     @PostMapping("/v2/new-fees")
-    public ResponseEntity<?> newFees(@RequestHeader("staffId") String Id,
-                                     @RequestParam String classId,
-                                     @RequestParam String semesterId,
-                                     @RequestParam String feesAmount) {
+    public ResponseEntity<?> newFees(@Valid @RequestBody NewFees newFees) {
 
         String staffId = authenticatedStaffProvider.getStaffId();
 
-        return feesService.addNewSemesterFees(Double.parseDouble(feesAmount), semesterId, classId, staffId);
+        return feesService.addNewSemesterFees(newFees, staffId);
     }
 
     @PostMapping("/v1/add-fees-payment")
     public ResponseEntity<?> addNewFeePayment(@RequestHeader("staffId") String Id,
-                                              @Valid @RequestBody NewFeesPaymentDTO data) {
+                                              @Valid @RequestBody NewPayment data) {
         String studentId = data.getStudentId();
         Double amountPaid = data.getAmountPaid();
         String personWhoPaid = data.getPayerName();
