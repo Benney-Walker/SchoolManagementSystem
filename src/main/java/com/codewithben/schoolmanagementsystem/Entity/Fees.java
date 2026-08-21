@@ -18,7 +18,7 @@ public class Fees {
     private int feesId;
 
     @Column(nullable = false)
-    private Double amountToBePayed;
+    private float amountToBePayed;
 
     @OneToMany(mappedBy = "fees")
     private List<StudentFeeRecord> feesRecords;

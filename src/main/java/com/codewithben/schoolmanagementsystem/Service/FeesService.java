@@ -19,6 +19,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @AllArgsConstructor
 @Service
@@ -80,17 +81,15 @@ public class FeesService {
 
         for (PaymentRecords paymentRecords : studentFeeRecord.getPaymentRecords()) {
 
-            if (!paymentRecords.isDeleted()) {
+            PaymentHistory paymentHistory = new PaymentHistory(
+                    paymentRecords.getDateOfPayment().toString(),
+                    String.valueOf(paymentRecords.getAmountPaid()),
+                    String.valueOf(paymentRecords.getFeesBalance()),
+                    paymentRecords.getPersonWhoPaid(),
+                    paymentRecords.getPhoneNumber()
+            );
+            paymentHistoryList.add(paymentHistory);
 
-                PaymentHistory paymentHistory = new PaymentHistory(
-                        paymentRecords.getDateOfPayment().toString(),
-                        String.valueOf(paymentRecords.getAmountPaid()),
-                        String.valueOf(paymentRecords.getFeesBalance()),
-                        paymentRecords.getPersonWhoPaid(),
-                        paymentRecords.getPhoneNumber()
-                );
-                paymentHistoryList.add(paymentHistory);
-            }
         }
 
         //Build Student Info
@@ -144,9 +143,6 @@ public class FeesService {
         List<StudentPaymentRecords> studentPaymentRecordsList = new ArrayList<>();
         for (PaymentRecords paymentRecord : studentFeeRecord.getPaymentRecords()) {
 
-            if (paymentRecord.isDeleted()) {
-                continue;
-            }
 
             StudentPaymentRecords studentPaymentRecords = StudentPaymentRecords.builder()
                     .paymentId(paymentRecord.getRecordsId())
@@ -180,13 +176,6 @@ public class FeesService {
             loggingService.logGeneralActivity(LogType.FEES, LogAction.UPDATE, "Invalid payment Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Invalid payment Id"
-            ));
-        }
-
-        if (paymentRecord.isDeleted()) {
-            loggingService.logGeneralActivity(LogType.FEES, LogAction.UPDATE, "Payment record marked deleted", staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "Payment record already deleted"
             ));
         }
 
@@ -228,13 +217,6 @@ public class FeesService {
                 ));
             }
 
-            if (paymentRecord.isDeleted()) {
-                loggingService.logGeneralActivity(LogType.FEES, LogAction.DELETE, "Payment record already deleted", staffId, LogStatus.FAILED);
-                return ResponseEntity.status(HttpStatus.OK).body(Map.of(
-                        "message", "Payment record already deleted"
-                ));
-            }
-
             StudentFeeRecord studentFeeRecord = paymentRecord.getFeeRecord();
             //Calculate total paid and new balance
             double oldTotalAmountPaid = studentFeeRecord.getTotalAmountPaid();
@@ -245,7 +227,6 @@ public class FeesService {
             studentFeeRecord.setBalance(newBalance);
             studentFeeRecordRepository.save(studentFeeRecord);
 
-            paymentRecord.setDeleted(true);
             paymentRecordsRepository.save(paymentRecord);
 
             loggingService.logGeneralActivity(
@@ -336,18 +317,18 @@ public class FeesService {
         return ResponseEntity.ok(gradeFeesReportList);
     }
 
-    private Double getExpectedLevelFees(String levelId) {
+    private float getExpectedLevelFees(String levelId) {
         Level level = levelRepository.findByLevelID(levelId).orElse(null);
         if (level == null) {
-            return 0.0;
+            return 0;
         }
         Semester currentSemester = utilityClass.getCurrentSemester(level.getInstitution());
         Fees fees = feesRepository.findBySemester_SemesterIDAndLevel_LevelID(currentSemester.getSemesterID(), levelId).orElse(null);
         if (fees == null) {
-            return 0.0;
+            return 0;
         }
 
-        Double feesAmount = fees.getAmountToBePayed();
+        float feesAmount = fees.getAmountToBePayed();
 
         return feesAmount * level.getStudents().size();
     }
@@ -373,18 +354,9 @@ public class FeesService {
                 .sum();
     }
 
+    public ResponseEntity<?> addNewSemesterFees(NewFees newFees, String staffId) {
 
-
-    public ResponseEntity<?> addNewSemesterFees(Double feesAmount, String semesterId, String levelID, String staffId) {
-
-        if (feesAmount < 0) {
-            loggingService.logGeneralActivity(LogType.FEES, LogAction.CREATE, "Fee amount can't be negative", staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
-                    "message", "Fee amount can't be negative"
-            ));
-        }
-
-        Semester semester = semesterRepository.findBySemesterID(semesterId).orElse(null);
+        Semester semester = semesterRepository.findBySemesterID(newFees.getSemesterId()).orElse(null);
         if (semester == null) {
             loggingService.logGeneralActivity(LogType.FEES, LogAction.CREATE, "Invalid term Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
@@ -392,48 +364,47 @@ public class FeesService {
             ));
         }
 
-        Level level = levelRepository.findByLevelID(levelID).orElse(null);
-        if (level == null) {
-            loggingService.logGeneralActivity(LogType.FEES, LogAction.CREATE, "Invalid class Id", staffId, LogStatus.FAILED);
+        List<Level> levels = levelRepository.findAllByLevelIDIn(newFees.getLevelIds());
+        if (levels == null || levels.isEmpty()) {
+            loggingService.logGeneralActivity(LogType.FEES, LogAction.CREATE, "All selected classes are not found", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "Invalid class Id"
+                    "message", "All selected classes are not found"
             ));
         }
 
-        Fees fees = feesRepository.findBySemester_SemesterIDAndLevel_LevelID(semesterId, levelID).orElse(null);
-        if (fees != null) {
-            loggingService.logGeneralActivity(LogType.FEES, LogAction.CREATE, "Term Fees already added", staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
-                    "message", "Term Fees already added"
-            ));
+        List<Fees> createdRecords = new ArrayList<>();
+        for (Level level : levels) {
+            Fees fees = feesRepository.findBySemester_SemesterIDAndLevel_LevelID(newFees.getSemesterId(), level.getLevelID()).orElse(null);
+            if (fees == null) {
+                fees = new Fees();
+                fees.setAmountToBePayed(newFees.getFeesAmount());
+                fees.setSemester(semester);
+                fees.setLevel(level);
+                fees.setInstitution(level.getInstitution());
+                createdRecords.add(fees);
+            }
         }
+        feesRepository.saveAll(createdRecords);
 
-        fees = new Fees();
-        fees.setAmountToBePayed(feesAmount);
-        fees.setSemester(semester);
-        fees.setLevel(level);
-        fees.setInstitution(level.getInstitution());
-        feesRepository.save(fees);
+        //Compare to found classes and not found classes
+        List<String> foundClasses = levels.stream().map(
+                Level::getLevelID
+        ).toList();
 
-        List<Fees> levelFees = level.getFees();
-        if (levelFees == null) {
-            levelFees = new ArrayList<>();
-        }
-        levelFees.add(fees);
-        levelRepository.save(level);
-
-        List<Fees> institutionFees = level.getInstitution().getFees();
-        if (institutionFees == null) {
-            institutionFees = new ArrayList<>();
-        }
-        institutionFees.add(fees);
-        institutionRepository.save(level.getInstitution());
+        List<String> missingIds = newFees.getLevelIds().stream()
+                .filter(id -> !foundClasses.contains(id))
+                .toList();
 
         loggingService.logGeneralActivity(
                 LogType.FEES, LogAction.CREATE,
-                "Added term fee for " + level.getLevelName(),
+                "Added term fee for " + levels.stream().map(Level::getLevelName).collect(Collectors.joining(", ")),
                 staffId, LogStatus.SUCCESS);
-        return ResponseEntity.ok().build();
+        if (missingIds.isEmpty()) {
+            return ResponseEntity.ok().build();
+        }
+        return ResponseEntity.ok(Map.of(
+                "message", "Could not save for Invalid Ids " + missingIds.stream().map(id -> "\"" + id + "\"").collect(Collectors.joining(", "))
+        ));
     }
 
     public ResponseEntity<?> fetchFeesDetails(String semesterId, String levelId, String staffId) {
@@ -454,7 +425,7 @@ public class FeesService {
                 staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok(
                 new FetchFeesDetails(fee.getFeesId(),
-                String.valueOf(fee.getAmountToBePayed()),
+                fee.getAmountToBePayed(),
                 fee.getSemester().getSemesterID(),
                 fee.getLevel().getLevelID()
         ));
@@ -470,13 +441,13 @@ public class FeesService {
             ));
         }
 
-        fees.setAmountToBePayed(Double.parseDouble(update.getAmount()));
+        fees.setAmountToBePayed(update.getAmount());
         feesRepository.save(fees);
 
         List<StudentFeeRecord> feeRecords = fees.getFeesRecords();
         if (feeRecords != null && !feeRecords.isEmpty()) {
             for(StudentFeeRecord feeRecord : feeRecords) {
-                feeRecord.setFeeAmount(Double.parseDouble(update.getAmount()));
+                feeRecord.setFeeAmount(update.getAmount());
             }
             studentFeeRecordRepository.saveAll(feeRecords);
         }
@@ -536,7 +507,6 @@ public class FeesService {
         paymentRecord.setPhoneNumber(phoneNumber);
         paymentRecord.setDateOfPayment(LocalDate.now());
         paymentRecord.setInstitution(fees.getInstitution());
-        paymentRecord.setDeleted(false);
         paymentRecord.setFeeRecord(studentFeeRecord);
         paymentRecordsRepository.save(paymentRecord);
 
@@ -569,7 +539,7 @@ public class FeesService {
             return 0;
         }
 
-        Double feeAmount = fees.getAmountToBePayed();
+        float feeAmount = fees.getAmountToBePayed();
 
         return feeAmount * numberOfStudents;
     }
@@ -701,26 +671,22 @@ public class FeesService {
             if (counter == 20)
                 break;
 
+            RecentPaymentRecords recentPayment = RecentPaymentRecords.builder()
+                    .paymentDate(paymentRecord.getDateOfPayment().toString())
+                    .studentId(
+                            paymentRecord.getFeeRecord().getStudent().getStudentId()
+                    )
+                    .studentNameCol(
+                            paymentRecord.getFeeRecord().getStudent().getFirstName() + " " + paymentRecord.getFeeRecord().getStudent().getLastName()
+                    )
+                    .amountCol(String.valueOf(paymentRecord.getAmountPaid()))
+                    .payerCol(paymentRecord.getPersonWhoPaid())
+                    .levelCol(paymentRecord.getFeeRecord().getLevel().getLevelName())
+                    .build();
 
-            if (!paymentRecord.isDeleted()) {
+            recentPaymentRecords.add(recentPayment);
 
-                RecentPaymentRecords recentPayment = RecentPaymentRecords.builder()
-                        .paymentDate(paymentRecord.getDateOfPayment().toString())
-                        .studentId(
-                                paymentRecord.getFeeRecord().getStudent().getStudentId()
-                        )
-                        .studentNameCol(
-                                paymentRecord.getFeeRecord().getStudent().getFirstName() + " " + paymentRecord.getFeeRecord().getStudent().getLastName()
-                        )
-                        .amountCol(String.valueOf(paymentRecord.getAmountPaid()))
-                        .payerCol(paymentRecord.getPersonWhoPaid())
-                        .levelCol(paymentRecord.getFeeRecord().getLevel().getLevelName())
-                        .build();
-
-                recentPaymentRecords.add(recentPayment);
-
-                counter++;
-            }
+            counter++;
         }
 
         loggingService.logGeneralActivity(LogType.FEES, LogAction.READ, "N/A", staffId, LogStatus.SUCCESS);

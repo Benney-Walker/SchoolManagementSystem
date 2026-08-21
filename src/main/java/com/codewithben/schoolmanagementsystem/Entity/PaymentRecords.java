@@ -12,6 +12,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @Entity
 public class PaymentRecords {
+
     @Id
     private String recordsId;
 
@@ -29,9 +30,6 @@ public class PaymentRecords {
 
     @Column(nullable = false)
     private LocalDate dateOfPayment;
-
-    @Column(nullable = false)
-    private boolean isDeleted = false;
 
     @ManyToOne
     @JoinColumn(name = "feeRecord_recordId", nullable = false)
