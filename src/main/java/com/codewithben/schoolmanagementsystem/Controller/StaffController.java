@@ -197,8 +197,7 @@ public class StaffController {
     }
 
     @PutMapping("/v1/save-conduct-record")
-    public ResponseEntity<?> saveStudentConduct(@RequestHeader("staffId")String Id,
-                                                @Valid @RequestBody StudentConductRecord record) {
+    public ResponseEntity<?> saveStudentConduct(@Valid @RequestBody StudentConductRecord record) {
 
         String staffId = authenticatedStaffProvider.getStaffId();
 

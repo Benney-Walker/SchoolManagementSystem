@@ -31,7 +31,7 @@ public class StudentController {
     private final AuthenticatedStaffProvider authenticatedStaffProvider;
 
     @GetMapping("/v1/absent-students")
-    public ResponseEntity<?> getAbsentees(@RequestHeader("staffId") String Id) {
+    public ResponseEntity<?> getAbsentees() {
 
         String staffId  = authenticatedStaffProvider.getStaffId();
 
@@ -39,7 +39,7 @@ public class StudentController {
     }
 
     @GetMapping("/v1/total-students")
-    public ResponseEntity<?> loadTotalStudents(@RequestHeader("staffId") String Id) {
+    public ResponseEntity<?> loadTotalStudents() {
 
         String staffId  = authenticatedStaffProvider.getStaffId();
 
@@ -47,8 +47,7 @@ public class StudentController {
     }
 
     @GetMapping("/v1/find-student/{studentId}")
-    public ResponseEntity<?> findStudent(@RequestHeader("staffId") String Id,
-                                         @PathVariable String studentId) {
+    public ResponseEntity<?> findStudent(@PathVariable String studentId) {
 
         String staffId  = authenticatedStaffProvider.getStaffId();
 
@@ -74,8 +73,7 @@ public class StudentController {
     }
 
     @GetMapping("/v1/load-subject-students/{subjectId}/{semesterId}")
-    public ResponseEntity<?> getSubjectStudents(@RequestHeader("staffId")String Id,
-                                                @PathVariable String subjectId,
+    public ResponseEntity<?> getSubjectStudents(@PathVariable String subjectId,
                                                 @PathVariable String semesterId) {
 
         String staffId  = authenticatedStaffProvider.getStaffId();
@@ -84,8 +82,7 @@ public class StudentController {
     }
 
     @PostMapping("/v1/save-scores")
-    public ResponseEntity<?> saveSubjectScores(@RequestHeader("staffId") String Id,
-                                               @RequestHeader("subjectId") String subjectId,
+    public ResponseEntity<?> saveSubjectScores(@RequestHeader("subjectId") String subjectId,
                                                @RequestHeader("semesterId") String semesterId,
                                                @RequestBody List<StudentsScoresTable> scores) {
 
@@ -95,8 +92,7 @@ public class StudentController {
     }
 
     @PutMapping("/v1/update-student-data")
-    public ResponseEntity<?> updateStudentData(@RequestHeader("staffId") String Id,
-                                               @RequestBody UpdateStudentPersonalData data) {
+    public ResponseEntity<?> updateStudentData(@RequestBody UpdateStudentPersonalData data) {
 
         String staffId  = authenticatedStaffProvider.getStaffId();
 
@@ -104,8 +100,7 @@ public class StudentController {
     }
 
     @GetMapping("/v1/load-students-for-attendance/{levelId}/{date}")
-    public ResponseEntity<?> loadStudentsForAttendance(@RequestHeader("staffId") String Id,
-                                                       @PathVariable String levelId,
+    public ResponseEntity<?> loadStudentsForAttendance(@PathVariable String levelId,
                                                        @PathVariable String date) {
 
         String staffId  = authenticatedStaffProvider.getStaffId();
@@ -114,8 +109,7 @@ public class StudentController {
     }
 
     @PostMapping("/v2/mark-attendance")
-    public ResponseEntity<?> markAttendance(@RequestHeader("staffId") String Id,
-                                            @RequestHeader("selectedDate") String date,
+    public ResponseEntity<?> markAttendance(@RequestHeader("selectedDate") String date,
                                             @RequestHeader("levelId") String levelId,
                                             @RequestBody List<AttendanceRequestList> list) {
 
@@ -125,8 +119,7 @@ public class StudentController {
     }
 
     @GetMapping("/v1/attendance-records")
-    public ResponseEntity<?> loadAttendanceRecords(@RequestHeader("staffId") String Id,
-                                                   @RequestParam String levelId,
+    public ResponseEntity<?> loadAttendanceRecords(@RequestParam String levelId,
                                                    @RequestParam String semesterId,
                                                    @RequestParam String date) {
 
@@ -136,8 +129,7 @@ public class StudentController {
     }
 
     @GetMapping("/v1/dates-marked/{levelId}/{semesterId}")
-    public ResponseEntity<?> loadDatesMarked(@RequestHeader("staffId") String Id,
-                                             @PathVariable String levelId,
+    public ResponseEntity<?> loadDatesMarked(@PathVariable String levelId,
                                              @PathVariable String semesterId) {
 
         String staffId  = authenticatedStaffProvider.getStaffId();
@@ -146,8 +138,7 @@ public class StudentController {
     }
 
     @GetMapping("/v1/load-students/{levelId}")
-    public ResponseEntity<?> loadClassStudents(@RequestHeader("staffId") String Id,
-                                               @PathVariable String levelId) {
+    public ResponseEntity<?> loadClassStudents(@PathVariable String levelId) {
 
         String staffId  = authenticatedStaffProvider.getStaffId();
 
@@ -155,8 +146,7 @@ public class StudentController {
     }
 
     @PutMapping("/v1/promote-student")
-    public ResponseEntity<?> promoteStudent(@RequestHeader("staffId") String Id,
-                                            @RequestParam String studentId,
+    public ResponseEntity<?> promoteStudent(@RequestParam String studentId,
                                             @RequestParam String promotionClassId,
                                             @RequestParam String semesterId) {
 
@@ -166,8 +156,7 @@ public class StudentController {
     }
 
     @PutMapping("/v1/repeat-student")
-    public ResponseEntity<?> repeatStudent(@RequestHeader("staffId") String Id,
-                                           @RequestParam String studentId,
+    public ResponseEntity<?> repeatStudent(@RequestParam String studentId,
                                            @RequestParam String semesterId) {
 
         String staffId  = authenticatedStaffProvider.getStaffId();
@@ -176,8 +165,7 @@ public class StudentController {
     }
 
     @GetMapping(value = "/v3/generate-report-card")
-    public ResponseEntity<?> generateStudentReport(@RequestHeader("staffId") String Id,
-                                                   @RequestParam String studentId,
+    public ResponseEntity<?> generateStudentReport(@RequestParam String studentId,
                                                    @RequestParam String semesterId) {
 
         String staffId  = authenticatedStaffProvider.getStaffId();
