@@ -1,10 +1,9 @@
 package com.codewithben.schoolmanagementsystem.Service;
 
-import com.codewithben.schoolmanagementsystem.Constants.LogAction;
-import com.codewithben.schoolmanagementsystem.Constants.LogStatus;
-import com.codewithben.schoolmanagementsystem.Constants.LogType;
-import com.codewithben.schoolmanagementsystem.Constants.StudentStatus;
+import com.codewithben.schoolmanagementsystem.Constants.*;
 import com.codewithben.schoolmanagementsystem.DTO.Fees.*;
+import com.codewithben.schoolmanagementsystem.DTO.RabbitMQ.Fees.FeeCreation;
+import com.codewithben.schoolmanagementsystem.DTO.RabbitMQ.Fees.FeesUpdate;
 import com.codewithben.schoolmanagementsystem.DTO.Report.GradeFeesReport;
 import com.codewithben.schoolmanagementsystem.Entity.*;
 import com.codewithben.schoolmanagementsystem.Repository.*;
@@ -43,6 +42,8 @@ public class FeesService {
     private final InstitutiionRepository institutionRepository;
 
     private final LoggingService loggingService;
+
+    private final RabbitMQProducer rabbitMQProducer;
 
 
     // Displays student Fees
