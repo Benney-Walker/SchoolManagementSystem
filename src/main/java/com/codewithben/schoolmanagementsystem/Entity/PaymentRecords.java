@@ -17,10 +17,10 @@ public class PaymentRecords {
     private String recordsId;
 
     @Column(nullable = false)
-    private double amountPaid;
+    private float amountPaid;
 
     @Column(nullable = false)
-    private double feesBalance;
+    private float feesBalance;
 
     @Column(nullable = false)
     private String personWhoPaid;
@@ -34,8 +34,4 @@ public class PaymentRecords {
     @ManyToOne
     @JoinColumn(name = "feeRecord_recordId", nullable = false)
     private StudentFeeRecord feeRecord;
-
-    @ManyToOne
-    @JoinColumn(name = "institution_institutionId", nullable = false)
-    private Institution institution;
 }
