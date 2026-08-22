@@ -14,7 +14,15 @@ public class RabbitMQProducer {
     public void sendFeeCreationEvent(Object payload) {
         rabbitTemplate.convertAndSend(
                 RabbitMQConfig.EXCHANGE_NAME,
-                RabbitMQConfig.FEE_ROUTING_KEY,
+                RabbitMQConfig.FEE_CREATION_ROUTING_KEY,
+                payload
+        );
+    }
+
+    public void sendFeeUpdateEvent(Object payload) {
+        rabbitTemplate.convertAndSend(
+                RabbitMQConfig.EXCHANGE_NAME,
+                RabbitMQConfig.FEE_UPDATE_ROUTING_KEY,
                 payload
         );
     }
