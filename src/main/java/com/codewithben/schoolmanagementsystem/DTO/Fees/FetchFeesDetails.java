@@ -14,15 +14,14 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class FetchFeesDetails {
 
-    private int feesId;
+    @NotBlank(message = "Fees Id must not be null")
+    private String feesId;
 
     @Positive(message = "Fees amount should be a positive amount")
     private float amount;
 
-    @NotBlank(message = "Semester is required")
     private String semesterId;
 
-    @NotBlank(message = "Class is required")
     private String classId;
 
 }
