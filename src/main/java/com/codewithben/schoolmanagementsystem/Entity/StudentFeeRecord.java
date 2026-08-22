@@ -17,11 +17,11 @@ public class StudentFeeRecord {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int feeRecordId;
 
-    private double feeAmount;
+    private float totalAmount;
 
-    private double totalAmountPaid;
+    private float amountPaid;
 
-    private double balance;
+    private float balance;
 
     @ManyToOne
     @JoinColumn(name = "student_studentId")
@@ -31,11 +31,7 @@ public class StudentFeeRecord {
     @JoinColumn(name = "fees_feesId")
     private Fees fees;
 
-    @ManyToOne
-    @JoinColumn(name = "level_special_payment")
-    private LevelSpecialPayment levelSpecialPayment;
-
-    @OneToMany(mappedBy = "feeRecord")
+    @OneToMany(mappedBy = "feeRecord", cascade =  CascadeType.ALL)
     private List<PaymentRecords> paymentRecords;
 
     @ManyToOne
@@ -49,4 +45,6 @@ public class StudentFeeRecord {
     @ManyToOne
     @JoinColumn(name = "institution_institutionId")
     private Institution institution;
+
+    private boolean isLocked;
 }
