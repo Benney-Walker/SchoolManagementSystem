@@ -43,12 +43,11 @@ public class FinanceController {
 
         String staffId = authenticatedStaffProvider.getStaffId();
 
-        return feesService.addNewPayment(studentId, amountPaid, personWhoPaid, phoneNumber, levelId, semesterId, staffId);
+        return feesService.addNewPayment(newPayment, staffId);
     }
 
     @GetMapping("/v1/fetch-payment-records")
-    public ResponseEntity<?> fetchPaymentRecords(@RequestHeader("StaffId") String Id,
-                                                 @RequestParam String studentId,
+    public ResponseEntity<?> fetchPaymentRecords(@RequestParam String studentId,
                                                  @RequestParam String levelId,
                                                  @RequestParam String semesterId) {
 
@@ -58,8 +57,7 @@ public class FinanceController {
     }
 
     @PutMapping("/v1/update-payment-details")
-    public ResponseEntity<?> updatePaymentRecords(@RequestHeader("staffId") String Id,
-                                                  @Valid @RequestBody StudentPaymentRecords update) {
+    public ResponseEntity<?> updatePaymentRecords(@Valid @RequestBody StudentPaymentRecords update) {
 
         String staffId = authenticatedStaffProvider.getStaffId();
 
@@ -67,8 +65,7 @@ public class FinanceController {
     }
 
     @DeleteMapping("/v1/delete-payment-record/{transactionId}")
-    public ResponseEntity<?> deletePaymentRecord(@RequestHeader("staffId") String Id,
-                                                 @PathVariable String transactionId) {
+    public ResponseEntity<?> deletePaymentRecord(@PathVariable String transactionId) {
 
         String staffId = authenticatedStaffProvider.getStaffId();
 
@@ -76,8 +73,7 @@ public class FinanceController {
     }
 
     @GetMapping("/v1/search-fees-report")
-    public ResponseEntity<?> searchStudentFeesReport(@RequestHeader("staffId") String Id,
-                                                     @RequestParam String studentId,
+    public ResponseEntity<?> searchStudentFeesReport(@RequestParam String studentId,
                                                      @RequestParam String semesterId,
                                                      @RequestParam String gradeId) {
 
@@ -87,8 +83,7 @@ public class FinanceController {
     }
 
     @GetMapping("/v1/fetch-grade-fees-report/{levelId}/{semesterId}")
-    public ResponseEntity<?> fetchGradesFeesReport(@RequestHeader("staffId") String Id,
-                                                   @PathVariable String levelId,
+    public ResponseEntity<?> fetchGradesFeesReport(@PathVariable String levelId,
                                                    @PathVariable String semesterId) {
 
         String staffId = authenticatedStaffProvider.getStaffId();
@@ -97,7 +92,7 @@ public class FinanceController {
     }
 
     @GetMapping("/v1/class-summary-fees")
-    public ResponseEntity<?> getClassSummaryFees(@RequestHeader("staffId") String Id) {
+    public ResponseEntity<?> getClassSummaryFees() {
 
         String staffId = authenticatedStaffProvider.getStaffId();
 
@@ -105,22 +100,21 @@ public class FinanceController {
     }
 
     @GetMapping("/v1/total-fees")
-    public ResponseEntity<?> totalSemesterFees(@RequestHeader("staffId") String Id) {
+    public ResponseEntity<?> totalSemesterFees() {
         String staffId = authenticatedStaffProvider.getStaffId();
 
         return feesService.getTotalSemesterFees(staffId);
     }
 
     @GetMapping("/v1/fees-paid")
-    public ResponseEntity<?> totalAmountPaid(@RequestHeader("staffId") String Id) {
+    public ResponseEntity<?> totalAmountPaid() {
         String staffId = authenticatedStaffProvider.getStaffId();
 
         return feesService.getTotalFeesPaid(staffId);
     }
 
     @GetMapping("/v1/fetch-fees-details/{semesterId}/{levelId}")
-    public ResponseEntity<?> fetchFeesDetails(@RequestHeader("staffId") String Id,
-                                              @PathVariable String semesterId,
+    public ResponseEntity<?> fetchFeesDetails(@PathVariable String semesterId,
                                               @PathVariable String levelId) {
         String staffId = authenticatedStaffProvider.getStaffId();
 
@@ -128,15 +122,15 @@ public class FinanceController {
     }
 
     @PutMapping("/v2/update-semester-fees")
-    public ResponseEntity<?> updateFeesAmount(@RequestHeader("staffId") String Id,
-                                              @Valid @RequestBody FetchFeesDetails fetchFeesDetails) {
+    public ResponseEntity<?> updateFeesAmount(@Valid @RequestBody FetchFeesDetails fetchFeesDetails) {
+
         String staffId = authenticatedStaffProvider.getStaffId();
 
         return feesService.updateSemesterFees(fetchFeesDetails, staffId);
     }
 
     @GetMapping("/v1/recent-fees-transactions")
-    public ResponseEntity<?> getRecentPayment(@RequestHeader("staffId") String Id) {
+    public ResponseEntity<?> getRecentPayment() {
         String staffId = authenticatedStaffProvider.getStaffId();
 
         return feesService.getRecentPayments(staffId);
