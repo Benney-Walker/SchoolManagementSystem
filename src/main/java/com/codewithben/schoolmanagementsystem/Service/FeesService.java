@@ -377,10 +377,12 @@ public class FeesService {
             Fees fees = feesRepository.findBySemester_SemesterIDAndLevel_LevelID(newFees.getSemesterId(), level.getLevelID()).orElse(null);
             if (fees == null) {
                 fees = new Fees();
+                fees.setFeesId(utilityClass.generateEntityId("FEES"));
                 fees.setAmountToBePayed(newFees.getFeesAmount());
                 fees.setSemester(semester);
                 fees.setLevel(level);
                 fees.setInstitution(level.getInstitution());
+                fees.setLocked(false);
                 createdRecords.add(fees);
             }
         }
@@ -395,10 +397,17 @@ public class FeesService {
                 .filter(id -> !foundClasses.contains(id))
                 .toList();
 
+        //Publish fee creation to rabbitMQ
+        FeeCreation feeCreation = new FeeCreation();
+        feeCreation.setSemesterId(newFees.getSemesterId());
+        feeCreation.setLevelIds(foundClasses);
+        rabbitMQProducer.sendFeeCreationEvent(feeCreation);
+
         loggingService.logGeneralActivity(
                 LogType.FEES, LogAction.CREATE,
                 "Added term fee for " + levels.stream().map(Level::getLevelName).collect(Collectors.joining(", ")),
                 staffId, LogStatus.SUCCESS);
+
         if (missingIds.isEmpty()) {
             return ResponseEntity.ok().build();
         }
