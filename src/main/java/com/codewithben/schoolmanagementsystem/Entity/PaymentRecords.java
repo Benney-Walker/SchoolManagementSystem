@@ -34,4 +34,8 @@ public class PaymentRecords {
     @ManyToOne
     @JoinColumn(name = "feeRecord_recordId", nullable = false)
     private StudentFeeRecord feeRecord;
+
+    @ManyToOne
+    @JoinColumn(name = "institution_Id", nullable = false)
+    private Institution institution;
 }
