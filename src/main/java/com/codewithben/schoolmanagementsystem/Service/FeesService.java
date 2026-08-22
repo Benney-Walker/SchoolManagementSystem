@@ -457,12 +457,12 @@ public class FeesService {
             loggingService.logGeneralActivity(
                     LogType.FEES,
                     LogAction.UPDATE,
-                    "Fee update is invalid at this period",
+                    "Fee update is not allowed at this period",
                     staffId,
                     LogStatus.FAILED
             );
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
-                    "message", "Fee update is invalid at this period"
+                    "message", "Fee update is not allowed at this period"
             ));
         }
 
@@ -637,7 +637,12 @@ public class FeesService {
 
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staff == null) {
-            loggingService.logGeneralActivity(LogType.FEES, LogAction.READ, "N/A", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(
+                    LogType.FEES,
+                    LogAction.READ,
+                    "Invalid staff Id",
+                    staffId, LogStatus.FAILED
+            );
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Invalid staff Id"
             ));
@@ -645,16 +650,19 @@ public class FeesService {
 
         Semester currentSemester = utilityClass.getCurrentSemester(staff.getInstitution());
         if (currentSemester == null) {
-            loggingService.logGeneralActivity(LogType.FEES, LogAction.READ, "N/A", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(
+                    LogType.FEES,
+                    LogAction.READ,
+                    "Current semester not added to system",
+                    staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Current semester not added to system"
             ));
         }
 
         List<PaymentRecords> paymentRecords = paymentRecordsRepository
-                .findByInstitution_InstitutionIdAndFeeRecord_Semester_SemesterIDOrderByDateOfPaymentDesc(
-                        staff.getInstitution().getInstitutionId(),
-                        currentSemester.getSemesterID()
+                .find15ByInstitution_InstitutionIdAndFeeRecord_Semester_SemesterIDOrderByDateOfPaymentDesc(
+                        currentSemester.getInstitution().getInstitutionId(), currentSemester.getSemesterID()
                 );
         if (paymentRecords == null || paymentRecords.isEmpty()) {
             loggingService.logGeneralActivity(LogType.FEES, LogAction.READ, "N/A", staffId, LogStatus.FAILED);
@@ -664,10 +672,7 @@ public class FeesService {
         }
 
         List<RecentPaymentRecords> recentPaymentRecords = new ArrayList<>();
-        int counter = 0;
         for (PaymentRecords paymentRecord : paymentRecords) {
-            if (counter == 20)
-                break;
 
             RecentPaymentRecords recentPayment = RecentPaymentRecords.builder()
                     .paymentDate(paymentRecord.getDateOfPayment().toString())
@@ -683,11 +688,13 @@ public class FeesService {
                     .build();
 
             recentPaymentRecords.add(recentPayment);
-
-            counter++;
         }
 
-        loggingService.logGeneralActivity(LogType.FEES, LogAction.READ, "N/A", staffId, LogStatus.SUCCESS);
+        loggingService.logGeneralActivity(
+                LogType.FEES,
+                LogAction.READ,
+                "Fetched recent payment records",
+                staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok(recentPaymentRecords);
     }
 
