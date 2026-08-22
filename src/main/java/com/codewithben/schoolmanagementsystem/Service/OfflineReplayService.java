@@ -4,6 +4,7 @@ import com.codewithben.schoolmanagementsystem.Constants.AttendanceStatus;
 import com.codewithben.schoolmanagementsystem.Constants.LogAction;
 import com.codewithben.schoolmanagementsystem.Constants.LogStatus;
 import com.codewithben.schoolmanagementsystem.Constants.LogType;
+import com.codewithben.schoolmanagementsystem.DTO.Fees.NewPayment;
 import com.codewithben.schoolmanagementsystem.DTO.Offline.OfflineAttendanceList;
 import com.codewithben.schoolmanagementsystem.DTO.Offline.OfflinePaymentList;
 import com.codewithben.schoolmanagementsystem.DTO.Offline.OfflineScoresList;
@@ -117,10 +118,16 @@ public class OfflineReplayService {
 
         int completed = 0;
         for (OfflinePaymentList record : list) {
-            ResponseEntity<?> response = feesService.addNewPayment(
-                    record.getStudentId(), record.getAmountPaid(), record.getPayerName(),
-                    record.getPayerPhone(), record.getLevelId(), record.getSemesterId(), staffId
-            );
+            NewPayment newPayment = NewPayment.builder()
+                    .amountPaid(record.getAmountPaid())
+                    .levelId(record.getLevelId())
+                    .payerName(record.getPayerName())
+                    .payerPhone(record.getPayerPhone())
+                    .semesterId(record.getSemesterId())
+                    .studentId(record.getStudentId())
+                    .build();
+
+            ResponseEntity<?> response = feesService.addNewPayment(newPayment, staffId);
             if (response.getStatusCode() == HttpStatus.OK) {
                 completed++;
             }
@@ -131,7 +138,7 @@ public class OfflineReplayService {
             return ResponseEntity.ok().build();
         } else {
             loggingService.logGeneralActivity(LogType.FEES, LogAction.SYNC, "Some records not synchronized", staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
                     "message", "Some records not synchronized"
             ));
         }
