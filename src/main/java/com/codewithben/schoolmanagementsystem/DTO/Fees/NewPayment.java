@@ -17,9 +17,8 @@ public class NewPayment {
     @NotBlank(message = "Student ID is required")
     private String studentId;
 
-    @NotNull(message = "Amount paid is required")
-    @Positive(message = "Amount paid must be greater than zero")
-    private Double amountPaid;
+    @Positive(message = "Amount must be positive")
+    private float amountPaid;
 
     @NotBlank(message = "Payer name is required")
     private String payerName;
