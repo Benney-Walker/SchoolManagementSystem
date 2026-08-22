@@ -29,9 +29,6 @@ public class LevelSpecialPayment {
     @JoinColumn(name = "special_payment_id", nullable = false)
     private SpecialPayment specialPayment;
 
-    @OneToMany(mappedBy = "levelSpecialPayment")
-    private List<StudentFeeRecord> studentFeeRecord;
-
     private String description;
 
     private LocalDate createdAt;
