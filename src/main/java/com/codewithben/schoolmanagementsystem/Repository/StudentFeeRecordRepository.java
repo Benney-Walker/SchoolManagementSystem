@@ -9,5 +9,7 @@ import java.util.Optional;
 @Repository
 public interface StudentFeeRecordRepository extends JpaRepository<StudentFeeRecord, Integer> {
 
-    Optional<StudentFeeRecord> findByStudent_StudentIdAndFees_FeesId(String studentId, int feesId);
+    Optional<StudentFeeRecord> findByStudent_StudentIdAndFees_FeesId(String studentId, String feesId);
+
+    Optional<StudentFeeRecord> findByStudent_StudentIdAndSemester_SemesterID(String studentId, String semesterId);
 }
