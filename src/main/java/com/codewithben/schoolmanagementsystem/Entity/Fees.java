@@ -14,8 +14,7 @@ import java.util.List;
 public class Fees {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int feesId;
+    private String feesId;
 
     @Column(nullable = false)
     private float amountToBePayed;
@@ -34,4 +33,6 @@ public class Fees {
     @ManyToOne
     @JoinColumn(name = "institution_institutionId")
     private Institution institution;
+
+    private boolean isLocked;
 }

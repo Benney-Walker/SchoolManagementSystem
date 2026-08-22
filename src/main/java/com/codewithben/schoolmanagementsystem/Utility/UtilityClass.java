@@ -70,9 +70,13 @@ public class UtilityClass {
             long entityCode = 100700L;
             newCode = getStringCode(entityName, prefix, entityCode);
 
-        } else if (entityName.equals("TRANSACTION")) {
+        } else if (entityName.equals("FEES_PAYMENT")) {
             String prefix = "TX";
             long entityCode = 100800300L;
+            newCode = getStringCode(entityName, prefix, entityCode);
+        } else if (entityName.equals("FEES")) {
+            String prefix = "FE";
+            long entityCode = 100900300L;
             newCode = getStringCode(entityName, prefix, entityCode);
         }
 
@@ -88,7 +92,7 @@ public class UtilityClass {
             generateId.setCode(code + 1L);
             entityID_generationRepository.save(generateId);
 
-            return prefix + String.valueOf(code);
+            return prefix + code;
         }catch (Exception ex) {
             log.error("Failed to generate entity ID for entityName='{}' (prefix='{}')", entityName, prefix, ex);
             return null;
