@@ -10,6 +10,7 @@ import com.codewithben.schoolmanagementsystem.Repository.*;
 import com.codewithben.schoolmanagementsystem.Utility.UtilityClass;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -20,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
 @AllArgsConstructor
 @Service
 public class FeesService {
@@ -98,8 +100,8 @@ public class FeesService {
         String studentFullName = student.getFirstName() + " " + student.getLastName();
         String semesterName = fees.getSemester().getSemesterName();
         String levelName = fees.getLevel().getLevelName();
-        String totalFeesAmount = String.valueOf(studentFeeRecord.getFeeAmount());
-        String totalFeesPaid = String.valueOf(studentFeeRecord.getTotalAmountPaid());
+        String totalFeesAmount = String.valueOf(studentFeeRecord.getTotalAmount());
+        String totalFeesPaid = String.valueOf(studentFeeRecord.getAmountPaid());
         String feesBalance = String.valueOf(studentFeeRecord.getBalance());
 
         loggingService.logGeneralActivity(
@@ -152,7 +154,7 @@ public class FeesService {
                     .studentName(
                             studentFeeRecord.getStudent().getFirstName() + " " + studentFeeRecord.getStudent().getLastName()
                     )
-                    .amount(String.valueOf(paymentRecord.getAmountPaid()))
+                    .amount(paymentRecord.getAmountPaid())
                     .semesterId(
                             studentFeeRecord.getSemester().getSemesterName() + " " + studentFeeRecord.getSemester().getAcademicYear()
                     )
@@ -180,16 +182,16 @@ public class FeesService {
             ));
         }
 
-        if (paymentRecord.getAmountPaid() != Double.parseDouble(update.getAmount())) {
-            paymentRecord.setAmountPaid(Double.parseDouble(update.getAmount()));
+        if (paymentRecord.getAmountPaid() != update.getAmount()) {
+            paymentRecord.setAmountPaid(update.getAmount());
             paymentRecordsRepository.save(paymentRecord);
 
             StudentFeeRecord studentFeeRecord = paymentRecord.getFeeRecord();
-            double newTotalPaid = studentFeeRecord.getPaymentRecords()
+            float newTotalPaid = (float) studentFeeRecord.getPaymentRecords()
                     .stream().mapToDouble(PaymentRecords::getAmountPaid).sum();
-            double newBalance = studentFeeRecord.getFeeAmount() - newTotalPaid;
+            float newBalance = (float) studentFeeRecord.getTotalAmount() - newTotalPaid;
 
-            studentFeeRecord.setTotalAmountPaid(newTotalPaid);
+            studentFeeRecord.setAmountPaid(newTotalPaid);
             studentFeeRecord.setBalance(newBalance);
             paymentRecord.setFeesBalance(newBalance);
             studentFeeRecordRepository.save(studentFeeRecord);
@@ -220,11 +222,11 @@ public class FeesService {
 
             StudentFeeRecord studentFeeRecord = paymentRecord.getFeeRecord();
             //Calculate total paid and new balance
-            double oldTotalAmountPaid = studentFeeRecord.getTotalAmountPaid();
-            double newTotalAmountPaid = oldTotalAmountPaid - paymentRecord.getAmountPaid();
-            double newBalance = studentFeeRecord.getBalance() + newTotalAmountPaid;
+            float oldTotalAmountPaid = studentFeeRecord.getAmountPaid();
+            float newTotalAmountPaid = oldTotalAmountPaid - paymentRecord.getAmountPaid();
+            float newBalance = studentFeeRecord.getBalance() + newTotalAmountPaid;
             //Save records
-            studentFeeRecord.setTotalAmountPaid(newTotalAmountPaid);
+            studentFeeRecord.setAmountPaid(newTotalAmountPaid);
             studentFeeRecord.setBalance(newBalance);
             studentFeeRecordRepository.save(studentFeeRecord);
 
@@ -304,8 +306,8 @@ public class FeesService {
             GradeFeesReport paymentRecord = new GradeFeesReport();
             paymentRecord.setStudentId(record.getStudent().getStudentId());
             paymentRecord.setStudentName(record.getStudent().getFirstName() + " " + record.getStudent().getLastName());
-            paymentRecord.setTotalAmountToPay(String.valueOf(record.getFeeAmount()));
-            paymentRecord.setAmountPayed(String.valueOf(record.getTotalAmountPaid()));
+            paymentRecord.setTotalAmountToPay(String.valueOf(record.getTotalAmount()));
+            paymentRecord.setAmountPayed(String.valueOf(record.getAmountPaid()));
             paymentRecord.setOutstanding(String.valueOf(record.getBalance()));
 
             gradeFeesReportList.add(paymentRecord);
@@ -351,7 +353,7 @@ public class FeesService {
             return 0.0;
         }
         return studentFeeRecords.stream()
-                .mapToDouble(StudentFeeRecord::getTotalAmountPaid)
+                .mapToDouble(StudentFeeRecord::getAmountPaid)
                 .sum();
     }
 
@@ -467,13 +469,8 @@ public class FeesService {
         fees.setAmountToBePayed(update.getAmount());
         feesRepository.save(fees);
 
-        List<StudentFeeRecord> feeRecords = fees.getFeesRecords();
-        if (feeRecords != null && !feeRecords.isEmpty()) {
-            for(StudentFeeRecord feeRecord : feeRecords) {
-                feeRecord.setFeeAmount(update.getAmount());
-            }
-            studentFeeRecordRepository.saveAll(feeRecords);
-        }
+        FeesUpdate feesUpdate = FeesUpdate.builder().feesId(update.getFeesId()).build();
+        rabbitMQProducer.sendFeeUpdateEvent(feesUpdate);
 
         loggingService.logGeneralActivity(
                 LogType.FEES, LogAction.UPDATE,
@@ -483,76 +480,54 @@ public class FeesService {
     }
 
     @Transactional
-    public ResponseEntity<?> addNewPayment(String studentId, Double amountPaid, String personWhoPaid, String phoneNumber, String levelId,
-                                           String semesterId, String staffId) {
-
-        Students student = studentsRepository.findByStudentId(studentId).orElse(null);
-        if (student == null) {
-            loggingService.logGeneralActivity(LogType.FEES, LogAction.CREATE, "Invalid student Id", staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "Invalid student Id"
-            ));
-        }
-
-        Fees fees = feesRepository.findBySemester_SemesterIDAndLevel_LevelID(semesterId, levelId).orElse(null);
-        if (fees == null) {
-            loggingService.logGeneralActivity(LogType.FEES, LogAction.CREATE, "Term fee not added to system", staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "Term fee not added to system"
-            ));
-        }
+    public ResponseEntity<?> addNewPayment(NewPayment newPayment, String staffId) {
 
         StudentFeeRecord studentFeeRecord = studentFeeRecordRepository
-                .findByStudent_StudentIdAndFees_FeesId(studentId, fees.getFeesId()).orElse(null);
+                .findByStudent_StudentIdAndSemester_SemesterID(
+                        newPayment.getStudentId(), newPayment.getSemesterId()
+                ).orElse(null);
         if (studentFeeRecord == null) {
-            studentFeeRecord = new StudentFeeRecord();
-            studentFeeRecord.setFeeAmount(fees.getAmountToBePayed());
-            studentFeeRecord.setTotalAmountPaid(0);
-            studentFeeRecord.setBalance(fees.getAmountToBePayed());
-            studentFeeRecord.setStudent(student);
-            studentFeeRecord.setFees(fees);
-            studentFeeRecord.setLevel(fees.getLevel());
-            studentFeeRecord.setSemester(fees.getSemester());
-            studentFeeRecord.setInstitution(fees.getInstitution());
-            studentFeeRecordRepository.save(studentFeeRecord);
+            loggingService.logGeneralActivity(
+                    LogType.PAYMENT,
+                    LogAction.CREATE,
+                    "Term fees not added",
+                    staffId, LogStatus.FAILED
+
+            );
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Term fees not added"
+            ));
         }
 
-        double oldTotalPaid = studentFeeRecord.getTotalAmountPaid();
-        double newTotalPaid = oldTotalPaid + amountPaid;
-        double newBalance = studentFeeRecord.getFeeAmount() - newTotalPaid;
+        float newTotalPaid = studentFeeRecord.getAmountPaid() + newPayment.getAmountPaid();
+        float newBalance = studentFeeRecord.getTotalAmount() - newTotalPaid;
 
         // Create and save
         PaymentRecords paymentRecord = new PaymentRecords();
-        paymentRecord.setRecordsId(utilityClass.generateEntityId("TRANSACTION"));
-        paymentRecord.setAmountPaid(amountPaid);
+        paymentRecord.setRecordsId(utilityClass.generateEntityId("FEES_PAYMENT"));
+        paymentRecord.setAmountPaid(newPayment.getAmountPaid());
         paymentRecord.setFeesBalance(newBalance);
-        paymentRecord.setPersonWhoPaid(personWhoPaid);
-        paymentRecord.setPhoneNumber(phoneNumber);
+        paymentRecord.setPersonWhoPaid(newPayment.getPayerName());
+        paymentRecord.setPhoneNumber(newPayment.getPayerPhone());
         paymentRecord.setDateOfPayment(LocalDate.now());
-        paymentRecord.setInstitution(fees.getInstitution());
         paymentRecord.setFeeRecord(studentFeeRecord);
-        paymentRecordsRepository.save(paymentRecord);
 
-        List<PaymentRecords> paymentRecords = studentFeeRecord.getPaymentRecords();
-        if (paymentRecords == null) {
-            paymentRecords = new ArrayList<>();
-        }
-        paymentRecords.add(paymentRecord);
-        studentFeeRecord.setPaymentRecords(paymentRecords);
-        studentFeeRecord.setTotalAmountPaid(newTotalPaid);
+        //Update fee record balance
+        studentFeeRecord.setAmountPaid(newTotalPaid);
         studentFeeRecord.setBalance(newBalance);
+        studentFeeRecord.setLocked(true);
         studentFeeRecordRepository.save(studentFeeRecord);
 
-        //Add Payment to institution
-        List<PaymentRecords> institutionPaymentRecords = student.getInstitution().getPaymentRecords();
-        if (institutionPaymentRecords == null) {
-            institutionPaymentRecords = new ArrayList<>();
-        }
+        studentFeeRecord.getFees().setLocked(true);
+        feesRepository.save(studentFeeRecord.getFees());
 
-        institutionPaymentRecords.add(paymentRecord);
-        institutionRepository.save(student.getInstitution());
-
-        loggingService.logGeneralActivity(LogType.FEES, LogAction.CREATE, "N/A", staffId, LogStatus.SUCCESS);
+        loggingService.logGeneralActivity(
+                LogType.PAYMENT,
+                LogAction.CREATE,
+                "New payment for " + studentFeeRecord.getStudent().getFirstName(),
+                staffId,
+                LogStatus.SUCCESS
+        );
         return ResponseEntity.ok().build();
     }
 
@@ -579,7 +554,7 @@ public class FeesService {
         if (studentFeeRecords == null || studentFeeRecords.isEmpty())
             return 0.0;
         return studentFeeRecords.stream().mapToDouble(
-                StudentFeeRecord::getTotalAmountPaid
+                StudentFeeRecord::getAmountPaid
         ).sum();
     }
 
