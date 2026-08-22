@@ -17,7 +17,7 @@ public class OfflinePaymentList {
 
     private String semesterId;
 
-    private Double amountPaid;
+    private float amountPaid;
 
     private String payerName;
 
