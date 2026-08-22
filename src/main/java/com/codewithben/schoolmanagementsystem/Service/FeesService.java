@@ -693,4 +693,105 @@ public class FeesService {
         return ResponseEntity.ok(recentPaymentRecords);
     }
 
+    public void createIndividualFeeRecord(FeeCreation feeCreation) {
+
+        List<Fees> feesList = feesRepository.findBySemester_SemesterIDAndLevel_LevelIDIn(
+                feeCreation.getSemesterId(), feeCreation.getLevelIds()
+        );
+
+        for (Fees fees : feesList) {
+
+            List<Students> studentsList = utilityClass.getActiveStudents(fees.getLevel().getStudents());
+            if (studentsList == null || studentsList.isEmpty()) {
+                continue;
+            }
+
+            List<LevelSpecialPayment> specialPayments = fees.getLevel().getLevelSpecialPayments();
+
+            float newStudent = (float) specialPayments.stream().mapToDouble(LevelSpecialPayment::getAmount).sum();
+            float oldStudent = (float) specialPayments.stream()
+                    .filter(specialFee -> specialFee.getSpecialPayment().getPaymentType() == SpecialPaymentType.ADMISSION_FEE)
+                    .mapToDouble(LevelSpecialPayment::getAmount)
+                    .sum();
+
+            List<StudentFeeRecord> newRecords = new ArrayList<>();
+            for (Students student : studentsList) {
+
+                StudentFeeRecord newRecord = studentFeeRecordRepository.findByStudent_StudentIdAndFees_FeesId(
+                        student.getStudentId(), fees.getFeesId()
+                ).orElse(null);
+                if (newRecord == null) {
+                    newRecord = new StudentFeeRecord();
+                    newRecord.setStudent(student);
+                    newRecord.setFees(fees);
+                    newRecord.setLevel(fees.getLevel());
+                    newRecord.setSemester(fees.getSemester());
+                    newRecord.setLocked(false);
+                    newRecord.setInstitution(fees.getInstitution());
+
+                    if (student.isNew()) {
+                        newRecord.setTotalAmount(fees.getAmountToBePayed() + newStudent);
+                    } else {
+                        newRecord.setTotalAmount(fees.getAmountToBePayed() + oldStudent);
+                    }
+                    newRecords.add(newRecord);
+                }
+            }
+
+            if (!newRecords.isEmpty()) {
+                studentFeeRecordRepository.saveAll(newRecords);
+            }
+        }
+    }
+
+    public void updateIndividualFeeRecord(FeesUpdate feesUpdate) {
+
+        Fees fees = feesRepository.findByFeesId(feesUpdate.getFeesId()).orElse(null);
+        if (fees == null) {
+            log.error("Fees with id {} not found", feesUpdate.getFeesId());
+            return;
+        }
+
+        List<Students> studentsList = utilityClass.getActiveStudents(fees.getLevel().getStudents());
+        if (studentsList == null || studentsList.isEmpty()) {
+            log.error("Class {} has no students", fees.getLevel().getLevelName());
+            return;
+        }
+
+        List<LevelSpecialPayment> specialPayments = fees.getLevel().getLevelSpecialPayments();
+
+        float newStudent = (float) specialPayments.stream().mapToDouble(LevelSpecialPayment::getAmount).sum();
+        float oldStudent = (float) specialPayments.stream()
+                .filter(specialFee -> specialFee.getSpecialPayment().getPaymentType() == SpecialPaymentType.ADMISSION_FEE)
+                .mapToDouble(LevelSpecialPayment::getAmount)
+                .sum();
+
+        List<StudentFeeRecord> newRecords = new ArrayList<>();
+        for (Students student : studentsList) {
+
+            StudentFeeRecord newRecord = studentFeeRecordRepository.findByStudent_StudentIdAndFees_FeesId(
+                    student.getStudentId(), fees.getFeesId()
+            ).orElse(null);
+            if (newRecord == null) {
+                newRecord = new StudentFeeRecord();
+                newRecord.setStudent(student);
+                newRecord.setFees(fees);
+                newRecord.setLevel(fees.getLevel());
+                newRecord.setSemester(fees.getSemester());
+                newRecord.setLocked(false);
+                newRecord.setInstitution(fees.getInstitution());
+
+                if (student.isNew()) {
+                    newRecord.setTotalAmount(fees.getAmountToBePayed() + newStudent);
+                } else {
+                    newRecord.setTotalAmount(fees.getAmountToBePayed() + oldStudent);
+                }
+                newRecords.add(newRecord);
+            }
+        }
+
+        if (!newRecords.isEmpty()) {
+            studentFeeRecordRepository.saveAll(newRecords);
+        }
+    }
 }
