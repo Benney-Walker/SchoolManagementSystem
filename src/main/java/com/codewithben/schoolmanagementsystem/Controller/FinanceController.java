@@ -39,14 +39,7 @@ public class FinanceController {
     }
 
     @PostMapping("/v1/add-fees-payment")
-    public ResponseEntity<?> addNewFeePayment(@RequestHeader("staffId") String Id,
-                                              @Valid @RequestBody NewPayment data) {
-        String studentId = data.getStudentId();
-        Double amountPaid = data.getAmountPaid();
-        String personWhoPaid = data.getPayerName();
-        String phoneNumber = data.getPayerPhone();
-        String levelId = data.getLevelId();
-        String semesterId = data.getSemesterId();
+    public ResponseEntity<?> addNewFeePayment(@Valid @RequestBody NewPayment newPayment) {
 
         String staffId = authenticatedStaffProvider.getStaffId();
 
