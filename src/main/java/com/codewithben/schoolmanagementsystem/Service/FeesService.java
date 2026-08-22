@@ -450,6 +450,19 @@ public class FeesService {
             ));
         }
 
+        if (fees.isLocked()) {
+            loggingService.logGeneralActivity(
+                    LogType.FEES,
+                    LogAction.UPDATE,
+                    "Fee update is invalid at this period",
+                    staffId,
+                    LogStatus.FAILED
+            );
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                    "message", "Fee update is invalid at this period"
+            ));
+        }
+
         fees.setAmountToBePayed(update.getAmount());
         feesRepository.save(fees);
 
