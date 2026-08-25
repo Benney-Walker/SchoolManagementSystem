@@ -10,16 +10,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class RecentPaymentRecords {
-    private String paymentDate;
+    private String date;
 
-    private String studentId;
+    private String studentName;
 
-    private String studentNameCol;
-
-    private String amountCol;
-
-    private String payerCol;
-
-    private String levelCol;
+    private String amount;
 
 }
