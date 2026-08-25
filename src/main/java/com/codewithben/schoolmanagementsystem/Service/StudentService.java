@@ -2,6 +2,7 @@ package com.codewithben.schoolmanagementsystem.Service;
 
 import com.codewithben.schoolmanagementsystem.Constants.*;
 import com.codewithben.schoolmanagementsystem.DTO.Attendance.TodaysAbsentees;
+import com.codewithben.schoolmanagementsystem.DTO.Students.AddNewStudent;
 import com.codewithben.schoolmanagementsystem.DTO.Students.FindStudentDTO;
 import com.codewithben.schoolmanagementsystem.DTO.Students.StudentsHolder;
 import com.codewithben.schoolmanagementsystem.DTO.Students.UpdateStudentPersonalData;
@@ -16,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -39,18 +41,21 @@ public class StudentService {
 
     //Method for adding new student
     @Transactional
-    public ResponseEntity<?> addNewStudent(String firstName, String lastName, String gender, String dateOfBirth, String hometown,
-                                           String parentName, String parentContact, String levelId, boolean isNew, String staffId) {
+    public ResponseEntity<?> addNewStudent(AddNewStudent addNewStudent, String staffId) {
 
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staff == null) {
-            loggingService.logGeneralActivity(LogType.STUDENT, LogAction.CREATE, "Invalid staff Id", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(
+                    LogType.STUDENT,
+                    LogAction.CREATE,
+                    "Could not add student! Contact developer",
+                    staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
-                    "message", "Invalid staff Id"
+                    "message", "Could not add student! Contact developer"
             ));
         }
 
-        Level level = levelRepository.findByLevelID(levelId).orElse(null);
+        Level level = levelRepository.findByLevelID(addNewStudent.getLevelId()).orElse(null);
         if (level == null) {
             loggingService.logGeneralActivity(LogType.STUDENT, LogAction.CREATE, "Invalid Class Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
@@ -58,11 +63,11 @@ public class StudentService {
             ));
         }
 
-        LocalDate dob = LocalDate.parse(dateOfBirth);
+        LocalDate dob = LocalDate.parse(addNewStudent.getDateOfBirth(), DateTimeFormatter.ISO_DATE);
 
         boolean duplicateExists = studentsRepository
                 .existsByFirstNameAndLastNameAndDateOfBirthAndInstitution_InstitutionId(
-                        firstName, lastName, dob, staff.getInstitution().getInstitutionId()
+                        addNewStudent.getFirstName(), addNewStudent.getLastName(), dob, staff.getInstitution().getInstitutionId()
                 );
         if (duplicateExists) {
             loggingService.logGeneralActivity(LogType.STUDENT, LogAction.CREATE, "Student already exist", staffId, LogStatus.FAILED);
@@ -76,42 +81,27 @@ public class StudentService {
         //Saving new student
         Students student = new Students();
         student.setStudentId(studentId);
-        student.setFirstName(firstName);
-        student.setLastName(lastName);
-        student.setGender(gender);
-        student.setDateOfBirth(LocalDate.parse(dateOfBirth));
-        student.setHomeTown(hometown);
-        student.setParentName(parentName);
-        student.setParentPhoneNumber(parentContact);
+        student.setFirstName(addNewStudent.getFirstName());
+        student.setLastName(addNewStudent.getLastName());
+        student.setGender(addNewStudent.getGender());
+        student.setDateOfBirth(dob);
+        student.setHomeTown(addNewStudent.getHometown());
+        student.setParentName(addNewStudent.getParentName());
+        student.setParentPhoneNumber(addNewStudent.getGuardianContact());
         student.setLevel(level);
-        student.setNew(isNew);
+        student.setNew(addNewStudent.isNew());
         student.setRegistrationDate(LocalDate.now());
         student.setInstitution(staff.getInstitution());
         student.setStudentStatus(StudentStatus.ACTIVE);
 
         studentsRepository.saveAndFlush(student);
 
-        //Add student to level list
-        List<Students> levelStudents = level.getStudents();
-        if (levelStudents == null) {
-            levelStudents = new ArrayList<>();
-        }
-        levelStudents.add(student);
-        level.setStudents(levelStudents);
-        levelRepository.save(level);
-
-        //Adding student to institution
-        List<Students> students = staff.getInstitution().getStudents();
-        if (students == null) {
-            students = new ArrayList<>();
-        }
-        students.add(student);
-        staff.getInstitution().setStudents(students);
-        institutionRepository.save(staff.getInstitution());
-
         loggingService.logGeneralActivity(
                 LogType.STUDENT, LogAction.CREATE,
-                "Added new student: " + firstName + " " + lastName + " for " + level.getLevelName(),
+                "Added new student: "
+                        + addNewStudent.getFirstName()
+                        + " " + addNewStudent.getLastName()
+                        + " for " + level.getLevelName(),
                 staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok(studentId);
 
