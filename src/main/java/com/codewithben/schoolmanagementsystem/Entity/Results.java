@@ -59,4 +59,6 @@ public class Results {
     private int totalAttendanceCount;
 
     private boolean isReady;
+
+    private boolean isLocked;
 }
