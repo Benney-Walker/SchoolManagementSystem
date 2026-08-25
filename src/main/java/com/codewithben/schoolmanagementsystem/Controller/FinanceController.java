@@ -113,12 +113,11 @@ public class FinanceController {
         return feesService.getTotalFeesPaid(staffId);
     }
 
-    @GetMapping("/v1/fetch-fees-details/{semesterId}/{levelId}")
-    public ResponseEntity<?> fetchFeesDetails(@PathVariable String semesterId,
-                                              @PathVariable String levelId) {
+    @GetMapping("/v1/fetch-fees-details/{semesterId}")
+    public ResponseEntity<?> fetchFeesDetails(@PathVariable String semesterId) {
         String staffId = authenticatedStaffProvider.getStaffId();
 
-        return feesService.fetchFeesDetails(semesterId, levelId, staffId);
+        return feesService.fetchFeesDetails(semesterId, staffId);
     }
 
     @PutMapping("/v2/update-semester-fees")
@@ -160,7 +159,7 @@ public class FinanceController {
         return expensesService.totalSemesterExpenses(staffId);
     }
 
-    @PatchMapping("/v1/update-expense-record")
+    @PutMapping("/v1/update-expense-record")
     public ResponseEntity<?> updateExpensesRecord(@Valid @RequestBody UpdateExpensesRecord updateExpensesRecord) {
 
         String staffId = authenticatedStaffProvider.getStaffId();
