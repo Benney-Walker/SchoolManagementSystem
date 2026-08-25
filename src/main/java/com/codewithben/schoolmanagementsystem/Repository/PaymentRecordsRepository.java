@@ -10,7 +10,7 @@ public interface PaymentRecordsRepository extends JpaRepository<PaymentRecords, 
     Optional<PaymentRecords> findByRecordsId(String id);
 
     List<PaymentRecords>
-    find15ByInstitution_InstitutionIdAndFeeRecord_Semester_SemesterIDOrderByDateOfPaymentDesc(
+    findFirst15ByInstitution_InstitutionIdAndFeeRecord_Semester_SemesterIDOrderByDateOfPaymentDesc(
                     String institutionId, String feeRecordId
             );
 }
