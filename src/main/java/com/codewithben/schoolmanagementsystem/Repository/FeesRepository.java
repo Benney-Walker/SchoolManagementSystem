@@ -15,5 +15,7 @@ public interface FeesRepository extends JpaRepository<Fees, Long> {
             String semesterId, String levelId
     );
 
+    List<Fees> findBySemester_SemesterID(String semesterId);
+
     List<Fees> findBySemester_SemesterIDAndLevel_LevelIDIn(String semesterId, List<String> levelIds);
 }
