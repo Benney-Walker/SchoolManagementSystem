@@ -17,14 +17,16 @@ public class RabbitMQConsumer {
     private final FeesService feesService;
 
     @RabbitListener(queues = RabbitMQConfig.FEE_CREATION_QUEUE_NAME)
-    public void consumeFeeCreationEvent(Object payload) {
-        FeeCreation feeCreation = mapper.convertValue(payload, FeeCreation.class);
+    public void consumeFeeCreationEvent(FeeCreation feeCreation) {
         feesService.createIndividualFeeRecord(feeCreation);
     }
 
     @RabbitListener(queues = RabbitMQConfig.FEE_UPDATE_QUEUE_NAME)
-    public void consumeFeeUpdateEvent(Object payload) {
-        FeesUpdate feesUpdate = mapper.convertValue(payload, FeesUpdate.class);
+    public void consumeFeeUpdateEvent(FeesUpdate feesUpdate) {
         feesService.updateIndividualFeeRecord(feesUpdate);
+    }
+
+    public void consumeResultsCreationEvent(Object payload) {
+
     }
 }
