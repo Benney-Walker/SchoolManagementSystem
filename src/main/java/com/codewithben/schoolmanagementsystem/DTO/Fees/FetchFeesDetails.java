@@ -1,7 +1,6 @@
 package com.codewithben.schoolmanagementsystem.DTO.Fees;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -22,6 +21,6 @@ public class FetchFeesDetails {
 
     private String semesterId;
 
-    private String classId;
+    private String levelName;
 
 }
