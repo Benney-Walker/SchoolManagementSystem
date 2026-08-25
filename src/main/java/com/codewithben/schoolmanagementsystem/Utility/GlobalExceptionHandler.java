@@ -43,6 +43,8 @@ public class GlobalExceptionHandler {
         error.put("message", "The requested resource was not found");
         error.put("path", request.getRequestURI());
 
+        System.out.println("Error: " + error);
+
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
 
@@ -65,6 +67,8 @@ public class GlobalExceptionHandler {
         error.put("message", "Validation failed");
         error.put("errors", fieldErrors);
         error.put("path", request.getRequestURI());
+
+        System.out.println("Error: " + error);
         
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
@@ -82,6 +86,8 @@ public class GlobalExceptionHandler {
         error.put("error", "Internal Server Error");
         error.put("message", "Internal Server Error. Contact developer");
         error.put("path", request.getRequestURI());
+
+        System.out.println("Error: " + error);
 
         // Full detail (including stack trace) goes to the log, not to the client.
         log.error("Unhandled exception on {} {}", request.getMethod(), request.getRequestURI(), ex);
