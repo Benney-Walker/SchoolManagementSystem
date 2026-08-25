@@ -375,8 +375,31 @@ public class FeesService {
             ));
         }
 
+        //Compare found classes and not found classes
+        List<String> foundClasses = levels.stream().map(
+                Level::getLevelID
+        ).toList();
+
+        List<String> missingIds = newFees.getLevelIds().stream()
+                .filter(id -> !foundClasses.contains(id))
+                .toList();
+        if (!missingIds.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "These Ids are invalid: " + String.join(", ", missingIds)
+            ));
+        }
+
         List<Fees> createdRecords = new ArrayList<>();
+        List<String> notAffectedClasses = new ArrayList<>();
+        List<String> affectedClasses = new ArrayList<>();
         for (Level level : levels) {
+
+            if (level.getLevelSpecialPayments() == null ||
+            level.getLevelSpecialPayments().isEmpty()) {
+                notAffectedClasses.add(level.getLevelName());
+                continue;
+            }
+
             Fees fees = feesRepository.findBySemester_SemesterIDAndLevel_LevelID(newFees.getSemesterId(), level.getLevelID()).orElse(null);
             if (fees == null) {
                 fees = new Fees();
@@ -387,60 +410,64 @@ public class FeesService {
                 fees.setInstitution(level.getInstitution());
                 fees.setLocked(false);
                 createdRecords.add(fees);
+                affectedClasses.add(level.getLevelID());
             }
         }
-        feesRepository.saveAll(createdRecords);
+        if (!createdRecords.isEmpty() && !affectedClasses.isEmpty()) {
+            feesRepository.saveAll(createdRecords);
 
-        //Compare to found classes and not found classes
-        List<String> foundClasses = levels.stream().map(
-                Level::getLevelID
-        ).toList();
-
-        List<String> missingIds = newFees.getLevelIds().stream()
-                .filter(id -> !foundClasses.contains(id))
-                .toList();
-
-        //Publish fee creation to rabbitMQ
-        FeeCreation feeCreation = new FeeCreation();
-        feeCreation.setSemesterId(newFees.getSemesterId());
-        feeCreation.setLevelIds(foundClasses);
-        rabbitMQProducer.sendFeeCreationEvent(feeCreation);
-
-        loggingService.logGeneralActivity(
-                LogType.FEES, LogAction.CREATE,
-                "Added term fee for " + levels.stream().map(Level::getLevelName).collect(Collectors.joining(", ")),
-                staffId, LogStatus.SUCCESS);
-
-        if (missingIds.isEmpty()) {
-            return ResponseEntity.ok().build();
+            //Publish fee creation to rabbitMQ
+            FeeCreation feeCreation = new FeeCreation();
+            feeCreation.setSemesterId(newFees.getSemesterId());
+            feeCreation.setLevelIds(affectedClasses);
+            rabbitMQProducer.sendFeeCreationEvent(feeCreation);
         }
-        return ResponseEntity.ok(Map.of(
-                "message", "Could not save for Invalid Ids " + missingIds.stream().map(id -> "\"" + id + "\"").collect(Collectors.joining(", "))
-        ));
+
+        if (notAffectedClasses.isEmpty()) {
+            loggingService.logGeneralActivity(
+                    LogType.FEES, LogAction.CREATE,
+                    "Added term fee for " + levels.stream().map(Level::getLevelName).collect(Collectors.joining(", ")),
+                    staffId, LogStatus.SUCCESS);
+            return ResponseEntity.ok(Map.of(
+                    "message", "Added term fee for " + levels.stream().map(Level::getLevelName).collect(Collectors.joining(", "))
+            ));
+        } else {
+            loggingService.logGeneralActivity(
+                    LogType.FEES, LogAction.CREATE,
+                    String.join(", ", notAffectedClasses) + " has no special fees added so could not process actual fees",
+                    staffId, LogStatus.SUCCESS);
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                    "message", String.join(", ", notAffectedClasses) + " has no special fees added so could not process actual fees"
+            ));
+        }
     }
 
-    public ResponseEntity<?> fetchFeesDetails(String semesterId, String levelId, String staffId) {
+    public ResponseEntity<?> fetchFeesDetails(String semesterId, String staffId) {
 
-        Fees fee = feesRepository.findBySemester_SemesterIDAndLevel_LevelID(
-                semesterId, levelId
-        ).orElse(null);
-        if (fee == null) {
-            loggingService.logGeneralActivity(LogType.FEES, LogAction.READ, "Term fee not added for this class", staffId, LogStatus.FAILED);
+        List<Fees> fees = feesRepository.findBySemester_SemesterID(semesterId);
+        if (fees == null || fees.isEmpty()) {
+            loggingService.logGeneralActivity(LogType.FEES, LogAction.READ, "Term fee not added", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "Term fee not added for this class"
+                    "message", "Term fees not added"
             ));
+        }
+
+        List<FetchFeesDetails> records = new ArrayList<>();
+        for (Fees fee : fees) {
+            FetchFeesDetails record = FetchFeesDetails.builder()
+                    .feesId(fee.getFeesId())
+                    .semesterId(fee.getSemester().getSemesterID())
+                    .levelName(fee.getLevel().getLevelName())
+                    .amount(fee.getAmountToBePayed())
+                    .build();
+            records.add(record);
         }
 
         loggingService.logGeneralActivity(
                 LogType.FEES, LogAction.READ,
-                "Fetched fee details for " + fee.getLevel().getLevelName(),
+                "Fetched term fees",
                 staffId, LogStatus.SUCCESS);
-        return ResponseEntity.ok(
-                new FetchFeesDetails(fee.getFeesId(),
-                fee.getAmountToBePayed(),
-                fee.getSemester().getSemesterID(),
-                fee.getLevel().getLevelID()
-        ));
+        return ResponseEntity.ok(records);
     }
 
     public ResponseEntity<?> updateSemesterFees(FetchFeesDetails update, String staffId) {
@@ -511,6 +538,8 @@ public class FeesService {
         paymentRecord.setPhoneNumber(newPayment.getPayerPhone());
         paymentRecord.setDateOfPayment(LocalDate.now());
         paymentRecord.setFeeRecord(studentFeeRecord);
+        paymentRecord.setInstitution(studentFeeRecord.getInstitution());
+        paymentRecordsRepository.saveAndFlush(paymentRecord);
 
         //Update fee record balance
         studentFeeRecord.setAmountPaid(newTotalPaid);
@@ -518,8 +547,10 @@ public class FeesService {
         studentFeeRecord.setLocked(true);
         studentFeeRecordRepository.save(studentFeeRecord);
 
-        studentFeeRecord.getFees().setLocked(true);
-        feesRepository.save(studentFeeRecord.getFees());
+        if (!studentFeeRecord.getFees().isLocked()) {
+            studentFeeRecord.getFees().setLocked(true);
+            feesRepository.save(studentFeeRecord.getFees());
+        }
 
         loggingService.logGeneralActivity(
                 LogType.PAYMENT,
@@ -661,7 +692,7 @@ public class FeesService {
         }
 
         List<PaymentRecords> paymentRecords = paymentRecordsRepository
-                .find15ByInstitution_InstitutionIdAndFeeRecord_Semester_SemesterIDOrderByDateOfPaymentDesc(
+                .findFirst15ByInstitution_InstitutionIdAndFeeRecord_Semester_SemesterIDOrderByDateOfPaymentDesc(
                         currentSemester.getInstitution().getInstitutionId(), currentSemester.getSemesterID()
                 );
         if (paymentRecords == null || paymentRecords.isEmpty()) {
@@ -675,16 +706,13 @@ public class FeesService {
         for (PaymentRecords paymentRecord : paymentRecords) {
 
             RecentPaymentRecords recentPayment = RecentPaymentRecords.builder()
-                    .paymentDate(paymentRecord.getDateOfPayment().toString())
-                    .studentId(
-                            paymentRecord.getFeeRecord().getStudent().getStudentId()
+                    .amount(String.valueOf(paymentRecord.getAmountPaid()))
+                    .studentName(
+                            paymentRecord.getFeeRecord().getStudent().getFirstName()
+                            + " " +
+                            paymentRecord.getFeeRecord().getStudent().getLastName()
                     )
-                    .studentNameCol(
-                            paymentRecord.getFeeRecord().getStudent().getFirstName() + " " + paymentRecord.getFeeRecord().getStudent().getLastName()
-                    )
-                    .amountCol(String.valueOf(paymentRecord.getAmountPaid()))
-                    .payerCol(paymentRecord.getPersonWhoPaid())
-                    .levelCol(paymentRecord.getFeeRecord().getLevel().getLevelName())
+                    .date(paymentRecord.getDateOfPayment().toString())
                     .build();
 
             recentPaymentRecords.add(recentPayment);
@@ -698,6 +726,7 @@ public class FeesService {
         return ResponseEntity.ok(recentPaymentRecords);
     }
 
+    @Transactional
     public void createIndividualFeeRecord(FeeCreation feeCreation) {
 
         List<Fees> feesList = feesRepository.findBySemester_SemesterIDAndLevel_LevelIDIn(
@@ -749,6 +778,7 @@ public class FeesService {
         }
     }
 
+    @Transactional
     public void updateIndividualFeeRecord(FeesUpdate feesUpdate) {
 
         Fees fees = feesRepository.findByFeesId(feesUpdate.getFeesId()).orElse(null);
