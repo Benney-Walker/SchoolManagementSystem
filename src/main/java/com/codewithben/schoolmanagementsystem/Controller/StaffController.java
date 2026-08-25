@@ -35,7 +35,7 @@ public class StaffController {
 
 
     @GetMapping("/v1/total-staffs")
-    public ResponseEntity<?> loadTotalStaffs(@RequestHeader("staffId") String Id) {
+    public ResponseEntity<?> loadTotalStaffs() {
 
         String staffId = authenticatedStaffProvider.getStaffId();
 
@@ -43,7 +43,7 @@ public class StaffController {
     }
 
     @GetMapping("/v1/total-teaching-staffs")
-    public ResponseEntity<?> loadTotalTeachingStaffs(@RequestHeader("staffId") String Id) {
+    public ResponseEntity<?> loadTotalTeachingStaffs() {
 
         String staffId = authenticatedStaffProvider.getStaffId();
 
@@ -52,7 +52,7 @@ public class StaffController {
 
     //Unused endpoint
     @GetMapping("/v1/staff-list")
-    public ResponseEntity<?> loadStaffInfo(@RequestHeader("staffid") String Id) {
+    public ResponseEntity<?> loadStaffInfo() {
 
         String staffId = authenticatedStaffProvider.getStaffId();
 
@@ -60,8 +60,7 @@ public class StaffController {
     }
 
     @GetMapping("/v1/find-staff-by-id/{instructorId}")
-    public ResponseEntity<?> findStaffById(@RequestHeader("staffId") String Id,
-                                           @PathVariable String instructorId) {
+    public ResponseEntity<?> findStaffById(@PathVariable String instructorId) {
 
         String staffId = authenticatedStaffProvider.getStaffId();
 
@@ -78,8 +77,7 @@ public class StaffController {
 
 
     @GetMapping("/v1/view-class-results")
-    public ResponseEntity<?> viewClassSemesterResults(@RequestHeader("staffId") String Id,
-                                                      @RequestParam String levelId,
+    public ResponseEntity<?> viewClassSemesterResults(@RequestParam String levelId,
                                                       @RequestParam String semesterId) {
 
         String staffId = authenticatedStaffProvider.getStaffId();
@@ -88,8 +86,7 @@ public class StaffController {
     }
 
     @GetMapping("/v1/report-card")
-    public ResponseEntity<?> viewStudentResults(@RequestHeader("staffId") String Id,
-                                                @RequestParam String studentId,
+    public ResponseEntity<?> viewStudentResults(@RequestParam String studentId,
                                                 @RequestParam String semesterId) {
 
         String staffId = authenticatedStaffProvider.getStaffId();
@@ -98,8 +95,7 @@ public class StaffController {
     }
 
     @GetMapping("/v1/view-sba")
-    public ResponseEntity<?> viewSba(@RequestHeader("staffId") String Id,
-                                     @RequestParam String classId,
+    public ResponseEntity<?> viewSba(@RequestParam String classId,
                                      @RequestParam String subjectId,
                                      @RequestParam String semesterId) {
 
@@ -109,8 +105,7 @@ public class StaffController {
     }
 
     @GetMapping("/v1/view-master-sheet")
-    public ResponseEntity<?> viewMasterSheet(@RequestHeader("staffId") String Id,
-                                             @RequestParam String levelId,
+    public ResponseEntity<?> viewMasterSheet(@RequestParam String levelId,
                                              @RequestParam String semesterId) {
 
         String staffId = authenticatedStaffProvider.getStaffId();
@@ -119,7 +114,7 @@ public class StaffController {
     }
 
     @GetMapping("/v1/load-staffs-info")
-    public ResponseEntity<?> loadStaffCache(@RequestHeader("staffId") String Id) {
+    public ResponseEntity<?> loadStaffCache() {
 
         String staffId = authenticatedStaffProvider.getStaffId();
 
@@ -127,7 +122,7 @@ public class StaffController {
     }
 
     @GetMapping("/v2/staff-list")
-    public ResponseEntity<?> loadStaffList(@RequestHeader("staffId") String Id) {
+    public ResponseEntity<?> loadStaffList() {
 
         String staffId = authenticatedStaffProvider.getStaffId();
 
@@ -135,7 +130,7 @@ public class StaffController {
     }
 
     @GetMapping("/v1/load-semesters")
-    public ResponseEntity<?> loadSemesterCaching(@RequestHeader("staffId") String Id) {
+    public ResponseEntity<?> loadSemesterCaching() {
 
         String staffId = authenticatedStaffProvider.getStaffId();
 
@@ -143,7 +138,7 @@ public class StaffController {
     }
 
     @GetMapping("/v1/load-levels")
-    public ResponseEntity<?> loadGradesCache(@RequestHeader("staffId") String Id) {
+    public ResponseEntity<?> loadGradesCache() {
 
         String staffId = authenticatedStaffProvider.getStaffId();
 
@@ -151,7 +146,7 @@ public class StaffController {
     }
 
     @GetMapping("/v1/load-classes")
-    public ResponseEntity<?> loadClassesForCache(@RequestHeader("staffId") String Id) {
+    public ResponseEntity<?> loadClassesForCache() {
 
         String staffId = authenticatedStaffProvider.getStaffId();
 
@@ -159,8 +154,7 @@ public class StaffController {
     }
 
     @GetMapping("/v1/load-subjects/{levelId}")
-    public ResponseEntity<?> loadGradeSubjects(@RequestHeader("staffId") String Id,
-                                               @PathVariable String levelId) {
+    public ResponseEntity<?> loadGradeSubjects(@PathVariable String levelId) {
 
         String staffId = authenticatedStaffProvider.getStaffId();
 
@@ -168,8 +162,7 @@ public class StaffController {
     }
 
     @PostMapping("/v1/add-new-staff")
-    public ResponseEntity<?> enrollNewStaff(@RequestHeader("staffId")String Id,
-                                            @Valid @RequestBody NewStaff newStaff) {
+    public ResponseEntity<?> enrollNewStaff(@Valid @RequestBody NewStaff newStaff) {
 
         String firstName = newStaff.getFirstName();
         String lastName = newStaff.getLastName();
@@ -187,8 +180,7 @@ public class StaffController {
     }
 
     @GetMapping("/v1/conduct-records")
-    public ResponseEntity<?> getStudentsConduct(@RequestHeader("staffId")String Id,
-                                                @RequestParam String levelId,
+    public ResponseEntity<?> getStudentsConduct(@RequestParam String levelId,
                                                 @RequestParam String semesterId) {
 
         String staffId = authenticatedStaffProvider.getStaffId();
@@ -203,13 +195,4 @@ public class StaffController {
 
         return conductService.saveStudentConducts(staffId, record);
     }
-
-    /*@PutMapping("/v2/save-conduct-record")
-    public ResponseEntity<?> saveStudentConduct(@RequestHeader("staffId")String Id,
-                                                @Valid @RequestBody List<@Valid StudentConductRecord> records) {
-
-        String staffId = authenticatedStaffProvider.getStaffId();
-
-        return conductService.saveStudentConducts(staffId, records);
-    }*/
 }

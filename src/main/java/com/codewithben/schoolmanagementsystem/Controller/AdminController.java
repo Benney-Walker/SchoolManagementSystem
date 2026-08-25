@@ -51,8 +51,7 @@ public class AdminController {
     private final AuthenticatedStaffProvider authenticatedStaffProvider;
 
     @PostMapping("/v1/reset-staff-password")
-    public ResponseEntity<?> recoverStaffPassword(@RequestHeader("staffId") String Id,
-                                                  @RequestParam String newPasswordStaffId,
+    public ResponseEntity<?> recoverStaffPassword(@RequestParam String newPasswordStaffId,
                                                   @RequestParam String newPassword) {
         String staffId = authenticatedStaffProvider.getStaffId();
 
@@ -60,8 +59,7 @@ public class AdminController {
     }
 
     @PostMapping("/v1/add-semester")
-    public ResponseEntity<?> addNewSemester(@RequestHeader("staffId") String Id,
-                                            @Valid @RequestBody AddNewSemester addNewSemester) {
+    public ResponseEntity<?> addNewSemester(@Valid @RequestBody AddNewSemester addNewSemester) {
 
         String semesterName = addNewSemester.getSemesterName();
         LocalDate startDate = LocalDate.parse(addNewSemester.getStartDate());
@@ -74,15 +72,14 @@ public class AdminController {
     }
 
     @PostMapping("/v1/new-grading-criteria")
-    public ResponseEntity<?> setGradingCriteria(@RequestHeader("staffId") String Id,
-                                                @Valid @RequestBody GradingCriteria gradingCriteria) {
+    public ResponseEntity<?> setGradingCriteria(@Valid @RequestBody GradingCriteria gradingCriteria) {
         String staffId = authenticatedStaffProvider.getStaffId();
 
         return institutionService.saveGradingCriteria(gradingCriteria, staffId);
     }
 
     @GetMapping("/v1/load-grading-criteria")
-    public ResponseEntity<?> loadAllGradingCriteria(@RequestHeader("staffId") String Id) {
+    public ResponseEntity<?> loadAllGradingCriteria() {
 
         String staffId = authenticatedStaffProvider.getStaffId();
 
@@ -90,8 +87,7 @@ public class AdminController {
     }
 
     @PutMapping("/v1/update-grading-criteria")
-    public ResponseEntity<?> updateGradingCriteria(@RequestHeader("staffId") String Id,
-                                                   @Valid @RequestBody GradingCriteria gradingCriteria) {
+    public ResponseEntity<?> updateGradingCriteria(@Valid @RequestBody GradingCriteria gradingCriteria) {
 
         String staffId = authenticatedStaffProvider.getStaffId();
 
@@ -99,8 +95,7 @@ public class AdminController {
     }
 
     @GetMapping("/v1/find-class-info/{levelId}")
-    public ResponseEntity<?> findClassInfo(@RequestHeader("staffId") String Id,
-                                           @PathVariable String levelId) {
+    public ResponseEntity<?> findClassInfo(@PathVariable String levelId) {
 
         String staffId = authenticatedStaffProvider.getStaffId();
 
@@ -108,8 +103,7 @@ public class AdminController {
     }
 
     @PutMapping("/v1/update-class-info")
-    public ResponseEntity<?> updateClassInfo(@RequestHeader("staffId") String Id,
-                                             @Valid @RequestBody FindAndUpdateClassInfo updateInfo) {
+    public ResponseEntity<?> updateClassInfo(@Valid @RequestBody FindAndUpdateClassInfo updateInfo) {
 
         String staffId = authenticatedStaffProvider.getStaffId();
 
@@ -117,8 +111,7 @@ public class AdminController {
     }
 
     @PutMapping("/v1/update-staff-info")
-    public ResponseEntity<?> updateStaffInfo(@RequestHeader("staffId") String Id,
-                                             @Valid @RequestBody FindStaffDTO info) {
+    public ResponseEntity<?> updateStaffInfo(@Valid @RequestBody FindStaffDTO info) {
 
         String staffId = authenticatedStaffProvider.getStaffId();
 
@@ -126,16 +119,14 @@ public class AdminController {
     }
 
     @GetMapping("/v1/search-semester/{semesterId}")
-    public ResponseEntity<?> searchSemesterInfo(@RequestHeader("staffId") String Id,
-                                                @PathVariable String semesterId) {
+    public ResponseEntity<?> searchSemesterInfo(@PathVariable String semesterId) {
         String staffId = authenticatedStaffProvider.getStaffId();
 
         return classService.findSemesterInfo(semesterId, staffId);
     }
 
     @PutMapping("/v1/update-semester-info")
-    public ResponseEntity<?> updateSemesterInfo(@RequestHeader("staffId") String Id,
-                                                @Valid @RequestBody FindSemester updateInfo) {
+    public ResponseEntity<?> updateSemesterInfo(@Valid @RequestBody FindSemester updateInfo) {
 
         String staffId = authenticatedStaffProvider.getStaffId();
 
@@ -143,8 +134,7 @@ public class AdminController {
     }
 
     @PostMapping("/v1/add-new-class")
-    public ResponseEntity<?> addNewClass(@RequestHeader("staffId") String Id,
-                                         @RequestParam String gradeName,
+    public ResponseEntity<?> addNewClass(@RequestParam String gradeName,
                                          @RequestParam String instructorId) {
         String staffId = authenticatedStaffProvider.getStaffId();
 
@@ -152,8 +142,7 @@ public class AdminController {
     }
 
     @PostMapping("/v1/add-subject")
-    public ResponseEntity<?> saveNewSubject(@RequestHeader("staffId") String Id,
-                                            @Valid @RequestBody AddNewSubject addNewSubject) {
+    public ResponseEntity<?> saveNewSubject(@Valid @RequestBody AddNewSubject addNewSubject) {
         String subjectName = addNewSubject.getSubjectName();
         String levelId = addNewSubject.getGradeId();
 
@@ -164,8 +153,7 @@ public class AdminController {
     }
 
     @GetMapping("/v1/load-subject-data/{subjectId}")
-    public ResponseEntity<?> loadSubjectData(@RequestHeader("staffId") String Id,
-                                             @PathVariable String subjectId) {
+    public ResponseEntity<?> loadSubjectData(@PathVariable String subjectId) {
 
         String staffId = authenticatedStaffProvider.getStaffId();
 
@@ -173,8 +161,7 @@ public class AdminController {
     }
 
     @PutMapping("/v1/update-subject-details")
-    public ResponseEntity<?> updateSubjectData(@RequestHeader("staffId") String Id,
-                                               @Valid @RequestBody SubjectDTO subjectDTO) {
+    public ResponseEntity<?> updateSubjectData(@Valid @RequestBody SubjectDTO subjectDTO) {
 
         String staffId = authenticatedStaffProvider.getStaffId();
 
@@ -182,8 +169,7 @@ public class AdminController {
     }
 
     @DeleteMapping("/v1/delete-subject/{subjectId}")
-    public ResponseEntity<?> deleteSubjectData(@RequestHeader("staffId") String Id,
-                                               @PathVariable String subjectId) {
+    public ResponseEntity<?> deleteSubjectData(@PathVariable String subjectId) {
 
         String staffId = authenticatedStaffProvider.getStaffId();
 
@@ -191,8 +177,7 @@ public class AdminController {
     }
 
     @GetMapping(value = "/v2/generate-class-report")
-    public ResponseEntity<?> generateBulkClassReports(@RequestHeader("staffId") String Id,
-                                                      @RequestParam String levelId,
+    public ResponseEntity<?> generateBulkClassReports(@RequestParam String levelId,
                                                       @RequestParam String semesterId) {
         String staffId = authenticatedStaffProvider.getStaffId();
 
@@ -200,8 +185,7 @@ public class AdminController {
     }
 
     @GetMapping(value = "/v2/generate-sba-report")
-    public ResponseEntity<?> generateSbaReport(@RequestHeader("staffId") String Id,
-                                               @RequestParam String levelId,
+    public ResponseEntity<?> generateSbaReport(@RequestParam String levelId,
                                                @RequestParam String semesterId,
                                                @RequestParam String subjectId) {
         String staffId = authenticatedStaffProvider.getStaffId();
@@ -210,8 +194,7 @@ public class AdminController {
     }
 
     @GetMapping(value = "/v2/generate-master-sheet")
-    public ResponseEntity<?> generateMasterScoreSheet(@RequestHeader("staffId") String Id,
-                                                      @RequestParam String levelId,
+    public ResponseEntity<?> generateMasterScoreSheet(@RequestParam String levelId,
                                                       @RequestParam String semesterId) {
         String staffId = authenticatedStaffProvider.getStaffId();
 
@@ -219,7 +202,7 @@ public class AdminController {
     }
 
     @GetMapping("/v1/recent-logs")
-    public ResponseEntity<?> getRecentActivities(@RequestHeader("staffId") String Id) {
+    public ResponseEntity<?> getRecentActivities() {
 
         String staffId = authenticatedStaffProvider.getStaffId();
 
@@ -227,8 +210,7 @@ public class AdminController {
     }
 
     @GetMapping("/v1/get-staff-logs")
-    public ResponseEntity<?> getStaffLogs(@RequestHeader("staffId") String Id,
-                                          @RequestParam String selectedStaffId,
+    public ResponseEntity<?> getStaffLogs(@RequestParam String selectedStaffId,
                                           @RequestParam String fromDate,
                                           @RequestParam String toDate) {
 
@@ -240,8 +222,7 @@ public class AdminController {
     }
 
     @GetMapping("/v1/get-timely-logs")
-    public ResponseEntity<?> getTimelyLogs(@RequestHeader("staffId") String Id,
-                                           @RequestParam String fromDate,
+    public ResponseEntity<?> getTimelyLogs(@RequestParam String fromDate,
                                            @RequestParam String toDate) {
         String staffId = authenticatedStaffProvider.getStaffId();
 
@@ -249,15 +230,14 @@ public class AdminController {
     }
 
     @PostMapping("/v1/add-holiday")
-    public ResponseEntity<?> addNewHoliday(@RequestHeader("staffId")String Id,
-                                           @Valid @RequestBody Holiday holiday) {
+    public ResponseEntity<?> addNewHoliday(@Valid @RequestBody Holiday holiday) {
         String staffId = authenticatedStaffProvider.getStaffId();
 
         return holidayService.addNewHoliday(staffId, holiday);
     }
 
     @GetMapping("/v1/load-holidays")
-    public ResponseEntity<?> loadHolidays(@RequestHeader("staffId") String Id) {
+    public ResponseEntity<?> loadHolidays() {
 
         String staffId = authenticatedStaffProvider.getStaffId();
 
@@ -265,8 +245,7 @@ public class AdminController {
     }
 
     @PutMapping("/v1/update-holiday")
-    public ResponseEntity<?> updateHoliday(@RequestHeader("staffId")String Id,
-                                           @Valid @RequestBody Holiday holiday) {
+    public ResponseEntity<?> updateHoliday(@Valid @RequestBody Holiday holiday) {
 
         String staffId = authenticatedStaffProvider.getStaffId();
 

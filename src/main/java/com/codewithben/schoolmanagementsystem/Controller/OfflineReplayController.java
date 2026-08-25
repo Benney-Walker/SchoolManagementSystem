@@ -21,8 +21,7 @@ public class OfflineReplayController {
     private final AuthenticatedStaffProvider authenticatedStaffProvider;
 
     @PostMapping("/v1/sync-attendance")
-    public ResponseEntity<?> saveAttendanceRecords(@RequestHeader("staffId")String Id,
-                                                   @RequestBody List<OfflineAttendanceList> list) {
+    public ResponseEntity<?> saveAttendanceRecords(@RequestBody List<OfflineAttendanceList> list) {
 
         String staffId = authenticatedStaffProvider.getStaffId();
 
@@ -30,8 +29,7 @@ public class OfflineReplayController {
     }
 
     @PostMapping("/v1/sync-scores")
-    public ResponseEntity<?> saveScoresRecords(@RequestHeader("staffId")String Id,
-                                               @RequestBody List<OfflineScoresList> list) {
+    public ResponseEntity<?> saveScoresRecords(@RequestBody List<OfflineScoresList> list) {
 
         String staffId = authenticatedStaffProvider.getStaffId();
 
@@ -39,8 +37,7 @@ public class OfflineReplayController {
     }
 
     @PostMapping("/v1/sync-payment")
-    public ResponseEntity<?> savePaymentsRecords(@RequestHeader("staffId")String Id,
-                                                 @RequestBody List<OfflinePaymentList> list) {
+    public ResponseEntity<?> savePaymentsRecords(@RequestBody List<OfflinePaymentList> list) {
 
         String staffId = authenticatedStaffProvider.getStaffId();
 
