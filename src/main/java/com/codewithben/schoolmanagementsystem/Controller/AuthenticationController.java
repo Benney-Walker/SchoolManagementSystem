@@ -84,41 +84,39 @@ public class AuthenticationController {
     @PostMapping("/v1/staff-login")
     public ResponseEntity<?> staffAuthentication(@RequestBody LoginRequest loginRequest) {
 
-            authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
-                            loginRequest.getStaffId(),
-                            loginRequest.getPassword()
-                    )
-            );
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        loginRequest.getStaffId(),
+                        loginRequest.getPassword()
+                )
+        );
 
-            Staffs staff = staffService.getStaffDetails(loginRequest.getStaffId());
+        Staffs staff = staffService.getStaffDetails(loginRequest.getStaffId());
 
-            List<String> rolesList = staff.getRoles().stream().map(
-                    role -> role.getStaffRole().name()).toList();
+        List<String> rolesList = staff.getRoles().stream().map(
+                role -> role.getStaffRole().name()).toList();
 
 
-            String accessToken = jwtUtility.generateAccessToken(
-                    loginRequest.getStaffId(),
-                    rolesList
-            );
+        String accessToken = jwtUtility.generateAccessToken(
+                loginRequest.getStaffId(),
+                rolesList
+        );
 
-            String refreshToken = jwtUtility.generateRefreshToken(
-                    loginRequest.getStaffId()
-            );
+        String refreshToken = jwtUtility.generateRefreshToken(
+                loginRequest.getStaffId()
+        );
 
-            return ResponseEntity.ok(
-                    LoginResponse.builder()
-                            .staffId(staff.getStaffId())
-                            .staffName(
-                                    staff.getFirstName().toUpperCase() + " " + staff.getLastName().toUpperCase()
-                            )
-                            .roles(rolesList)
-                            .institutionName(staff.getInstitution().getInstitutionName().toUpperCase())
-                            .authToken(accessToken)
-                            .refreshToken(refreshToken)
-                            .build()
-            );
-
+        return ResponseEntity.ok(
+                LoginResponse.builder()
+                        .staffName(
+                                staff.getFirstName().toUpperCase() + " " + staff.getLastName().toUpperCase()
+                        )
+                        .roles(rolesList)
+                        .institutionName(staff.getInstitution().getInstitutionName().toUpperCase())
+                        .authToken(accessToken)
+                        .refreshToken(refreshToken)
+                        .build()
+        );
     }
 
     @PostMapping("/v1/refresh-token")
