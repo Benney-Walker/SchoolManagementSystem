@@ -1,5 +1,6 @@
 package com.codewithben.schoolmanagementsystem.DTO.Fees;
 
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
@@ -15,7 +16,7 @@ import java.util.List;
 @AllArgsConstructor
 public class NewFees {
 
-    @NotEmpty(message = "Term must not be empty")
+    @NotBlank(message = "Term must not be empty")
     private String semesterId;
 
     @NotEmpty(message = "At least one class must be selected")
