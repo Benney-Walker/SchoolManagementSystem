@@ -2,6 +2,7 @@ package com.codewithben.schoolmanagementsystem.Service;
 
 import com.codewithben.schoolmanagementsystem.Constants.*;
 import com.codewithben.schoolmanagementsystem.DTO.Attendance.TodaysAbsentees;
+import com.codewithben.schoolmanagementsystem.DTO.RabbitMQ.Student.NewStudentFee;
 import com.codewithben.schoolmanagementsystem.DTO.Students.AddNewStudent;
 import com.codewithben.schoolmanagementsystem.DTO.Students.FindStudentDTO;
 import com.codewithben.schoolmanagementsystem.DTO.Students.StudentsHolder;
@@ -35,7 +36,7 @@ public class StudentService {
 
     private final ResultsRepository resultsRepository;
 
-    private final InstitutiionRepository institutionRepository;
+    private final RabbitMQProducer rabbitMQProducer;
 
     private final LoggingService loggingService;
 
@@ -96,6 +97,9 @@ public class StudentService {
 
         studentsRepository.saveAndFlush(student);
 
+        NewStudentFee newStudentFee = NewStudentFee.builder().levelId(level.getLevelID()).studentId(studentId).build();
+        rabbitMQProducer.sendStudentFeeCreationEvent(newStudentFee);
+
         loggingService.logGeneralActivity(
                 LogType.STUDENT, LogAction.CREATE,
                 "Added new student: "
@@ -104,7 +108,6 @@ public class StudentService {
                         + " for " + level.getLevelName(),
                 staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok(studentId);
-
     }
 
     public ResponseEntity<?> findStudent(String studentId, String staffId) {

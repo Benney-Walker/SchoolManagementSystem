@@ -13,12 +13,31 @@ public class RabbitMQConfig {
 
     public static final String EXCHANGE_NAME = "school_management_exchange";
 
+
+    /************************************************
+                FINANCES_QUEUES_DECLARATIONS
+     *************************************************/
     public static final String FEE_CREATION_QUEUE_NAME = "fee_creation_queue";
     public static final String FEE_UPDATE_QUEUE_NAME = "fee_update_queue";
+    public static final String NEW_STUDENT_FEE_CREATION_QUEUE_NAME = "new_student_fee_creation_queue";
 
+    /************************************************
+             ACADEMIC_QUEUES_DECLARATIONS
+     *************************************************/
+    public static final String RESULTS_CREATION_QUEUE_NAME = "results_creation_queue";
+
+
+    /************************************************
+                    ROUTING
+     *************************************************/
     public static final String FEE_CREATION_ROUTING_KEY = "fee_routing_key";
     public static final String FEE_UPDATE_ROUTING_KEY = "fee_update_routing_key";
+    public static final String NEW_STUDENT_FEE_ROUTING_KEY = "new_student_routing_key";
+    public static final String RESULTS_CREATION_ROUTING_KEY = "results_creation_routing_key";
 
+    /************************************************
+     * *******           QUEUES   ******************
+    *************************************************/
     @Bean
     public Queue feeCreationQueue() {
         return new Queue(FEE_CREATION_QUEUE_NAME, true);
@@ -30,9 +49,19 @@ public class RabbitMQConfig {
     }
 
     @Bean
-    public TopicExchange exchange() {
-        return new TopicExchange(EXCHANGE_NAME);
+    public Queue newStudentFeeCreationQueue() {
+        return new Queue(NEW_STUDENT_FEE_CREATION_QUEUE_NAME, true);
     }
+
+    @Bean
+    public Queue resultsCreationQueue() {
+        return new Queue(RESULTS_CREATION_QUEUE_NAME, true);
+    }
+
+
+    /************************************************
+                       BINDINGS
+     *************************************************/
 
     @Bean
     public Binding feeCreationBinding(Queue feeCreationQueue, TopicExchange exchange) {
@@ -42,6 +71,20 @@ public class RabbitMQConfig {
     @Bean
     public Binding feeUpdateBinding(Queue feeUpdateQueue, TopicExchange exchange) {
         return BindingBuilder.bind(feeUpdateQueue).to(exchange).with(FEE_UPDATE_ROUTING_KEY);
+    }
+
+    @Bean
+    public Binding newStudentFeeCreationBinding(Queue newStudentFeeCreationQueue, TopicExchange exchange) {
+        return BindingBuilder.bind(newStudentFeeCreationQueue).to(exchange).with(NEW_STUDENT_FEE_ROUTING_KEY);
+    }
+
+    /************************************************
+                  BROKER_STATIC_CONFIG
+     *************************************************/
+
+    @Bean
+    public TopicExchange exchange() {
+        return new TopicExchange(EXCHANGE_NAME);
     }
 
     @Bean

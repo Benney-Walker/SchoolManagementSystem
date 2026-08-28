@@ -4,6 +4,7 @@ import com.codewithben.schoolmanagementsystem.Constants.*;
 import com.codewithben.schoolmanagementsystem.DTO.Fees.*;
 import com.codewithben.schoolmanagementsystem.DTO.RabbitMQ.Fees.FeeCreation;
 import com.codewithben.schoolmanagementsystem.DTO.RabbitMQ.Fees.FeesUpdate;
+import com.codewithben.schoolmanagementsystem.DTO.RabbitMQ.Student.NewStudentFee;
 import com.codewithben.schoolmanagementsystem.DTO.Report.GradeFeesReport;
 import com.codewithben.schoolmanagementsystem.Entity.*;
 import com.codewithben.schoolmanagementsystem.Repository.*;
@@ -726,6 +727,10 @@ public class FeesService {
         return ResponseEntity.ok(recentPaymentRecords);
     }
 
+    /*********************************************
+                    ASYNC METHODS
+     *********************************************/
+
     @Transactional
     public void createIndividualFeeRecord(FeeCreation feeCreation) {
 
@@ -764,9 +769,13 @@ public class FeesService {
                     newRecord.setInstitution(fees.getInstitution());
 
                     if (student.isNew()) {
-                        newRecord.setTotalAmount(fees.getAmountToBePayed() + newStudent);
+                        float total = fees.getAmountToBePayed() + newStudent;
+                        newRecord.setTotalAmount(total);
+                        newRecord.setBalance(total);
                     } else {
-                        newRecord.setTotalAmount(fees.getAmountToBePayed() + oldStudent);
+                        float total = fees.getAmountToBePayed() + oldStudent;
+                        newRecord.setTotalAmount(total);
+                        newRecord.setBalance(total);
                     }
                     newRecords.add(newRecord);
                 }
@@ -828,5 +837,67 @@ public class FeesService {
         if (!newRecords.isEmpty()) {
             studentFeeRecordRepository.saveAll(newRecords);
         }
+    }
+
+    @Transactional
+    public void createNewStudentFee(NewStudentFee newStudentFee) {
+
+        Level level = levelRepository.findByLevelID(newStudentFee.getLevelId()).orElse(null);
+        if (level == null) {
+            log.error("Could not create student fee. Invalid level Id {}", newStudentFee.getLevelId());
+            return;
+        }
+
+        Semester currentSemester = utilityClass.getCurrentSemester(level.getInstitution());
+        if (currentSemester == null) {
+            log.error("Could not create student fee. Current term not added");
+            return;
+        }
+
+        if (LocalDate.now().isBefore(currentSemester.getSemesterStartDate()) || LocalDate.now().isAfter(currentSemester.getSemesterEndDate())) {
+            log.error("Could not create student fee. Current term not added");
+            return;
+        }
+
+        Fees fee = feesRepository.findBySemester_SemesterIDAndLevel_LevelID(
+                currentSemester.getSemesterID(), newStudentFee.getLevelId()
+        ).orElse(null);
+        if (fee == null) {
+            log.error("Could not create student fee. Current term fee not added");
+            return;
+        }
+
+        List<LevelSpecialPayment> specialPayments = fee.getLevel().getLevelSpecialPayments();
+
+        float newStudent = (float) specialPayments.stream().mapToDouble(LevelSpecialPayment::getAmount).sum();
+        float oldStudent = (float) specialPayments.stream()
+                .filter(specialFee -> specialFee.getSpecialPayment().getPaymentType() == SpecialPaymentType.ADMISSION_FEE)
+                .mapToDouble(LevelSpecialPayment::getAmount)
+                .sum();
+
+        Students student = studentsRepository.findByStudentId(newStudentFee.getStudentId()).orElse(null);
+        if (student == null) {
+            log.error("Could not create student fee. Invalid student id {}", newStudentFee.getStudentId());
+            return;
+        }
+
+        StudentFeeRecord newRecord = new StudentFeeRecord();
+        newRecord.setStudent(student);
+        newRecord.setFees(fee);
+        newRecord.setLevel(fee.getLevel());
+        newRecord.setSemester(fee.getSemester());
+        newRecord.setLocked(false);
+        newRecord.setInstitution(fee.getInstitution());
+
+        if (student.isNew()) {
+            float total = fee.getAmountToBePayed() + newStudent;
+            newRecord.setTotalAmount(total);
+            newRecord.setBalance(total);
+        } else {
+            float total = fee.getAmountToBePayed() + oldStudent;
+            newRecord.setTotalAmount(total);
+            newRecord.setBalance(total);
+        }
+        studentFeeRecordRepository.saveAndFlush(newRecord);
     }
 }

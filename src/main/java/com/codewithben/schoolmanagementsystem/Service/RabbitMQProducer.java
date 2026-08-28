@@ -26,4 +26,12 @@ public class RabbitMQProducer {
                 payload
         );
     }
+
+    public void sendStudentFeeCreationEvent(Object payload) {
+        rabbitTemplate.convertAndSend(
+                RabbitMQConfig.EXCHANGE_NAME,
+                RabbitMQConfig.NEW_STUDENT_FEE_ROUTING_KEY,
+                payload
+        );
+    }
 }
