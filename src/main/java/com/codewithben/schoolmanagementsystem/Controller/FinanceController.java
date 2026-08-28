@@ -198,4 +198,12 @@ public class FinanceController {
 
         return expensesService.generateExpensesReport(semesterId, staffId);
     }
+
+    @DeleteMapping("/v1/delete-expenses/{expensesId}")
+    public ResponseEntity<?> deleteExpensesRecord(@PathVariable String expensesId) {
+
+        String staffId = authenticatedStaffProvider.getStaffId();
+
+        return expensesService.deleteExpenses(expensesId, staffId);
+    }
 }
