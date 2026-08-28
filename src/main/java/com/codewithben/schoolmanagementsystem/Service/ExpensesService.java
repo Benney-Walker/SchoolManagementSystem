@@ -224,6 +224,32 @@ public class ExpensesService {
         }
     }
 
+    public ResponseEntity<?> deleteExpenses(String expensesId, String staffId) {
+        Expenses expenses = expensesRepo.findByExpenseId(expensesId).orElse(null);
+        if(expenses == null){
+            loggingService.logGeneralActivity(
+                    LogType.EXPENSES,
+                    LogAction.DELETE,
+                    "Expenses record not found",
+                    staffId,
+                    LogStatus.FAILED
+            );
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Expenses record not found"
+            ));
+        }
+
+        expensesRepo.delete(expenses);
+        loggingService.logGeneralActivity(
+                LogType.EXPENSES,
+                LogAction.DELETE,
+                "Expenses record deleted",
+                staffId,
+                LogStatus.SUCCESS
+        );
+        return ResponseEntity.ok().build();
+    }
+
     private List<ExpensesRecord> readExpensesRecords(String semesterId){
 
         List<Expenses> expensesList = expensesRepo.findBySemester_SemesterID(semesterId);
@@ -248,4 +274,5 @@ public class ExpensesService {
         }
         return records;
     }
+
 }
