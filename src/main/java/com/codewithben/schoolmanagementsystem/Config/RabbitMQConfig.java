@@ -24,7 +24,7 @@ public class RabbitMQConfig {
     /************************************************
              ACADEMIC_QUEUES_DECLARATIONS
      *************************************************/
-    public static final String RESULTS_CREATION_QUEUE_NAME = "results_creation_queue";
+    public static final String UPDATE_RESULTS_QUEUE_NAME = "update_results_queue";
 
 
     /************************************************
@@ -33,7 +33,7 @@ public class RabbitMQConfig {
     public static final String FEE_CREATION_ROUTING_KEY = "fee_routing_key";
     public static final String FEE_UPDATE_ROUTING_KEY = "fee_update_routing_key";
     public static final String NEW_STUDENT_FEE_ROUTING_KEY = "new_student_routing_key";
-    public static final String RESULTS_CREATION_ROUTING_KEY = "results_creation_routing_key";
+    public static final String UPDATE_RESULTS_ROUTING_KEY = "update_results_routing_key";
 
     /************************************************
      * *******           QUEUES   ******************
@@ -54,10 +54,9 @@ public class RabbitMQConfig {
     }
 
     @Bean
-    public Queue resultsCreationQueue() {
-        return new Queue(RESULTS_CREATION_QUEUE_NAME, true);
+    public Queue updateResultsQueue() {
+        return new Queue(UPDATE_RESULTS_QUEUE_NAME, true);
     }
-
 
     /************************************************
                        BINDINGS
@@ -76,6 +75,11 @@ public class RabbitMQConfig {
     @Bean
     public Binding newStudentFeeCreationBinding(Queue newStudentFeeCreationQueue, TopicExchange exchange) {
         return BindingBuilder.bind(newStudentFeeCreationQueue).to(exchange).with(NEW_STUDENT_FEE_ROUTING_KEY);
+    }
+
+    @Bean
+    public Binding updateResultsBinding(Queue updateResultsQueue, TopicExchange exchange) {
+        return BindingBuilder.bind(updateResultsQueue).to(exchange).with(UPDATE_RESULTS_ROUTING_KEY);
     }
 
     /************************************************

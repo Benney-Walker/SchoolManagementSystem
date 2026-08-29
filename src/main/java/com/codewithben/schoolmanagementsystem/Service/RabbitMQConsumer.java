@@ -3,6 +3,7 @@ package com.codewithben.schoolmanagementsystem.Service;
 import com.codewithben.schoolmanagementsystem.Config.RabbitMQConfig;
 import com.codewithben.schoolmanagementsystem.DTO.RabbitMQ.Fees.FeeCreation;
 import com.codewithben.schoolmanagementsystem.DTO.RabbitMQ.Fees.FeesUpdate;
+import com.codewithben.schoolmanagementsystem.DTO.RabbitMQ.Results.ResultsUpdate;
 import com.codewithben.schoolmanagementsystem.DTO.RabbitMQ.Student.NewStudentFee;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -13,23 +14,25 @@ import org.springframework.stereotype.Component;
 @Component
 public class RabbitMQConsumer {
 
-    private final FeesService feesService;
+    private final AsyncService asyncService;
 
     @RabbitListener(queues = RabbitMQConfig.FEE_CREATION_QUEUE_NAME)
     public void consumeFeeCreationEvent(FeeCreation feeCreation) {
-        feesService.createIndividualFeeRecord(feeCreation);
+        asyncService.createIndividualFeeRecord(feeCreation);
     }
 
     @RabbitListener(queues = RabbitMQConfig.FEE_UPDATE_QUEUE_NAME)
     public void consumeFeeUpdateEvent(FeesUpdate feesUpdate) {
-        feesService.updateIndividualFeeRecord(feesUpdate);
+        asyncService.updateIndividualFeeRecord(feesUpdate);
     }
 
     @RabbitListener(queues = RabbitMQConfig.NEW_STUDENT_FEE_CREATION_QUEUE_NAME)
     public void consumeStudentFeeCreationEvent(NewStudentFee newStudentFee) {
-        feesService.createNewStudentFee(newStudentFee);
+        asyncService.createNewStudentFee(newStudentFee);
     }
-    public void consumeResultsCreationEvent(Object payload) {
 
+    @RabbitListener(queues = RabbitMQConfig.UPDATE_RESULTS_QUEUE_NAME)
+    public void consumeUpdateResultsEvent(ResultsUpdate resultsUpdate) {
+        asyncService.updateResults(resultsUpdate);
     }
 }
