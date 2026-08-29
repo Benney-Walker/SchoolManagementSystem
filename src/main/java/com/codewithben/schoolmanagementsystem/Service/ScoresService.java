@@ -3,6 +3,7 @@ package com.codewithben.schoolmanagementsystem.Service;
 import com.codewithben.schoolmanagementsystem.Constants.LogAction;
 import com.codewithben.schoolmanagementsystem.Constants.LogStatus;
 import com.codewithben.schoolmanagementsystem.Constants.LogType;
+import com.codewithben.schoolmanagementsystem.DTO.RabbitMQ.Results.ResultsUpdate;
 import com.codewithben.schoolmanagementsystem.DTO.Students.StudentsScoresTable;
 import com.codewithben.schoolmanagementsystem.DTO.Subject.SubjectScores;
 import com.codewithben.schoolmanagementsystem.Entity.*;
@@ -39,6 +40,8 @@ public class ScoresService {
     private final SubjectScoreRepository subjectScoreRepository;
 
     private final UtilityClass utilityClass;
+
+    private final RabbitMQProducer rabbitMQProducer;
 
     public ResponseEntity<?> loadStudentsForScores(String semesterId, String subjectId, String staffId) {
 
@@ -159,7 +162,8 @@ public class ScoresService {
             ));
         }
 
-        Set<Results> affectedResults = new LinkedHashSet<>();
+        List<Results> affectedResults = new ArrayList<>();
+        List<SubjectScore> affectedSubjectScores = new ArrayList<>();
 
         for (StudentsScoresTable score : scores) {
 
@@ -173,10 +177,7 @@ public class ScoresService {
 
                 Students student = studentsRepository.findByStudentId(score.getStudentId()).orElse(null);
                 if (student == null) {
-                    loggingService.logGeneralActivity(LogType.SUBJECT_SCORE, LogAction.CREATE,"Invalid student Id", staffId, LogStatus.FAILED);
-                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                            "message", "Invalid student Id"
-                    ));
+                    continue;
                 }
 
                 result = new Results();
@@ -198,24 +199,22 @@ public class ScoresService {
 
             saveNewScore(subjectScore, score, result, subject, result.getStudent(), semester);
 
+            affectedSubjectScores.add(subjectScore);
             affectedResults.add(result);
         }
 
-        subjectScoreRepository.flush();
+        resultsRepository.saveAllAndFlush(affectedResults);
+        subjectScoreRepository.saveAllAndFlush(affectedSubjectScores);
 
-        int classSize = utilityClass.getActiveStudents(subject.getLevel().getStudents()).size();
-        int subjectsInLevel = subject.getLevel().getSubjects().size();
-        for (Results result : affectedResults) {
-            updateResultTotals(result, staff, classSize);
-
-            long scoresSubjects = subjectScoreRepository.countByResults_ResultId(result.getResultId());
-            result.setReady(scoresSubjects == subjectsInLevel);
-
-            result.setUpdatedAt(LocalDate.now());
-            result.setUpdatedBy(staff);
-        }
-
-        resultsRepository.saveAll(affectedResults);
+        List<Long> affectedResultsIds = affectedResults.stream().map(
+                Results::getResultId
+        ).toList();
+        ResultsUpdate resultsUpdate = ResultsUpdate.builder()
+                .staffId(staffId)
+                .subjectId(subjectId)
+                .affectedResultsIds(affectedResultsIds)
+                .build();
+        rabbitMQProducer.updateResultsEvent(resultsUpdate);
 
         loggingService.logGeneralActivity(
                 LogType.SUBJECT_SCORE, LogAction.CREATE,
@@ -254,33 +253,5 @@ public class ScoresService {
                 utilityClass.extractDescription(totalScore, student.getInstitution().getInstitutionId())
         );
         subjectScore.setTotalScore(totalScore);
-
-        subjectScoreRepository.save(subjectScore);
-    }
-
-    /* ===================================
-                    HELPERS
-    =====================================*/
-
-    public void updateResultTotals(Results result, Staffs updatedBy, int classSize) {
-        List<SubjectScore> scores = result.getSubjectScores();
-
-        double total = 0.0;
-        if (scores == null || scores.isEmpty()) {
-            result.setTotalScore(0.0);
-            result.setAverageScore(0.0);
-        } else {
-
-            for(SubjectScore score : scores) {
-                total += score.getTotalScore();
-            }
-
-            result.setUpdatedBy(updatedBy);
-            result.setTotalScore(Double.parseDouble(String.format("%.1f", total)));
-            result.setAverageScore(Double.parseDouble(String.format("%.1f", total / scores.size())));
-            result.setClassSize(classSize);
-        }
-
-        resultsRepository.save(result);
     }
 }

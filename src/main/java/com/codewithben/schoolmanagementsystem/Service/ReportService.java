@@ -11,7 +11,6 @@ import com.codewithben.schoolmanagementsystem.Entity.*;
 import com.codewithben.schoolmanagementsystem.Repository.*;
 import com.codewithben.schoolmanagementsystem.Utility.UtilityClass;
 import lombok.AllArgsConstructor;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -64,27 +63,14 @@ public class ReportService {
             ));
         }
 
-        List<Results> classResultsList = resultsRepository.findByLevel_LevelIDAndSemester_SemesterID(
-                studentResult.getLevel().getLevelID(), semesterId
-        );
-
-        if (!utilityClass.isClassResultsComplete(classResultsList)) {
-            loggingService.logGeneralActivity(LogType.REPORT, LogAction.READ,
-                    "Results not complete! Positions or Promotions not done",
-                    staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
-                    "message", "Results not complete! Positions or Promotions not done"
-            ));
-        }
-
-        /*if (semester.getSemesterName().equals("THIRD_TERM") && studentResult.getPromotionTo().equals("-")) {
+        if (semester.getSemesterName().equals("THIRD_TERM") && studentResult.getPromotionTo().equals("-")) {
             loggingService.logGeneralActivity(LogType.REPORT, LogAction.READ,
                     "Promotion activity not carried out",
                     staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
                     "message", "Promotion activity not carried out"
             ));
-        }*/
+        }
 
         String totalAttendance = String.valueOf(
                 attendanceService.getTotalAttendanceCount(semester)
@@ -151,16 +137,6 @@ public class ReportService {
             loggingService.logGeneralActivity(LogType.REPORT, LogAction.READ, "No records are found", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "No records are found"
-            ));
-        }
-
-        if (!utilityClass.isClassResultsComplete(classResultsList)) {
-            loggingService.logGeneralActivity(
-                    LogType.REPORT, LogAction.READ,
-                    level.getLevelName() + " results not complete! Positions or Promotions not done",
-                    staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
-                    "message", level.getLevelName() + " results not complete! Positions or Promotions not done"
             ));
         }
 

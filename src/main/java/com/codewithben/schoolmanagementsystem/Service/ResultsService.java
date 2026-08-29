@@ -9,7 +9,6 @@ import com.codewithben.schoolmanagementsystem.DTO.Result.ViewStudentsSubjectsRes
 import com.codewithben.schoolmanagementsystem.Entity.*;
 import com.codewithben.schoolmanagementsystem.Repository.*;
 import com.codewithben.schoolmanagementsystem.Utility.UtilityClass;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -66,15 +65,6 @@ public class ResultsService {
                 studentResult.getLevel().getLevelID(), semesterId
         );
 
-        if (!utilityClass.isClassResultsComplete(classResultsList)) {
-            loggingService.logGeneralActivity(LogType.REPORT, LogAction.READ,
-                    "Results not complete! Positions or Promotions not done",
-                    staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
-                    "message", "Results not complete! Positions or Promotions not done"
-            ));
-        }
-
         String totalAttendance = String.valueOf(
                 attendanceService.getTotalAttendanceCount(semester)
         );
@@ -128,15 +118,6 @@ public class ResultsService {
             loggingService.logGeneralActivity(LogType.RESULT, LogAction.READ, "No Results Found for this criteria", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "No Results Found for this criteria"
-            ));
-        }
-
-        if (!utilityClass.isClassResultsComplete(studentResults)) {
-            loggingService.logGeneralActivity(LogType.REPORT, LogAction.READ,
-                    "Results not complete! Positions or Promotions not done",
-                    staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
-                    "message", "Results not complete! Positions or Promotions not done"
             ));
         }
 
