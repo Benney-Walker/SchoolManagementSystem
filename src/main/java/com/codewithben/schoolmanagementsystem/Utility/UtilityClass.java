@@ -202,7 +202,27 @@ public class UtilityClass {
                 .orElse(null);
     }
 
-    private void reArrangePositions(List<Results> resultsList) {
+    public void updateResultTotals(Results result, Staffs updatedBy, int classSize) {
+        List<SubjectScore> scores = result.getSubjectScores();
+
+        double total = 0.0;
+        if (scores == null || scores.isEmpty()) {
+            result.setTotalScore(0.0);
+            result.setAverageScore(0.0);
+        } else {
+
+            for(SubjectScore score : scores) {
+                total += score.getTotalScore();
+            }
+
+            result.setUpdatedBy(updatedBy);
+            result.setTotalScore(Double.parseDouble(String.format("%.1f", total)));
+            result.setAverageScore(Double.parseDouble(String.format("%.1f", total / scores.size())));
+            result.setClassSize(classSize);
+        }
+    }
+
+    public void reArrangePositions(List<Results> resultsList) {
 
         if (resultsList == null || resultsList.isEmpty()) {
             return;
@@ -237,22 +257,4 @@ public class UtilityClass {
             default: return number + "th";
         }
     }
-
-    //Checks if class results is complete
-    public boolean isClassResultsComplete(List<Results> classResultsList) {
-        for (Results result : classResultsList) {
-            if (!result.isReady()) {
-                return false;
-            }
-
-            //Temporal fix
-            /*if (result.getSemester().getSemesterName().equals("THIRD_TERM") &&
-            result.getPromotionTo().equals("-")) return false;*/
-        }
-
-        classResultsList.sort(Comparator.comparing(Results::getTotalScore).reversed());
-        reArrangePositions(classResultsList);
-        return true;
-    }
-
 }
