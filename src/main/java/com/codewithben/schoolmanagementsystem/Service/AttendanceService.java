@@ -63,17 +63,10 @@ public class AttendanceService {
             ));
         }
 
-        if (utilityClass.isWeekend(selectedDate)) {
-            loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.READ, "Attendance can't be marked on weekends", staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
-                    "message", "Attendance can't be marked on weekends"
-            ));
-        }
-
-        if (utilityClass.isHoliday(semester, selectedDate)) {
+        if (utilityClass.isNotSchoolday(semester, selectedDate)) {
             loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.READ, "Selected date is a holiday", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
-                    "message", "Selected date is a holiday"
+                    "message", "Attendance cannot be marked today"
             ));
         }
 
