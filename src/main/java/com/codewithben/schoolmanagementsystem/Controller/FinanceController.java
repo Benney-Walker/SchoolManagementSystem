@@ -183,7 +183,7 @@ public class FinanceController {
         return specialPaymentService.loadSpecialPayments(paymentType, staffId);
     }
 
-    @PatchMapping("/v1/update-special-fee")
+    @PutMapping("/v1/update-special-fee")
     public ResponseEntity<?> updateSpecialPayment(@Valid @RequestBody UpdateSpecialPayment updateSpecialPayment) {
 
         String staffId = authenticatedStaffProvider.getStaffId();
