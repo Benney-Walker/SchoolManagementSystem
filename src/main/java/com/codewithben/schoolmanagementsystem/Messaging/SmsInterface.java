@@ -1,4 +1,4 @@
-package com.codewithben.schoolmanagementsystem.Messaging.Sms;
+package com.codewithben.schoolmanagementsystem.Messaging;
 
 import java.util.List;
 
