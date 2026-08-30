@@ -2,6 +2,7 @@ package com.codewithben.schoolmanagementsystem.DTO.SpecialPayments;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,8 +17,7 @@ public class UpdateSpecialPayment {
     @NotBlank(message = "Special Payment id is required")
     private String id;
 
-    @NotBlank(message = "Amount is required")
-    @Pattern(regexp = "\\d+(\\.\\d{1,2})?", message = "Amount must be a valid number")
+    @Positive(message = "Amount must be more than 0")
     private int amount;
 
     @NotBlank(message = "Description is required")
