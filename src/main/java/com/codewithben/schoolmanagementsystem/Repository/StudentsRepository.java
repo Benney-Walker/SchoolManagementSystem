@@ -13,6 +13,8 @@ import java.util.Optional;
 public interface StudentsRepository extends JpaRepository<Students, Long> {
     Optional<Students> findByStudentId(String studentId);
 
+    List<Students> findByStudentIdIn(List<String> studentIds);
+
     boolean existsByFirstNameAndLastNameAndDateOfBirthAndInstitution_InstitutionId(
             String firstName, String lastName, LocalDate dateOfBirth, String institutionId
     );
