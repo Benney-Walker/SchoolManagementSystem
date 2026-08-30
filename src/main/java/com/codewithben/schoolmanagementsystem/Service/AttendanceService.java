@@ -22,6 +22,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @AllArgsConstructor
 @Service
@@ -109,21 +110,6 @@ public class AttendanceService {
 
     public ResponseEntity<?> saveAttendance(String levelId, String date, List<AttendanceRequestList> attendanceList, String staffId) {
 
-        if (attendanceList == null || attendanceList.isEmpty()) {
-            loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.CREATE, "Attendance can't be marked on weekends", staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
-                    "message", "Invalid request! Attendance records empty"
-            ));
-        }
-        //Check if date is accepted for attendance
-        LocalDate selectedDate = LocalDate.parse(date, DateTimeFormatter.ISO_DATE);
-        if (utilityClass.isWeekend(selectedDate)) {
-            loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.CREATE, "Attendance can't be marked on weekends", staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
-                    "message", "Attendance can't be marked on weekends"
-            ));
-        }
-
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staff == null) {
             loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.CREATE, "Invalid staff Id", staffId, LogStatus.FAILED);
@@ -148,6 +134,22 @@ public class AttendanceService {
             ));
         }
 
+        //Check if date is accepted for attendance
+        LocalDate selectedDate = LocalDate.parse(date, DateTimeFormatter.ISO_DATE);
+
+        if (utilityClass.isNotSchoolday(semester, selectedDate)) {
+            loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.READ, "Selected date is a holiday", staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                    "message", "Attendance cannot be marked today"
+            ));
+        }
+
+        List<String> studentIds = attendanceList.stream().map(
+                AttendanceRequestList::getStudentId
+        ).toList();
+
+        List<Students> students = studentsRepository.findByStudentIdIn(studentIds);
+
         AttendanceDate attendanceDate = attendanceDateRepository
                 .findByLevel_LevelIDAndSemester_SemesterIDAndAttendanceDate(
                         levelId, semester.getSemesterID(), selectedDate
@@ -162,28 +164,24 @@ public class AttendanceService {
 
             List<AttendanceRecords> attendanceRecords = new ArrayList<>();
             for (AttendanceRequestList record : attendanceList) {
-                Students student = studentsRepository.findByStudentId(record.getStudentId()).orElse(null);
-                if (student == null) {
-                    loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.CREATE, "Invalid student Id", staffId, LogStatus.FAILED);
-                    return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
-                            "message", "Invalid student Id"
-                    ));
-                }
-                AttendanceRecords attendanceRecord = AttendanceRecords.builder()
-                        .attendanceDate(attendanceDate)
-                        .student(student)
-                        .status(AttendanceStatus.valueOf(record.getStatus().toUpperCase()))
-                        .build();
 
-                attendanceRecords.add(attendanceRecord);
+                for (Students student : students) {
+                    if (student.getStudentId().equals(record.getStudentId())) {
+                        AttendanceRecords attendanceRecord = AttendanceRecords.builder()
+                                .attendanceDate(attendanceDate)
+                                .student(student)
+                                .status(AttendanceStatus.valueOf(record.getStatus().toUpperCase()))
+                                .build();
+
+                        attendanceRecords.add(attendanceRecord);
+                    }
+                }
             }
 
             attendanceRecordsRepository.saveAll(attendanceRecords);
             loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.CREATE, "Marked attendance for " + level.getLevelName(), staffId, LogStatus.SUCCESS);
             return ResponseEntity.ok().build();
         } else {
-            //Holds names of students whose attendance is being updated
-            List<String> updatedRecordsStudents = new ArrayList<>();
 
             List<AttendanceRecords> existingRecords = attendanceDate.getAttendanceRecords();
             for (AttendanceRequestList record : attendanceList) {
@@ -194,15 +192,14 @@ public class AttendanceService {
                      !AttendanceStatus.valueOf(record.getStatus().toUpperCase()).equals(existingRecord.getStatus())) {
 
                          existingRecord.setStatus(AttendanceStatus.valueOf(record.getStatus().toUpperCase()));
-                         attendanceRecordsRepository.save(existingRecord);
-                         updatedRecordsStudents.add(existingRecord.getStudent().getFirstName());
                          break;
                      }
                  }
             }
+            attendanceRecordsRepository.saveAll(existingRecords);
 
             loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.UPDATE,
-                    "Updated attendance for " + updatedRecordsStudents.stream() + " of " + level.getLevelName(),
+                    "Updated attendance for " + level.getLevelName(),
                     staffId, LogStatus.SUCCESS);
             return ResponseEntity.ok().build();
         }
@@ -267,7 +264,7 @@ public class AttendanceService {
         List<LocalDate> schoolDays = new ArrayList<>();
         for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
 
-            if (!utilityClass.isWeekend(date) && !utilityClass.isHoliday(semester, date)) {
+            if (!utilityClass.isWeekend(date) && !utilityClass.isNotSchoolday(semester, date)) {
                 schoolDays.add(date);
             }
         }
