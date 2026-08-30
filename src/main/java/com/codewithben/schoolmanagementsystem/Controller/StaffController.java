@@ -67,7 +67,7 @@ public class StaffController {
         return staffService.findStaffById(instructorId, staffId);
     }
 
-    @GetMapping("/v1/load-staff-info")
+    @GetMapping("/v1/load-class-info")
     public ResponseEntity<?> loadStaffGrades() {
 
         String staffId = authenticatedStaffProvider.getStaffId();
