@@ -1,6 +1,5 @@
 package com.codewithben.schoolmanagementsystem.Service;
 
-import com.codewithben.schoolmanagementsystem.Constants.AttendanceStatus;
 import com.codewithben.schoolmanagementsystem.Constants.LogAction;
 import com.codewithben.schoolmanagementsystem.Constants.LogStatus;
 import com.codewithben.schoolmanagementsystem.Constants.LogType;
@@ -9,13 +8,11 @@ import com.codewithben.schoolmanagementsystem.DTO.Semester.SemesterCaching;
 import com.codewithben.schoolmanagementsystem.DTO.Class.FindAndUpdateClassInfo;
 import com.codewithben.schoolmanagementsystem.DTO.Class.GradeInformation;
 import com.codewithben.schoolmanagementsystem.DTO.Semester.FindSemester;
-import com.codewithben.schoolmanagementsystem.DTO.Students.StudentRoaster;
 import com.codewithben.schoolmanagementsystem.DTO.Subject.SubjectsHolder;
 import com.codewithben.schoolmanagementsystem.Entity.*;
 import com.codewithben.schoolmanagementsystem.Repository.*;
 import com.codewithben.schoolmanagementsystem.Utility.UtilityClass;
 import jakarta.transaction.Transactional;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,7 +22,6 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
@@ -202,7 +198,7 @@ public class ClassService {
         return ResponseEntity.ok().build();
     }
 
-    public ResponseEntity<?> loadStaffClasses(String staffId) {
+    public ResponseEntity<?> loadClassInfo(String staffId) {
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staff == null) {
             loggingService.logGeneralActivity(LogType.CLASS, LogAction.READ, "Could not load staff class information", staffId, LogStatus.FAILED);
@@ -219,62 +215,19 @@ public class ClassService {
             ));
         }
 
-        String currentSemesterId =
-                utilityClass.getCurrentSemester(staff.getInstitution()) == null ? "" : utilityClass.getCurrentSemester(staff.getInstitution()).getSemesterID();
+        int classSize = utilityClass.getActiveStudents(levels.getFirst().getStudents()).size();
 
-        List<GradeInformation> gradesInformation = getGradesInformation(levels, currentSemesterId);
+        GradeInformation gradesInformation = GradeInformation.builder()
+                .className(levels.getFirst().getLevelName())
+                .classSize(classSize)
+                .build();
 
-        loggingService.logGeneralActivity(LogType.CLASS, LogAction.READ, "Successfully loaded class information", staffId, LogStatus.SUCCESS);
+        loggingService.logGeneralActivity(
+                LogType.CLASS,
+                LogAction.READ,
+                "Successfully loaded class information",
+                staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok(gradesInformation);
-    }
-
-
-    private List<GradeInformation> getGradesInformation(List<Level> levels, String currentSemesterId) {
-        List<GradeInformation> gradesInformation = new ArrayList<>();
-        for (Level level : levels) {
-            String gradeId = level.getLevelID();
-            String gradeName = level.getLevelName();
-            String gradeStudentsCount = String.valueOf(
-                    level.getStudents() == null ? 0 : level.getStudents().size()
-            );
-
-            List<AttendanceRecords> markedRecords =
-                    attendanceRecordsRepository.findByAttendanceDate_Level_LevelIDAndAttendanceDate_Semester_SemesterID(
-                            level.getLevelID(), currentSemesterId
-                    );
-
-            List<StudentRoaster> gradeStudents = new ArrayList<>();
-
-            List<Students> students = level.getStudents() == null ?
-                    new ArrayList<>() : level.getStudents();
-                for (Students gradeStudent : students) {
-                    String studentId = gradeStudent.getStudentId();
-                    String fullName = gradeStudent.getFirstName() + " " + gradeStudent.getLastName();
-
-                    int presentCount = 0;
-                    for (AttendanceRecords markedRecord : markedRecords) {
-                        if (markedRecord.getStudent().equals(gradeStudent) &&
-                                markedRecord.getStatus().equals(AttendanceStatus.PRESENT)) {
-                            presentCount++;
-                        }
-                    }
-
-                    StudentRoaster studentRoaster = StudentRoaster.builder()
-                            .studentId(studentId)
-                            .studentName(fullName)
-                            .presentCount(presentCount)
-                            .build();
-
-                    gradeStudents.add(studentRoaster);
-                }
-
-            GradeInformation gradeInformation = new GradeInformation(
-                    gradeId, gradeName, gradeStudentsCount, gradeStudents
-            );
-
-            gradesInformation.add(gradeInformation);
-        }
-        return gradesInformation;
     }
 
     public ResponseEntity<?> findClassInfo(String levelId, String staffId) {

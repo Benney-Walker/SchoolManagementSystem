@@ -67,12 +67,12 @@ public class StaffController {
         return staffService.findStaffById(instructorId, staffId);
     }
 
-    @GetMapping("/v1/load-staff-grades")
-    public ResponseEntity<?> loadStaffGrades(@RequestHeader("staffId") String Id) {
+    @GetMapping("/v1/load-staff-info")
+    public ResponseEntity<?> loadStaffGrades() {
 
         String staffId = authenticatedStaffProvider.getStaffId();
 
-        return classService.loadStaffClasses(staffId);
+        return classService.loadClassInfo(staffId);
     }
 
 
