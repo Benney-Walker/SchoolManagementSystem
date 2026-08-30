@@ -171,7 +171,7 @@ public class UtilityClass {
         return day == DayOfWeek.SATURDAY || day == DayOfWeek.SUNDAY;
     }
 
-    public boolean isHoliday(Semester semester, LocalDate selectedDate) {
+    public boolean isNotSchoolday(Semester semester, LocalDate selectedDate) {
         List<SchoolHoliday> holidays = semester.getSchoolHoliday();
         if (holidays != null && !holidays.isEmpty()) {
             for (SchoolHoliday holiday : holidays) {
@@ -180,7 +180,8 @@ public class UtilityClass {
                 }
             }
         }
-        return false;
+
+        return isWeekend(selectedDate);
     }
 
     public List<Students> getActiveStudents(List<Students> students) {
