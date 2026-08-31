@@ -58,9 +58,13 @@ public class AttendanceService {
 
         Semester semester = utilityClass.getCurrentSemester(level.getInstitution());
         if (semester == null) {
-            loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.READ, "Current term not added to system", staffId, LogStatus.FAILED);
+            loggingService.logGeneralActivity(
+                    LogType.ATTENDANCE,
+                    LogAction.READ,
+                    "Attendance can't be marked today! Vacation or term has not started yet",
+                    staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
-                    "message", "Current term not added to system"
+                    "message", "Attendance can't be marked today! Vacation or term has not started yet"
             ));
         }
 
