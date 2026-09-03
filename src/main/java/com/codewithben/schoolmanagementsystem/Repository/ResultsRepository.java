@@ -23,5 +23,7 @@ public interface ResultsRepository extends JpaRepository<Results, Long> {
             String levelId, String semesterId
     );
 
+    List<Results> findAllBySemester_SemesterIDAndStudent_StudentIdIn(String semesterId, List<String> studentIds);
+
     List<Results> findAllByResultIdIn(List<Long> resultIds);
 }

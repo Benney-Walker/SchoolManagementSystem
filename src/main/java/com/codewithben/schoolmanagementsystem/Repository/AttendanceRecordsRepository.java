@@ -11,9 +11,6 @@ import java.util.Optional;
 
 @Repository
 public interface AttendanceRecordsRepository extends JpaRepository<AttendanceRecords, Long> {
-    Optional<AttendanceRecords> findByAttendanceDate_DateIdAndStudent_StudentId(
-            int attendanceDate, String studentId
-    );
 
     List<AttendanceRecords> findByStudent_StudentIdAndStatusAndAttendanceDate_Semester_SemesterID(
             String studentId, AttendanceStatus status, String semesterId

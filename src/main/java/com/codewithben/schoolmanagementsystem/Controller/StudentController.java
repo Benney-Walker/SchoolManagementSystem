@@ -1,7 +1,6 @@
 package com.codewithben.schoolmanagementsystem.Controller;
 
 import com.codewithben.schoolmanagementsystem.DTO.Attendance.AttendanceRequestList;
-import com.codewithben.schoolmanagementsystem.DTO.Result.SaveStudentScores;
 import com.codewithben.schoolmanagementsystem.DTO.Students.AddNewStudent;
 import com.codewithben.schoolmanagementsystem.DTO.Students.StudentsScoresTable;
 import com.codewithben.schoolmanagementsystem.DTO.Students.UpdateStudentPersonalData;
@@ -74,7 +73,7 @@ public class StudentController {
     @PostMapping("/v1/save-scores/{subjectId}/{semesterId}")
     public ResponseEntity<?> saveSubjectScores(@PathVariable String subjectId,
                                                @PathVariable String semesterId,
-                                               @RequestBody List<StudentsScoresTable> scores) {
+                                               @Valid @RequestBody List<StudentsScoresTable> scores) {
 
         String staffId  = authenticatedStaffProvider.getStaffId();
 
@@ -82,7 +81,7 @@ public class StudentController {
     }
 
     @PutMapping("/v1/update-student-data")
-    public ResponseEntity<?> updateStudentData(@RequestBody UpdateStudentPersonalData data) {
+    public ResponseEntity<?> updateStudentData(@Valid @RequestBody UpdateStudentPersonalData data) {
 
         String staffId  = authenticatedStaffProvider.getStaffId();
 

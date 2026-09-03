@@ -3,6 +3,7 @@ package com.codewithben.schoolmanagementsystem.Service;
 import com.codewithben.schoolmanagementsystem.Constants.SpecialPaymentType;
 import com.codewithben.schoolmanagementsystem.DTO.RabbitMQ.Fees.FeeCreation;
 import com.codewithben.schoolmanagementsystem.DTO.RabbitMQ.Fees.FeesUpdate;
+import com.codewithben.schoolmanagementsystem.DTO.RabbitMQ.Results.CreateResults;
 import com.codewithben.schoolmanagementsystem.DTO.RabbitMQ.Results.ResultsUpdate;
 import com.codewithben.schoolmanagementsystem.DTO.RabbitMQ.Student.NewStudentFee;
 import com.codewithben.schoolmanagementsystem.Entity.*;
@@ -40,6 +41,10 @@ public class AsyncService {
     private final StaffsRepository staffsRepository;
 
     private final SubjectScoreRepository subjectScoreRepository;
+
+    private final AttendanceRecordsRepository attendanceRecordsRepository;
+
+    private final SemesterRepository semesterRepository;
 
     @Transactional
     public void createIndividualFeeRecord(FeeCreation feeCreation) {
@@ -208,6 +213,62 @@ public class AsyncService {
             newRecord.setBalance(total);
         }
         studentFeeRecordRepository.saveAndFlush(newRecord);
+    }
+
+    public void create_updateResults(CreateResults createResults) {
+        Semester semester = semesterRepository.findBySemesterID(createResults.getSemesterId()).orElse(null);
+        Level level = levelRepository.findByLevelID(createResults.getLevelId()).orElse(null);
+        if (semester == null || level == null) {
+            return;
+        }
+
+        List<Results> resultsList = resultsRepository
+                .findAllBySemester_SemesterIDAndStudent_StudentIdIn(createResults.getSemesterId(), createResults.getStudentIds());
+
+        boolean found;
+        for (String studentId : createResults.getStudentIds()) {
+            found = false;
+
+            for (Results results : resultsList) {
+                if (results.getStudent().getStudentId().equals(studentId)) {
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found) {
+                Students student = studentsRepository.findByStudentId(studentId).orElse(null);
+                if (student == null) {
+                    continue;
+                }
+                Results result = resultsRepository
+                        .findByStudent_StudentIdAndSemester_SemesterID(studentId, createResults.getSemesterId())
+                        .orElse(new Results());
+                result.setStudent(student);
+                result.setSemester(semester);
+                result.setLevel(level);
+                resultsList.add(result);
+            }
+        }
+        resultsRepository.saveAllAndFlush(resultsList);
+
+        List<AttendanceRecords> attendanceRecords = attendanceRecordsRepository
+                .findByAttendanceDate_Level_LevelIDAndAttendanceDate_Semester_SemesterID(createResults.getLevelId(), createResults.getSemesterId());
+
+        List<Results> affectedResults = new ArrayList<>();
+        for (Results result : resultsList) {
+            int presentCount = 0;
+            for (AttendanceRecords attendanceRecord : attendanceRecords) {
+                if (result.getStudent().getStudentId().equals(attendanceRecord.getStudent().getStudentId())) {
+                    presentCount++;
+                }
+            }
+            if (presentCount > 0) {
+                result.setPresentAttendanceCount(presentCount);
+                affectedResults.add(result);
+            }
+        }
+        resultsRepository.saveAllAndFlush(affectedResults);
     }
 
     @Transactional

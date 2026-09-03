@@ -24,6 +24,7 @@ public class RabbitMQConfig {
     /************************************************
              ACADEMIC_QUEUES_DECLARATIONS
      *************************************************/
+    public static final String CREATE_RESULTS_QUEUE_NAME = "create_results_queue";
     public static final String UPDATE_RESULTS_QUEUE_NAME = "update_results_queue";
 
 
@@ -33,10 +34,12 @@ public class RabbitMQConfig {
     public static final String FEE_CREATION_ROUTING_KEY = "fee_routing_key";
     public static final String FEE_UPDATE_ROUTING_KEY = "fee_update_routing_key";
     public static final String NEW_STUDENT_FEE_ROUTING_KEY = "new_student_routing_key";
+
+    public static final String CREATE_RESULTS_ROUTING_KEY = "create_results_routing";
     public static final String UPDATE_RESULTS_ROUTING_KEY = "update_results_routing_key";
 
     /************************************************
-     * *******           QUEUES   ******************
+     * *******       QUEUES METHODS   ***********
     *************************************************/
     @Bean
     public Queue feeCreationQueue() {
@@ -54,6 +57,11 @@ public class RabbitMQConfig {
     }
 
     @Bean
+    public Queue createResultsQueue() {
+        return new Queue(CREATE_RESULTS_QUEUE_NAME, true);
+    }
+
+    @Bean
     public Queue updateResultsQueue() {
         return new Queue(UPDATE_RESULTS_QUEUE_NAME, true);
     }
@@ -61,7 +69,6 @@ public class RabbitMQConfig {
     /************************************************
                        BINDINGS
      *************************************************/
-
     @Bean
     public Binding feeCreationBinding(Queue feeCreationQueue, TopicExchange exchange) {
         return BindingBuilder.bind(feeCreationQueue).to(exchange).with(FEE_CREATION_ROUTING_KEY);
@@ -75,6 +82,11 @@ public class RabbitMQConfig {
     @Bean
     public Binding newStudentFeeCreationBinding(Queue newStudentFeeCreationQueue, TopicExchange exchange) {
         return BindingBuilder.bind(newStudentFeeCreationQueue).to(exchange).with(NEW_STUDENT_FEE_ROUTING_KEY);
+    }
+
+    @Bean
+    public Binding createResultsBinding(Queue createResultsQueue, TopicExchange exchange) {
+        return BindingBuilder.bind(createResultsQueue).to(exchange).with(CREATE_RESULTS_ROUTING_KEY);
     }
 
     @Bean

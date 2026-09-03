@@ -8,6 +8,7 @@ import com.codewithben.schoolmanagementsystem.DTO.Attendance.AttendanceRequestLi
 import com.codewithben.schoolmanagementsystem.DTO.Attendance.DatesMarked;
 import com.codewithben.schoolmanagementsystem.DTO.Attendance.StudentAttendance;
 import com.codewithben.schoolmanagementsystem.DTO.Attendance.TodaysAbsentees;
+import com.codewithben.schoolmanagementsystem.DTO.RabbitMQ.Results.CreateResults;
 import com.codewithben.schoolmanagementsystem.Entity.*;
 import com.codewithben.schoolmanagementsystem.Repository.*;
 import com.codewithben.schoolmanagementsystem.Utility.UtilityClass;
@@ -43,6 +44,8 @@ public class AttendanceService {
     private final StaffsRepository staffsRepository;
 
     private final SemesterRepository semesterRepository;
+
+    private final RabbitMQProducer rabbitMQProducer;
 
     public ResponseEntity<?> loadStudentsForAttendance(String levelId, String attendanceDate, String staffId) {
 
@@ -184,7 +187,6 @@ public class AttendanceService {
 
             attendanceRecordsRepository.saveAll(attendanceRecords);
             loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.CREATE, "Marked attendance for " + level.getLevelName(), staffId, LogStatus.SUCCESS);
-            return ResponseEntity.ok().build();
         } else {
 
             List<AttendanceRecords> existingRecords = attendanceDate.getAttendanceRecords();
@@ -205,8 +207,15 @@ public class AttendanceService {
             loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.UPDATE,
                     "Updated attendance for " + level.getLevelName(),
                     staffId, LogStatus.SUCCESS);
-            return ResponseEntity.ok().build();
         }
+        CreateResults createResults = CreateResults.builder()
+                .levelId(levelId)
+                .semesterId(semester.getSemesterID())
+                .studentIds(studentIds)
+                .build();
+        rabbitMQProducer.sendCreateResultsEvent(createResults);
+
+        return ResponseEntity.ok().build();
     }
 
     public ResponseEntity<?> loadAttendanceRecords(String staffId, String levelId, String semesterId, String date) {

@@ -35,7 +35,15 @@ public class RabbitMQProducer {
         );
     }
 
-    public void updateResultsEvent(Object payload) {
+    public void sendCreateResultsEvent(Object payload) {
+        rabbitTemplate.convertAndSend(
+                RabbitMQConfig.EXCHANGE_NAME,
+                RabbitMQConfig.CREATE_RESULTS_ROUTING_KEY,
+                payload
+        );
+    }
+
+    public void sendUpdateResultsEvent(Object payload) {
         rabbitTemplate.convertAndSend(
                 RabbitMQConfig.EXCHANGE_NAME,
                 RabbitMQConfig.UPDATE_RESULTS_ROUTING_KEY,

@@ -13,7 +13,6 @@ import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -214,7 +213,7 @@ public class ScoresService {
                 .subjectId(subjectId)
                 .affectedResultsIds(affectedResultsIds)
                 .build();
-        rabbitMQProducer.updateResultsEvent(resultsUpdate);
+        rabbitMQProducer.sendUpdateResultsEvent(resultsUpdate);
 
         loggingService.logGeneralActivity(
                 LogType.SUBJECT_SCORE, LogAction.CREATE,
