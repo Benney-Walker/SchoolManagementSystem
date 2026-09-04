@@ -32,7 +32,7 @@ public class NewStaff {
     private String dateOfBirth;
 
     @NotBlank(message = "Password is required")
-    @Size(min = 8, message = "Password must be at least 8 characters")
+    @Size(min = 6, message = "Password must be at least 8 characters")
     private String password;
 
     @NotBlank(message = "Email is required")
