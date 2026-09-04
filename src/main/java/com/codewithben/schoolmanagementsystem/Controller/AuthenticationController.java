@@ -54,7 +54,7 @@ public class AuthenticationController {
         return institutionService.addNewInstitution(data.getInstitutionName());
     }
 
-    @PostMapping("/v1/enroll-new-staff")
+    @PostMapping("/v1/enroll-new-principal")
     public ResponseEntity<?> newPrincipal(@RequestBody NewPrincipal newPrincipal) {
         String firstName = newPrincipal.getFirstName();
         String lastName = newPrincipal.getLastName();
