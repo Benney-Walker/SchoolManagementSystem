@@ -4,7 +4,6 @@ public enum LogType {
     ATTENDANCE,
     CONDUCT,
     FEES,
-
     PAYMENT,
     GRADE,
     INSTITUTION,
@@ -19,5 +18,5 @@ public enum LogType {
     SUBJECT,
     SUBJECT_SCORE,
     EXPENSES,
-    SPECIAL_FEES
+    BROADCAST
 }
