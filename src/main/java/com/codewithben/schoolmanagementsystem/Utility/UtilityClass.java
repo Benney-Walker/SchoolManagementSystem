@@ -256,6 +256,21 @@ public class UtilityClass {
             case 2: return number + "nd";
             case 3: return number + "rd";
             default: return number + "th";
+    public static String toInternational(String rawNumber) {
+        if (rawNumber == null || rawNumber.isEmpty()) {
+            return null;
         }
+
+        String digits = rawNumber.replaceAll("[\\s()\\-]", "").replaceFirst("^\\+", "");
+        if (digits.isEmpty()) {
+            return null;
+        }
+
+        if (digits.startsWith("0") && digits.length() == 10) {
+            return "+233" + digits.substring(1);
+        } else if (digits.startsWith("233")){
+            return "+" + digits;
+        }
+        return digits;
     }
 }
