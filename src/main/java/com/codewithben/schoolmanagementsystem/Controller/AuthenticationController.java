@@ -1,9 +1,6 @@
 package com.codewithben.schoolmanagementsystem.Controller;
 
-import com.codewithben.schoolmanagementsystem.Constants.LogAction;
-import com.codewithben.schoolmanagementsystem.Constants.LogStatus;
-import com.codewithben.schoolmanagementsystem.Constants.LogType;
-import com.codewithben.schoolmanagementsystem.Constants.StaffRoles;
+import com.codewithben.schoolmanagementsystem.Constants.*;
 import com.codewithben.schoolmanagementsystem.DTO.Auth.InstitutionRegistrationDTO;
 import com.codewithben.schoolmanagementsystem.DTO.Auth.RefreshRequest;
 import com.codewithben.schoolmanagementsystem.DTO.Staff.NewPrincipal;
@@ -96,9 +93,9 @@ public class AuthenticationController {
 
         List<String> rolesList = staff.getRoles().stream().map(
                 role -> role.getStaffRole().name()).toList();
-        if (rolesList.contains(StaffRoles.GENERAL_STAFF.name())) {
+        if (rolesList.contains(StaffRoles.GENERAL_STAFF.name()) || staff.getStaffStatus() == StaffStatus.INACTIVE) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
-                    "message", "General staffs are not allowed"
+                    "message", "You are not allowed to access the system! Contact your admin"
             ));
         }
 
