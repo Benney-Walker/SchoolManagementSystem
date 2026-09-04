@@ -18,4 +18,6 @@ public interface StudentsRepository extends JpaRepository<Students, Long> {
     boolean existsByFirstNameAndLastNameAndDateOfBirthAndInstitution_InstitutionId(
             String firstName, String lastName, LocalDate dateOfBirth, String institutionId
     );
+
+    List<Students> findAllByInstitution_InstitutionIdAndLevel_LevelIDIn(String institutionId, List<String> levelIds);
 }
