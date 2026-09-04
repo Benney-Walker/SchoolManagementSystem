@@ -23,11 +23,7 @@ public class UtilityClass {
 
     private final GradeSystemRepository gradeSystemRepository;
 
-    private final InstitutiionRepository institutiionRepository;
-
     private final ResultsRepository resultsRepository;
-
-    private final SemesterRepository semesterRepository;
 
     private final AtomicReference<List<GradeSystem>> cache = new AtomicReference<>();
 
@@ -251,11 +247,14 @@ public class UtilityClass {
         if (number >= 11 && number <= 13) {
             return number + "th";
         }
-        switch (number % 10) {
-            case 1: return number + "st";
-            case 2: return number + "nd";
-            case 3: return number + "rd";
-            default: return number + "th";
+        return switch (number % 10) {
+            case 1 -> number + "st";
+            case 2 -> number + "nd";
+            case 3 -> number + "rd";
+            default -> number + "th";
+        };
+    }
+
     public static String toInternational(String rawNumber) {
         if (rawNumber == null || rawNumber.isEmpty()) {
             return null;
