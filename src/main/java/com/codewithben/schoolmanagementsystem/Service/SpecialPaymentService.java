@@ -97,7 +97,7 @@ public class SpecialPaymentService {
         }
 
         loggingService.logGeneralActivity(
-                LogType.SPECIAL_FEES,
+                LogType.FEES,
                 LogAction.CREATE,
                 message,
                 staffId,
@@ -121,7 +121,7 @@ public class SpecialPaymentService {
                 );
         if (specialPaymentList == null || specialPaymentList.isEmpty()) {
             loggingService.logGeneralActivity(
-                    LogType.SPECIAL_FEES,
+                    LogType.FEES,
                     LogAction.READ,
                     "No special payment of type " + paymentType,
                     staffId,
@@ -154,7 +154,7 @@ public class SpecialPaymentService {
         LevelSpecialPayment levelSpecialPayment = levelSpecialPaymentRepo.findById(updateSpecialPayment.getId()).orElse(null);
         if(levelSpecialPayment == null){
             loggingService.logGeneralActivity(
-                    LogType.SPECIAL_FEES,
+                    LogType.FEES,
                     LogAction.UPDATE,
                     "Record do not exist",
                     staffId,
@@ -171,7 +171,7 @@ public class SpecialPaymentService {
         levelSpecialPaymentRepo.save(levelSpecialPayment);
 
         loggingService.logGeneralActivity(
-                LogType.SPECIAL_FEES,
+                LogType.FEES,
                 LogAction.UPDATE,
                 "Successfully updated record",
                 staffId,
