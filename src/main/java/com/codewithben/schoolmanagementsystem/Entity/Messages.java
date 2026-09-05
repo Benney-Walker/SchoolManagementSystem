@@ -29,5 +29,7 @@ public class Messages {
 
     private float smsCost;
 
-    private boolean success;
+    private int successCount;
+
+    private int failureCount;
 }
