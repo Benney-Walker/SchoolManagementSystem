@@ -1,23 +1,29 @@
 package com.codewithben.schoolmanagementsystem.Service;
 
+import com.codewithben.schoolmanagementsystem.Constants.AttendanceStatus;
 import com.codewithben.schoolmanagementsystem.Constants.SpecialPaymentType;
+import com.codewithben.schoolmanagementsystem.DTO.Broadcast.Agoo.AgooSmsResponse;
+import com.codewithben.schoolmanagementsystem.DTO.RabbitMQ.Attendance.DailyAttendance;
 import com.codewithben.schoolmanagementsystem.DTO.RabbitMQ.Fees.FeeCreation;
 import com.codewithben.schoolmanagementsystem.DTO.RabbitMQ.Fees.FeesUpdate;
 import com.codewithben.schoolmanagementsystem.DTO.RabbitMQ.Results.CreateResults;
 import com.codewithben.schoolmanagementsystem.DTO.RabbitMQ.Results.ResultsUpdate;
 import com.codewithben.schoolmanagementsystem.DTO.RabbitMQ.Student.NewStudentFee;
 import com.codewithben.schoolmanagementsystem.Entity.*;
+import com.codewithben.schoolmanagementsystem.Interface.SmsInterface;
 import com.codewithben.schoolmanagementsystem.Repository.*;
 import com.codewithben.schoolmanagementsystem.Utility.UtilityClass;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -45,6 +51,13 @@ public class AsyncService {
     private final AttendanceRecordsRepository attendanceRecordsRepository;
 
     private final SemesterRepository semesterRepository;
+
+    private final MessagesRepository messagesRepository;
+
+    private final SmsInterface smsInterface;
+
+    @Value("${attendance.default.message}")
+    private String attendanceMessage;
 
     @Transactional
     public void createIndividualFeeRecord(FeeCreation feeCreation) {
@@ -314,5 +327,62 @@ public class AsyncService {
         if (classResultsList == null || classResultsList.isEmpty()) return;
         classResultsList.sort(Comparator.comparing(Results::getTotalScore).reversed());
         utilityClass.reArrangePositions(classResultsList);
+    }
+
+    public void broadcastAttendanceStatus(DailyAttendance dailyAttendance) {
+
+        List<Students> students = studentsRepository.findByStudentIdIn(dailyAttendance.getStudentsIds());
+
+        if (students != null && !students.isEmpty()) {
+
+            int audienceCount = 0;
+            int successCount  = 0;
+            int failureCount = 0;
+            AgooSmsResponse agooSmsResponse = null;
+            for (Students student : students) {
+                String formattedNumber = UtilityClass.toInternational(student.getParentPhoneNumber());
+                if (formattedNumber == null)
+                    continue;
+
+                AttendanceStatus status =
+                        dailyAttendance.getAttendanceMap().get(student.getStudentId());
+
+                if (status == null) {
+                    log.warn("No attendance status found for student {}",
+                            student.getStudentId());
+                    continue;
+                }
+
+                String fullName = student.getFirstName() + " " + student.getLastName();
+                String preparedMessage = student.getInstitution().getBroadcastHeader() +
+                        attendanceMessage + " " + dailyAttendance.getAttendanceDate().toString() + " " +
+                        fullName + " is " + status.name();
+
+                agooSmsResponse = smsInterface.sendSms(preparedMessage, formattedNumber);
+                if (agooSmsResponse == null) {
+                    log.error(
+                            "SMS broadcast failed for student {}",
+                            student.getStudentId()
+                    );
+                    failureCount++;
+                    continue;
+                }
+                successCount++;
+                audienceCount++;
+            }
+
+            if (agooSmsResponse != null && audienceCount > 0) {
+                List<String> audience = new ArrayList<>();
+                audience.add(students.getFirst().getLevel().getLevelName());
+                Messages newMessage = Messages.builder()
+                        .message(attendanceMessage)
+                        .audience(audience)
+                        .audienceCount(audienceCount)
+                        .successCount(successCount)
+                        .failureCount(failureCount)
+                        .build();
+                messagesRepository.save(newMessage);
+            }
+        }
     }
 }
