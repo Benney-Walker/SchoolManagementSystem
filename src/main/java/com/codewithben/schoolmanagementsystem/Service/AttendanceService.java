@@ -8,6 +8,7 @@ import com.codewithben.schoolmanagementsystem.DTO.Attendance.AttendanceRequestLi
 import com.codewithben.schoolmanagementsystem.DTO.Attendance.DatesMarked;
 import com.codewithben.schoolmanagementsystem.DTO.Attendance.StudentAttendance;
 import com.codewithben.schoolmanagementsystem.DTO.Attendance.TodaysAbsentees;
+import com.codewithben.schoolmanagementsystem.DTO.RabbitMQ.Attendance.DailyAttendance;
 import com.codewithben.schoolmanagementsystem.DTO.RabbitMQ.Results.CreateResults;
 import com.codewithben.schoolmanagementsystem.Entity.*;
 import com.codewithben.schoolmanagementsystem.Repository.*;
@@ -21,6 +22,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -154,9 +156,9 @@ public class AttendanceService {
         List<String> studentIds = attendanceList.stream().map(
                 AttendanceRequestList::getStudentId
         ).toList();
+        Map<String, AttendanceStatus> attendanceMap = new HashMap<>();
 
         List<Students> students = studentsRepository.findByStudentIdIn(studentIds);
-
         AttendanceDate attendanceDate = attendanceDateRepository
                 .findByLevel_LevelIDAndSemester_SemesterIDAndAttendanceDate(
                         levelId, semester.getSemesterID(), selectedDate
@@ -174,13 +176,16 @@ public class AttendanceService {
 
                 for (Students student : students) {
                     if (student.getStudentId().equals(record.getStudentId())) {
+                        AttendanceStatus status = AttendanceStatus.valueOf(record.getStatus().toUpperCase());
+
                         AttendanceRecords attendanceRecord = AttendanceRecords.builder()
                                 .attendanceDate(attendanceDate)
                                 .student(student)
-                                .status(AttendanceStatus.valueOf(record.getStatus().toUpperCase()))
+                                .status(status)
                                 .build();
 
                         attendanceRecords.add(attendanceRecord);
+                        attendanceMap.put(student.getStudentId(), status);
                     }
                 }
             }
@@ -214,6 +219,13 @@ public class AttendanceService {
                 .studentIds(studentIds)
                 .build();
         rabbitMQProducer.sendCreateResultsEvent(createResults);
+
+        DailyAttendance dailyAttendance = DailyAttendance.builder()
+                .attendanceMap(attendanceMap)
+                .studentsIds(studentIds)
+                .attendanceDate(selectedDate)
+                .build();
+        rabbitMQProducer.sendDailyAttendanceEvent(dailyAttendance);
 
         return ResponseEntity.ok().build();
     }
