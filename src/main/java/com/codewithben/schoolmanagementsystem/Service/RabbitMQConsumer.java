@@ -1,6 +1,7 @@
 package com.codewithben.schoolmanagementsystem.Service;
 
 import com.codewithben.schoolmanagementsystem.Config.RabbitMQConfig;
+import com.codewithben.schoolmanagementsystem.DTO.RabbitMQ.Attendance.DailyAttendance;
 import com.codewithben.schoolmanagementsystem.DTO.RabbitMQ.Fees.FeeCreation;
 import com.codewithben.schoolmanagementsystem.DTO.RabbitMQ.Fees.FeesUpdate;
 import com.codewithben.schoolmanagementsystem.DTO.RabbitMQ.Results.CreateResults;
@@ -40,5 +41,10 @@ public class RabbitMQConsumer {
     @RabbitListener(queues = RabbitMQConfig.UPDATE_RESULTS_QUEUE_NAME)
     public void consumeUpdateResultsEvent(ResultsUpdate resultsUpdate) {
         asyncService.updateResults(resultsUpdate);
+    }
+
+    @RabbitListener(queues = RabbitMQConfig.DAILY_ATTENDANCE_QUEUE_NAME)
+    public void consumeDailyAttendanceEvent(DailyAttendance dailyAttendance) {
+        asyncService.broadcastAttendanceStatus(dailyAttendance);
     }
 }

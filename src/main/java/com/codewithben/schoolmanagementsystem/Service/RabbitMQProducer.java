@@ -50,4 +50,12 @@ public class RabbitMQProducer {
                 payload
         );
     }
+
+    public void sendDailyAttendanceEvent(Object payload) {
+        rabbitTemplate.convertAndSend(
+                RabbitMQConfig.EXCHANGE_NAME,
+                RabbitMQConfig.DAILY_ATTENDANCE_ROUTING_KEY,
+                payload
+        );
+    }
 }

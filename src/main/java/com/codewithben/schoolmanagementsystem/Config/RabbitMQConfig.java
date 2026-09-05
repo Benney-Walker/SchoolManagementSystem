@@ -26,6 +26,7 @@ public class RabbitMQConfig {
      *************************************************/
     public static final String CREATE_RESULTS_QUEUE_NAME = "create_results_queue";
     public static final String UPDATE_RESULTS_QUEUE_NAME = "update_results_queue";
+    public static final String DAILY_ATTENDANCE_QUEUE_NAME = "daily_attendance_queue";
 
 
     /************************************************
@@ -34,9 +35,9 @@ public class RabbitMQConfig {
     public static final String FEE_CREATION_ROUTING_KEY = "fee_routing_key";
     public static final String FEE_UPDATE_ROUTING_KEY = "fee_update_routing_key";
     public static final String NEW_STUDENT_FEE_ROUTING_KEY = "new_student_routing_key";
-
     public static final String CREATE_RESULTS_ROUTING_KEY = "create_results_routing";
     public static final String UPDATE_RESULTS_ROUTING_KEY = "update_results_routing_key";
+    public static final String DAILY_ATTENDANCE_ROUTING_KEY = "daily_attendance_routing_key";
 
     /************************************************
      * *******       QUEUES METHODS   ***********
@@ -66,6 +67,11 @@ public class RabbitMQConfig {
         return new Queue(UPDATE_RESULTS_QUEUE_NAME, true);
     }
 
+    @Bean
+    public Queue dailyAttendanceQueue() {
+        return new Queue(DAILY_ATTENDANCE_QUEUE_NAME, true);
+    }
+
     /************************************************
                        BINDINGS
      *************************************************/
@@ -92,6 +98,11 @@ public class RabbitMQConfig {
     @Bean
     public Binding updateResultsBinding(Queue updateResultsQueue, TopicExchange exchange) {
         return BindingBuilder.bind(updateResultsQueue).to(exchange).with(UPDATE_RESULTS_ROUTING_KEY);
+    }
+
+    @Bean
+    public Binding dailyAttendanceBinding(Queue dailyAttendanceQueue, TopicExchange exchange) {
+        return BindingBuilder.bind(dailyAttendanceQueue).to(exchange).with(DAILY_ATTENDANCE_ROUTING_KEY);
     }
 
     /************************************************
