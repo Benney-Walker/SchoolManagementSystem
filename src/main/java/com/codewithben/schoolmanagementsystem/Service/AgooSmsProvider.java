@@ -1,6 +1,7 @@
 package com.codewithben.schoolmanagementsystem.Service;
 
 import com.codewithben.schoolmanagementsystem.DTO.Broadcast.Agoo.AgooBulkSmsPayload;
+import com.codewithben.schoolmanagementsystem.DTO.Broadcast.Agoo.AgooSmsPayload;
 import com.codewithben.schoolmanagementsystem.DTO.Broadcast.Agoo.AgooSmsResponse;
 import com.codewithben.schoolmanagementsystem.Interface.SmsInterface;
 import lombok.extern.slf4j.Slf4j;
@@ -51,6 +52,34 @@ public class AgooSmsProvider implements SmsInterface {
 
             ResponseEntity<AgooSmsResponse> response = restTemplate.postForEntity(
                     AGOO_BULK_API_URL, request, AgooSmsResponse.class
+            );
+
+            return response.getBody();
+        } catch (Exception e) {
+            log.error("Could not send bulk sms messages: " + e.getMessage());
+            return null;
+        }
+    }
+
+    @Override
+    public AgooSmsResponse sendSms(String message, String recipient) {
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("X-API-Key", API_KEY);
+
+        AgooSmsPayload agooSmsPayload = AgooSmsPayload.builder()
+                .senderId(SENDER_ID)
+                .message(message)
+                .to(recipient)
+                .build();
+
+        HttpEntity<AgooSmsPayload> request = new HttpEntity<>(agooSmsPayload, headers);
+
+        try {
+
+            ResponseEntity<AgooSmsResponse> response = restTemplate.postForEntity(
+                    AGOO_API_URL, request, AgooSmsResponse.class
             );
 
             return response.getBody();
