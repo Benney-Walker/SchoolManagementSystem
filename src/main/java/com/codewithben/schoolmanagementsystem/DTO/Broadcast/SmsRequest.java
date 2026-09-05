@@ -1,5 +1,7 @@
 package com.codewithben.schoolmanagementsystem.DTO.Broadcast;
 
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,7 +15,10 @@ import java.util.List;
 @AllArgsConstructor
 public class SmsRequest {
 
+    @NotNull(message = "Message cannot be empty")
     private String message;
 
+    @NotEmpty(message = "At least an audience must be selected")
+    @NotNull(message = "At least an audience must be selected")
     private List<String> audience;
 }
