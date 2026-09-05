@@ -75,7 +75,7 @@ public class BroadcastService {
         }
 
         String preparedMessage =
-                staff.getInstitution().getInstitutionName().toUpperCase() + ". " + smsRequest.getMessage();
+                staff.getInstitution().getBroadcastHeader() + smsRequest.getMessage();
 
         List<String> broadcastRecipients = new ArrayList<>();
         if (!staffAudience.isEmpty()) {
@@ -106,16 +106,17 @@ public class BroadcastService {
                     "Could not send messages! Contact developers.",
                     staffId, LogStatus.FAILED
             );
+
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
-
 
         Messages newMessage = Messages.builder()
                 .message(preparedMessage)
                 .sentBy(staff)
                 .audience(getAudienceList(levelIds, staffRoles))
-                .audienceCount(staffAudience.size() + studentAudience.size())
-                .success(agooSmsResponse.isSuccess())
+                .audienceCount(agooSmsResponse.getData().getRecipientCount())
+                .successCount(agooSmsResponse.isSuccess() ? 1 : 0)
+                .failureCount(agooSmsResponse.isSuccess() ? 0 : 1)
                 .build();
         messagesRepository.save(newMessage);
 
