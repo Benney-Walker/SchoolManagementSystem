@@ -40,7 +40,8 @@ public class InstitutionService {
             institution = new Institution();
             String id = utilityClass.generateEntityId("INSTITUTION");
             institution.setInstitutionId(id);
-            institution.setInstitutionName(institutionName);
+            institution.setInstitutionName(institutionName.toUpperCase());
+            institution.setBroadcastHeader("::" + institutionName.toUpperCase() + ":: ");
             institutiionRepository.save(institution);
             return ResponseEntity.ok(id);
         }

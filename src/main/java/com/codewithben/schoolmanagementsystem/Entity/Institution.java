@@ -19,6 +19,9 @@ public class Institution {
     @Column(length = 100, nullable = false, unique = true)
     private String institutionName;
 
+    @Column(nullable = false)
+    private String broadcastHeader;
+
     @OneToMany(mappedBy = "institution")
     private List<Staffs> staff;
 
