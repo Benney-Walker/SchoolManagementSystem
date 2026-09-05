@@ -7,4 +7,6 @@ import java.util.List;
 public interface SmsInterface {
 
     AgooSmsResponse sendBulkSms(String message, List<String> recipient);
+
+    AgooSmsResponse sendSms(String message, String recipient);
 }
