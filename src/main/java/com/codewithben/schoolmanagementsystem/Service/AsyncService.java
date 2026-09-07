@@ -354,11 +354,10 @@ public class AsyncService {
                 }
 
                 String fullName = student.getFirstName() + " " + student.getLastName();
-                String preparedMessage = student.getInstitution().getBroadcastHeader() +
-                        attendanceMessage + " " + dailyAttendance.getAttendanceDate().toString() + " " +
+                String preparedMessage = attendanceMessage + " " + dailyAttendance.getAttendanceDate().toString() + " " +
                         fullName + " is " + status.name();
 
-                agooSmsResponse = smsInterface.sendSms(preparedMessage, formattedNumber);
+                agooSmsResponse = smsInterface.sendSms(student.getInstitution().getBroadcastHeader(), preparedMessage, formattedNumber);
                 if (agooSmsResponse == null) {
                     log.error(
                             "SMS broadcast failed for student {}",

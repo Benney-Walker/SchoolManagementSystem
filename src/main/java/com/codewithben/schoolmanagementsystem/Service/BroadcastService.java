@@ -74,9 +74,6 @@ public class BroadcastService {
             ));
         }
 
-        String preparedMessage =
-                staff.getInstitution().getBroadcastHeader() + smsRequest.getMessage();
-
         List<String> broadcastRecipients = new ArrayList<>();
         if (!staffAudience.isEmpty()) {
 
@@ -98,7 +95,7 @@ public class BroadcastService {
             }
         }
 
-        AgooSmsResponse agooSmsResponse = smsInterface.sendBulkSms(preparedMessage, broadcastRecipients);
+        AgooSmsResponse agooSmsResponse = smsInterface.sendBulkSms(staff.getInstitution().getBroadcastHeader(), smsRequest.getMessage(), broadcastRecipients);
         if (agooSmsResponse == null) {
             loggingService.logGeneralActivity(
                     LogType.BROADCAST,
@@ -111,7 +108,7 @@ public class BroadcastService {
         }
 
         Messages newMessage = Messages.builder()
-                .message(preparedMessage)
+                .message(smsRequest.getMessage())
                 .sentBy(staff)
                 .audience(getAudienceList(levelIds, staffRoles))
                 .audienceCount(agooSmsResponse.getData().getRecipientCount())
