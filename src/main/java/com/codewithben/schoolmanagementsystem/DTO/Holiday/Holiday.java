@@ -22,11 +22,4 @@ public class Holiday {
 
     @NotBlank(message = "End date is required")
     private String endDate;
-
-    @NotBlank(message = "Term (semester) is required")
-    private String semesterId;
-
-    private String semesterName;
-
-    private String academicYear;
 }
