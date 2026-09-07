@@ -22,7 +22,7 @@ public class NewSpecialPayment {
 
     //@NotBlank(message = "Amount is required")
     @Positive(message = "Amount is invalid")
-    private double amount;
+    private float amount;
 
     @NotEmpty(message = "At least one class must be selected")
     private List<String> levelList;
