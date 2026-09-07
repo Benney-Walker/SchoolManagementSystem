@@ -4,7 +4,6 @@ import com.codewithben.schoolmanagementsystem.Constants.*;
 import com.codewithben.schoolmanagementsystem.DTO.Fees.*;
 import com.codewithben.schoolmanagementsystem.DTO.RabbitMQ.Fees.FeeCreation;
 import com.codewithben.schoolmanagementsystem.DTO.RabbitMQ.Fees.FeesUpdate;
-import com.codewithben.schoolmanagementsystem.DTO.RabbitMQ.Student.NewStudentFee;
 import com.codewithben.schoolmanagementsystem.DTO.Report.GradeFeesReport;
 import com.codewithben.schoolmanagementsystem.Entity.*;
 import com.codewithben.schoolmanagementsystem.Repository.*;
@@ -41,8 +40,6 @@ public class FeesService {
     private final StaffsRepository staffsRepository;
 
     private final UtilityClass utilityClass;
-
-    private final InstitutiionRepository institutionRepository;
 
     private final LoggingService loggingService;
 
@@ -552,6 +549,9 @@ public class FeesService {
             studentFeeRecord.getFees().setLocked(true);
             feesRepository.save(studentFeeRecord.getFees());
         }
+
+        studentFeeRecord.getStudent().setNew(false);
+        studentsRepository.saveAndFlush(studentFeeRecord.getStudent());
 
         loggingService.logGeneralActivity(
                 LogType.PAYMENT,
