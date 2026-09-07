@@ -17,6 +17,8 @@ public class StudentFeeRecord {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int feeRecordId;
 
+    private float openingBalance;
+
     private float totalAmount;
 
     private float amountPaid;
