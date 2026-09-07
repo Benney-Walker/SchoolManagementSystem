@@ -54,7 +54,6 @@ public class GlobalExceptionHandler {
             HttpServletRequest request
     ) {
 
-        // Collect one message per invalid field: { "email": "must be a valid email", ... }
         Map<String, String> fieldErrors = new LinkedHashMap<>();
         for (FieldError fieldError : ex.getBindingResult().getFieldErrors()) {
             fieldErrors.putIfAbsent(fieldError.getField(), fieldError.getDefaultMessage());
@@ -64,7 +63,7 @@ public class GlobalExceptionHandler {
         error.put("timestamp", LocalDateTime.now());
         error.put("status", 400);
         error.put("error", "Bad Request");
-        error.put("message", "Validation failed");
+        error.put("message", fieldErrors);
         error.put("errors", fieldErrors);
         error.put("path", request.getRequestURI());
 
@@ -84,7 +83,7 @@ public class GlobalExceptionHandler {
         error.put("timestamp", LocalDateTime.now());
         error.put("status", 500);
         error.put("error", "Internal Server Error");
-        error.put("message", "Internal Server Error. Contact developer");
+        error.put("message", "Internal Server Error! Contact developer");
         error.put("path", request.getRequestURI());
 
         System.out.println("Error: " + error);
