@@ -25,10 +25,6 @@ public class SchoolHoliday {
     private LocalDate endDate;
 
     @ManyToOne
-    @JoinColumn(name = "Semester_semesterId")
-    private Semester semester;
-
-    @ManyToOne
     @JoinColumn(name = "Institution_InstitutionId")
     private Institution institution;
 }

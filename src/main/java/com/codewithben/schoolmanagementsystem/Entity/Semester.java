@@ -26,9 +26,6 @@ public class Semester {
 
     private String academicYear;
 
-    @OneToMany(mappedBy = "semester")
-    private List<SchoolHoliday> schoolHoliday;
-
     @ManyToOne
     @JoinColumn(name = "Institution_institutionId")
     private Institution institution;
