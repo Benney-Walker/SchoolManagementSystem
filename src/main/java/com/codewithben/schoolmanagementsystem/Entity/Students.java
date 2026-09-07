@@ -52,6 +52,8 @@ public class Students {
 
     private boolean isNew;
 
+    private boolean isBorder;
+
     @OneToMany(mappedBy = "student")
     private List<SubjectScore> subjectScore;
 

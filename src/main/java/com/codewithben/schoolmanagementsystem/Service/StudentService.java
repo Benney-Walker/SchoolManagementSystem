@@ -91,6 +91,7 @@ public class StudentService {
         student.setParentPhoneNumber(addNewStudent.getGuardianContact());
         student.setLevel(level);
         student.setNew(addNewStudent.isNew());
+        student.setBorder(addNewStudent.isBorder());
         student.setRegistrationDate(LocalDate.now());
         student.setInstitution(staff.getInstitution());
         student.setStudentStatus(StudentStatus.ACTIVE);
