@@ -168,7 +168,7 @@ public class UtilityClass {
     }
 
     public boolean isNotSchoolday(Semester semester, LocalDate selectedDate) {
-        List<SchoolHoliday> holidays = semester.getSchoolHoliday();
+        List<SchoolHoliday> holidays = semester.getInstitution().getSchoolHolidays();
         if (holidays != null && !holidays.isEmpty()) {
             for (SchoolHoliday holiday : holidays) {
                 if (!selectedDate.isBefore(holiday.getStartDate()) && !selectedDate.isAfter(holiday.getEndDate())) {
