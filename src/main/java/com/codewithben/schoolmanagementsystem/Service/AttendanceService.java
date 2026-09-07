@@ -426,7 +426,7 @@ public class AttendanceService {
 
             boolean isHoliday = false;
 
-            for (SchoolHoliday holiday : semester.getSchoolHoliday()) {
+            for (SchoolHoliday holiday : semester.getInstitution().getSchoolHolidays()) {
 
                 if (!date.isBefore(holiday.getStartDate()) && !date.isAfter(holiday.getEndDate())) {
                     isHoliday = true;
