@@ -40,4 +40,7 @@ public class AddNewStudent {
 
     @JsonProperty("isNew")
     private boolean isNew;
+
+    @JsonProperty("isBorder")
+    private boolean isBorder;
 }
