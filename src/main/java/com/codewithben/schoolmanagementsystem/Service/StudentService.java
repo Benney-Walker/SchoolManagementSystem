@@ -180,6 +180,28 @@ public class StudentService {
             ));
         }
 
+        if (StudentStatus.valueOf(data.getStatus()) == StudentStatus.GRADUATED) {
+            Level level = levelRepository.findByLevelNameAndInstitution_InstitutionId(
+                    StudentStatus.GRADUATED.name(), student.getInstitution().getInstitutionId()
+                    ).orElse(null);
+            if (level == null) {
+                loggingService.logGeneralActivity(
+                        LogType.STUDENT, LogAction.UPDATE,
+                        "Internal Server error! Contact developer.",
+                        staffId, LogStatus.FAILED);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                        "message", "Internal Server error! Contact developer."
+                ));
+            }
+
+            saveUpdate(data, student, level);
+            loggingService.logGeneralActivity(
+                    LogType.STUDENT, LogAction.UPDATE,
+                    "Updated student information: " + data.getFirstName() + " " + data.getLastName(),
+                    staffId, LogStatus.SUCCESS);
+            return ResponseEntity.ok().build();
+        }
+
         Level level = levelRepository.findByLevelID(data.getGradeId()).orElse(null);
         if (level == null) {
             loggingService.logGeneralActivity(LogType.STUDENT, LogAction.UPDATE, "Invalid class Id", staffId, LogStatus.FAILED);
@@ -188,6 +210,16 @@ public class StudentService {
             ));
         }
 
+        saveUpdate(data, student, level);
+
+        loggingService.logGeneralActivity(
+                LogType.STUDENT, LogAction.UPDATE,
+                "Updated student information: " + data.getFirstName() + " " + data.getLastName(),
+                staffId, LogStatus.SUCCESS);
+        return ResponseEntity.ok().build();
+    }
+
+    private void saveUpdate(UpdateStudentPersonalData data, Students student, Level level) {
         try {
             student.setFirstName(data.getFirstName());
             student.setLastName(data.getLastName());
@@ -202,12 +234,6 @@ public class StudentService {
         } catch (IllegalArgumentException e) {
             throw new RuntimeException(e);
         }
-
-        loggingService.logGeneralActivity(
-                LogType.STUDENT, LogAction.UPDATE,
-                "Updated student information: " + data.getFirstName() + " " + data.getLastName(),
-                staffId, LogStatus.SUCCESS);
-        return ResponseEntity.ok().build();
     }
 
 
