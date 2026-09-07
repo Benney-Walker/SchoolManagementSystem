@@ -76,12 +76,6 @@ public class AsyncService {
 
             List<LevelSpecialPayment> specialPayments = fees.getLevel().getLevelSpecialPayments();
 
-            float newStudent = (float) specialPayments.stream().mapToDouble(LevelSpecialPayment::getAmount).sum();
-            float oldStudent = (float) specialPayments.stream()
-                    .filter(specialFee -> specialFee.getSpecialPayment().getPaymentType() == SpecialPaymentType.ADMISSION_FEE)
-                    .mapToDouble(LevelSpecialPayment::getAmount)
-                    .sum();
-
             List<StudentFeeRecord> newRecords = new ArrayList<>();
             for (Students student : studentsList) {
 
@@ -97,15 +91,13 @@ public class AsyncService {
                     newRecord.setLocked(false);
                     newRecord.setInstitution(fees.getInstitution());
 
-                    if (student.isNew()) {
-                        float total = fees.getAmountToBePayed() + newStudent;
-                        newRecord.setTotalAmount(total);
-                        newRecord.setBalance(total);
-                    } else {
-                        float total = fees.getAmountToBePayed() + oldStudent;
-                        newRecord.setTotalAmount(total);
-                        newRecord.setBalance(total);
-                    }
+                    float openingBalance = getOpeningBalance(student.getStudentId(), student.getInstitution(), fees.getSemester().getSemesterStartDate());
+                    float specialPayment = getSpecialPaymentAmount(specialPayments, student);
+                    float total = fees.getAmountToBePayed() + specialPayment + openingBalance;
+
+                    newRecord.setOpeningBalance(openingBalance);
+                    newRecord.setTotalAmount(total);
+                    newRecord.setBalance(total);
                     newRecords.add(newRecord);
                 }
             }
@@ -133,12 +125,6 @@ public class AsyncService {
 
         List<LevelSpecialPayment> specialPayments = fees.getLevel().getLevelSpecialPayments();
 
-        float newStudent = (float) specialPayments.stream().mapToDouble(LevelSpecialPayment::getAmount).sum();
-        float oldStudent = (float) specialPayments.stream()
-                .filter(specialFee -> specialFee.getSpecialPayment().getPaymentType() == SpecialPaymentType.ADMISSION_FEE)
-                .mapToDouble(LevelSpecialPayment::getAmount)
-                .sum();
-
         List<StudentFeeRecord> newRecords = new ArrayList<>();
         for (Students student : studentsList) {
 
@@ -155,11 +141,13 @@ public class AsyncService {
                 newRecord.setInstitution(fees.getInstitution());
             }
 
-            if (student.isNew()) {
-                newRecord.setTotalAmount(fees.getAmountToBePayed() + newStudent);
-            } else {
-                newRecord.setTotalAmount(fees.getAmountToBePayed() + oldStudent);
-            }
+            float openingBalance = getOpeningBalance(student.getStudentId(), student.getInstitution(), fees.getSemester().getSemesterStartDate());
+            float specialPayment = getSpecialPaymentAmount(specialPayments, student);
+            float total = fees.getAmountToBePayed() + specialPayment + openingBalance;
+
+            newRecord.setOpeningBalance(openingBalance);
+            newRecord.setTotalAmount(total);
+            newRecord.setBalance(total);
             newRecords.add(newRecord);
         }
 
@@ -168,21 +156,20 @@ public class AsyncService {
 
     @Transactional
     public void createNewStudentFee(NewStudentFee newStudentFee) {
-
-        Level level = levelRepository.findByLevelID(newStudentFee.getLevelId()).orElse(null);
-        if (level == null) {
-            log.error("Could not create student fee. Invalid level Id {}", newStudentFee.getLevelId());
+        Students student = studentsRepository.findByStudentId(newStudentFee.getStudentId()).orElse(null);
+        if (student == null) {
+            log.error("Could not create student fee. Invalid student id {}", newStudentFee.getStudentId());
             return;
         }
 
-        Semester currentSemester = utilityClass.getCurrentSemester(level.getInstitution());
+        Semester currentSemester = utilityClass.getCurrentSemester(student.getInstitution());
         if (currentSemester == null) {
             log.error("Could not create student fee. Current term not added");
             return;
         }
 
         if (LocalDate.now().isBefore(currentSemester.getSemesterStartDate()) || LocalDate.now().isAfter(currentSemester.getSemesterEndDate())) {
-            log.error("Could not create student fee. Current term not added");
+            log.error("Current term not added or has not started");
             return;
         }
 
@@ -196,18 +183,9 @@ public class AsyncService {
 
         List<LevelSpecialPayment> specialPayments = fee.getLevel().getLevelSpecialPayments();
 
-        float newStudent = (float) specialPayments.stream().mapToDouble(LevelSpecialPayment::getAmount).sum();
-        float oldStudent = (float) specialPayments.stream()
-                .filter(specialFee -> specialFee.getSpecialPayment().getPaymentType() == SpecialPaymentType.ADMISSION_FEE)
-                .mapToDouble(LevelSpecialPayment::getAmount)
-                .sum();
+        float specialPaymentAmount = getSpecialPaymentAmount(specialPayments, student);
 
-        Students student = studentsRepository.findByStudentId(newStudentFee.getStudentId()).orElse(null);
-        if (student == null) {
-            log.error("Could not create student fee. Invalid student id {}", newStudentFee.getStudentId());
-            return;
-        }
-
+        float openingBalance = getOpeningBalance(student.getStudentId(), student.getInstitution(), currentSemester.getSemesterStartDate());
         StudentFeeRecord newRecord = new StudentFeeRecord();
         newRecord.setStudent(student);
         newRecord.setFees(fee);
@@ -215,16 +193,12 @@ public class AsyncService {
         newRecord.setSemester(fee.getSemester());
         newRecord.setLocked(false);
         newRecord.setInstitution(fee.getInstitution());
+        newRecord.setOpeningBalance(openingBalance);
 
-        if (student.isNew()) {
-            float total = fee.getAmountToBePayed() + newStudent;
-            newRecord.setTotalAmount(total);
-            newRecord.setBalance(total);
-        } else {
-            float total = fee.getAmountToBePayed() + oldStudent;
-            newRecord.setTotalAmount(total);
-            newRecord.setBalance(total);
-        }
+        float total = fee.getAmountToBePayed() + specialPaymentAmount + openingBalance;
+
+        newRecord.setTotalAmount(total);
+        newRecord.setBalance(total);
         studentFeeRecordRepository.saveAndFlush(newRecord);
     }
 
@@ -383,5 +357,71 @@ public class AsyncService {
                 messagesRepository.save(newMessage);
             }
         }
+    }
+
+    private float getOpeningBalance(String studentId, Institution institution, LocalDate date) {
+
+        List<Semester> previousSemesters =
+                semesterRepository.findByInstitutionAndSemesterStartDateBeforeOrderBySemesterStartDateDesc(
+                        institution, date
+                );
+        Semester lastSemester = previousSemesters.isEmpty() ? null : previousSemesters.getFirst();
+
+        if (lastSemester == null) {
+            return 0;
+        }
+
+        StudentFeeRecord previousRecord = studentFeeRecordRepository
+                .findByStudent_StudentIdAndSemester_SemesterID(studentId, lastSemester.getSemesterID()).orElse(null);
+        if (previousRecord == null) {
+            return 0;
+        }
+
+        return previousRecord.getBalance();
+    }
+
+    private float getSpecialPaymentAmount(List<LevelSpecialPayment> specialPayments, Students student) {
+        float newStudentBorder = 0;
+        float newStudentNotBorder = 0;
+        float oldStudentBorder = 0;
+        float oldStudentNotBorder = 0;
+
+        for (LevelSpecialPayment specialPayment : specialPayments) {
+
+            float amount = specialPayment.getAmount();
+
+            switch (specialPayment.getSpecialPayment().getPaymentType()) {
+
+                case ADMISSION_FEE -> {
+                    newStudentBorder += amount;
+                    newStudentNotBorder += amount;
+                }
+
+                case BOARDING -> {
+                    newStudentBorder += amount;
+                    oldStudentBorder += amount;
+                }
+
+                case STATIONARY, OTHER -> {
+                    newStudentBorder += amount;
+                    newStudentNotBorder += amount;
+                    oldStudentBorder += amount;
+                    oldStudentNotBorder += amount;
+                }
+            }
+        }
+
+        float specialPaymentAmount;
+
+        if (student.isNew()) {
+            specialPaymentAmount = student.isBorder()
+                    ? newStudentBorder
+                    : newStudentNotBorder;
+        } else {
+            specialPaymentAmount = student.isBorder()
+                    ? oldStudentBorder
+                    : oldStudentNotBorder;
+        }
+        return specialPaymentAmount;
     }
 }
