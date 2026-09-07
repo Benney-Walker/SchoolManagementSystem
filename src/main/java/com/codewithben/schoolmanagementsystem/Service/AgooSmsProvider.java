@@ -34,7 +34,7 @@ public class AgooSmsProvider implements SmsInterface {
     private final RestTemplate restTemplate = new RestTemplate();
 
     @Override
-    public AgooSmsResponse sendBulkSms(String message, List<String> recipients) {
+    public AgooSmsResponse sendBulkSms(String senderId, String message, List<String> recipients) {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -43,7 +43,7 @@ public class AgooSmsProvider implements SmsInterface {
         AgooBulkSmsPayload payload = AgooBulkSmsPayload.builder()
                 .message(message)
                 .recipients(recipients)
-                .senderId(SENDER_ID)
+                .senderId(senderId)
                 .build();
 
         HttpEntity<AgooBulkSmsPayload> request = new HttpEntity<>(payload, headers);
@@ -62,14 +62,14 @@ public class AgooSmsProvider implements SmsInterface {
     }
 
     @Override
-    public AgooSmsResponse sendSms(String message, String recipient) {
+    public AgooSmsResponse sendSms(String senderId, String message, String recipient) {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.set("X-API-Key", API_KEY);
 
         AgooSmsPayload agooSmsPayload = AgooSmsPayload.builder()
-                .senderId(SENDER_ID)
+                .senderId(senderId)
                 .message(message)
                 .to(recipient)
                 .build();
