@@ -3,6 +3,7 @@ package com.codewithben.schoolmanagementsystem.Service;
 import com.codewithben.schoolmanagementsystem.Constants.LogAction;
 import com.codewithben.schoolmanagementsystem.Constants.LogStatus;
 import com.codewithben.schoolmanagementsystem.Constants.LogType;
+import com.codewithben.schoolmanagementsystem.Constants.StudentStatus;
 import com.codewithben.schoolmanagementsystem.DTO.Class.LevelCaching;
 import com.codewithben.schoolmanagementsystem.DTO.Semester.SemesterCaching;
 import com.codewithben.schoolmanagementsystem.DTO.Class.FindAndUpdateClassInfo;
@@ -14,6 +15,7 @@ import com.codewithben.schoolmanagementsystem.Repository.*;
 import com.codewithben.schoolmanagementsystem.Utility.UtilityClass;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -22,7 +24,9 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
+@Slf4j
 @RequiredArgsConstructor
 @Service
 public class ClassService {
@@ -94,10 +98,8 @@ public class ClassService {
     public ResponseEntity<?> loadClassesForCache(String staffId) {
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         if (staff == null) {
-            loggingService.logGeneralActivity(LogType.CLASS, LogAction.READ, "Could not load classes", staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
-                    "message", "Server Error! Contact developer"
-            ));
+            log.error("Could not find staff {}", staffId);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
 
         List<Level> levels = staff.getInstitution().getLevel();
@@ -110,6 +112,8 @@ public class ClassService {
 
         List<LevelCaching> classesList = new ArrayList<>();
         for (Level level : levels) {
+            if (Objects.equals(level.getLevelName(), StudentStatus.GRADUATED.name()))
+                continue;
             LevelCaching levelCaching = LevelCaching.builder()
                     .levelId(level.getLevelID())
                     .levelName(level.getLevelName())
