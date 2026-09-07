@@ -42,4 +42,7 @@ public class Institution {
 
     @OneToMany(mappedBy = "institution")
     private List<SpecialPayment> specialPayment;
+
+    @OneToMany(mappedBy = "institution")
+    private List<SchoolHoliday> schoolHolidays;
 }
