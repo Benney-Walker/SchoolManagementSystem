@@ -18,5 +18,5 @@ public interface SchoolHolidayRepository extends JpaRepository<SchoolHoliday, In
             LocalDate startDate, LocalDate endDate, HolidayType holidayName, String institutionId
     );
 
-    List<SchoolHoliday> findBySemester_SemesterID(String semesterId);
+    List<SchoolHoliday> findByInstitution_InstitutionId(String semesterId);
 }
