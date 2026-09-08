@@ -114,8 +114,8 @@ public class RabbitMQConfig {
     }
 
     @Bean
-    public Binding paymentReportBroadcast(Queue paymentReportBroadcast, TopicExchange exchange) {
-        return BindingBuilder.bind(paymentReportBroadcast).to(exchange).with(PAYMENT_REPORT_BROADCAST_KEY);
+    public Binding paymentBroadcastBinding(Queue paymentBroadcastQueue, TopicExchange exchange) {
+        return BindingBuilder.bind(paymentBroadcastQueue).to(exchange).with(PAYMENT_REPORT_BROADCAST_KEY);
     }
 
     /************************************************
