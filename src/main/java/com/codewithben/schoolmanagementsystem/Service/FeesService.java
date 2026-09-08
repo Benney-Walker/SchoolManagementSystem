@@ -4,6 +4,7 @@ import com.codewithben.schoolmanagementsystem.Constants.*;
 import com.codewithben.schoolmanagementsystem.DTO.Fees.*;
 import com.codewithben.schoolmanagementsystem.DTO.RabbitMQ.Fees.FeeCreation;
 import com.codewithben.schoolmanagementsystem.DTO.RabbitMQ.Fees.FeesUpdate;
+import com.codewithben.schoolmanagementsystem.DTO.RabbitMQ.Fees.PaymentReport;
 import com.codewithben.schoolmanagementsystem.DTO.Report.GradeFeesReport;
 import com.codewithben.schoolmanagementsystem.Entity.*;
 import com.codewithben.schoolmanagementsystem.Repository.*;
@@ -543,20 +544,24 @@ public class FeesService {
         studentFeeRecord.setAmountPaid(newTotalPaid);
         studentFeeRecord.setBalance(newBalance);
         studentFeeRecord.setLocked(true);
-        studentFeeRecordRepository.save(studentFeeRecord);
+        studentFeeRecordRepository.saveAndFlush(studentFeeRecord);
 
         if (!studentFeeRecord.getFees().isLocked()) {
             studentFeeRecord.getFees().setLocked(true);
             feesRepository.save(studentFeeRecord.getFees());
         }
 
-        studentFeeRecord.getStudent().setNew(false);
-        studentsRepository.saveAndFlush(studentFeeRecord.getStudent());
         if (studentFeeRecord.getStudent().isNew()) {
             studentFeeRecord.getStudent().setNew(false);
             studentsRepository.saveAndFlush(studentFeeRecord.getStudent());
         }
 
+        PaymentReport paymentReport = PaymentReport.builder()
+                .studentId(newPayment.getStudentId())
+                .amountPaid(newPayment.getAmountPaid())
+                .newBalance(newBalance)
+                .build();
+        rabbitMQProducer.paymentReportBroadcast(paymentReport);
 
         loggingService.logGeneralActivity(
                 LogType.PAYMENT,
