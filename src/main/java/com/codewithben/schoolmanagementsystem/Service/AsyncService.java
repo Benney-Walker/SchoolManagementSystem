@@ -315,6 +315,7 @@ public class AsyncService {
             int successCount  = 0;
             int failureCount = 0;
             AgooSmsResponse agooSmsResponse = null;
+            String preparedMessage = "";
             for (Students student : students) {
                 String formattedNumber = UtilityClass.toInternational(student.getParentPhoneNumber());
                 if (formattedNumber == null)
@@ -330,7 +331,7 @@ public class AsyncService {
                 }
 
                 String fullName = student.getFirstName() + " " + student.getLastName();
-                String preparedMessage = attendanceMessage + " " + dailyAttendance.getAttendanceDate().toString() + " " +
+                preparedMessage = attendanceMessageHeader + " " + dailyAttendance.getAttendanceDate().toString() + " " +
                         fullName + " is " + status.name();
 
                 agooSmsResponse = smsInterface.sendSms(student.getInstitution().getBroadcastHeader(), preparedMessage, formattedNumber);
@@ -350,7 +351,7 @@ public class AsyncService {
                 List<String> audience = new ArrayList<>();
                 audience.add(students.getFirst().getLevel().getLevelName());
                 Messages newMessage = Messages.builder()
-                        .message(attendanceMessage)
+                        .message(preparedMessage)
                         .audience(audience)
                         .audienceCount(audienceCount)
                         .successCount(successCount)
@@ -378,6 +379,16 @@ public class AsyncService {
              log.error("Could not send Sms message {}", student.getParentPhoneNumber());
          }
          AgooSmsResponse smsResponse = smsInterface.sendSms(student.getInstitution().getBroadcastHeader(), preparedMessage, formattedNumber);
+         if (smsResponse != null) {
+             Messages newMessage = Messages.builder()
+                     .message(preparedMessage)
+                     .audience(List.of(fullName))
+                     .audienceCount(1)
+                     .successCount(1)
+                     .failureCount(0)
+                     .build();
+             messagesRepository.save(newMessage);
+         }
     }
 
     private float getOpeningBalance(String studentId, Institution institution, LocalDate date) {
