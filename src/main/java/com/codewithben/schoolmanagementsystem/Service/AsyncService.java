@@ -204,6 +204,7 @@ public class AsyncService {
         studentFeeRecordRepository.saveAndFlush(newRecord);
     }
 
+    @Transactional
     public void create_updateResults(CreateResults createResults) {
         Semester semester = semesterRepository.findBySemesterID(createResults.getSemesterId()).orElse(null);
         Level level = levelRepository.findByLevelID(createResults.getLevelId()).orElse(null);
@@ -215,6 +216,7 @@ public class AsyncService {
                 .findAllBySemester_SemesterIDAndStudent_StudentIdIn(createResults.getSemesterId(), createResults.getStudentIds());
 
         boolean found;
+        List<Results> newResultsList = new ArrayList<>();
         for (String studentId : createResults.getStudentIds()) {
             found = false;
 
@@ -236,10 +238,13 @@ public class AsyncService {
                 result.setStudent(student);
                 result.setSemester(semester);
                 result.setLevel(level);
-                resultsList.add(result);
+                newResultsList.add(result);
             }
         }
-        resultsRepository.saveAllAndFlush(resultsList);
+        if (!newResultsList.isEmpty()) {
+            resultsRepository.saveAllAndFlush(newResultsList);
+            resultsList.addAll(newResultsList);
+        }
 
         List<AttendanceRecords> attendanceRecords = attendanceRecordsRepository
                 .findByAttendanceDate_Level_LevelIDAndAttendanceDate_Semester_SemesterID(createResults.getLevelId(), createResults.getSemesterId());
