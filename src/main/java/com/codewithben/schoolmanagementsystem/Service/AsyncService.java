@@ -57,7 +57,10 @@ public class AsyncService {
     private final SmsInterface smsInterface;
 
     @Value("${attendance.default.message}")
-    private String attendanceMessage;
+    private String attendanceMessageHeader;
+
+    @Value("${payment.report.header}")
+    private String paymentReportHeader;
 
     @Transactional
     public void createIndividualFeeRecord(FeeCreation feeCreation) {
