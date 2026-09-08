@@ -20,6 +20,7 @@ public class RabbitMQConfig {
     public static final String FEE_CREATION_QUEUE_NAME = "fee_creation_queue";
     public static final String FEE_UPDATE_QUEUE_NAME = "fee_update_queue";
     public static final String NEW_STUDENT_FEE_CREATION_QUEUE_NAME = "new_student_fee_creation_queue";
+    public static final String PAYMENT_REPORT_BROADCAST_QUEUE_NAME = "payment_report_broadcast_queue";
 
     /************************************************
              ACADEMIC_QUEUES_DECLARATIONS
@@ -38,6 +39,8 @@ public class RabbitMQConfig {
     public static final String CREATE_RESULTS_ROUTING_KEY = "create_results_routing";
     public static final String UPDATE_RESULTS_ROUTING_KEY = "update_results_routing_key";
     public static final String DAILY_ATTENDANCE_ROUTING_KEY = "daily_attendance_routing_key";
+
+    public static final String PAYMENT_REPORT_BROADCAST_KEY = "payment_report_broadcast_key";
 
     /************************************************
      * *******       QUEUES METHODS   ***********
@@ -72,6 +75,11 @@ public class RabbitMQConfig {
         return new Queue(DAILY_ATTENDANCE_QUEUE_NAME, true);
     }
 
+    @Bean
+    public Queue paymentBroadcastQueue() {
+        return new Queue(PAYMENT_REPORT_BROADCAST_QUEUE_NAME, true);
+    }
+
     /************************************************
                        BINDINGS
      *************************************************/
@@ -103,6 +111,11 @@ public class RabbitMQConfig {
     @Bean
     public Binding dailyAttendanceBinding(Queue dailyAttendanceQueue, TopicExchange exchange) {
         return BindingBuilder.bind(dailyAttendanceQueue).to(exchange).with(DAILY_ATTENDANCE_ROUTING_KEY);
+    }
+
+    @Bean
+    public Binding paymentReportBroadcast(Queue paymentReportBroadcast, TopicExchange exchange) {
+        return BindingBuilder.bind(paymentReportBroadcast).to(exchange).with(PAYMENT_REPORT_BROADCAST_KEY);
     }
 
     /************************************************
