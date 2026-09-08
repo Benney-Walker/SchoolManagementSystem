@@ -1,11 +1,11 @@
 package com.codewithben.schoolmanagementsystem.Service;
 
 import com.codewithben.schoolmanagementsystem.Constants.AttendanceStatus;
-import com.codewithben.schoolmanagementsystem.Constants.SpecialPaymentType;
 import com.codewithben.schoolmanagementsystem.DTO.Broadcast.Agoo.AgooSmsResponse;
 import com.codewithben.schoolmanagementsystem.DTO.RabbitMQ.Attendance.DailyAttendance;
 import com.codewithben.schoolmanagementsystem.DTO.RabbitMQ.Fees.FeeCreation;
 import com.codewithben.schoolmanagementsystem.DTO.RabbitMQ.Fees.FeesUpdate;
+import com.codewithben.schoolmanagementsystem.DTO.RabbitMQ.Fees.PaymentReport;
 import com.codewithben.schoolmanagementsystem.DTO.RabbitMQ.Results.CreateResults;
 import com.codewithben.schoolmanagementsystem.DTO.RabbitMQ.Results.ResultsUpdate;
 import com.codewithben.schoolmanagementsystem.DTO.RabbitMQ.Student.NewStudentFee;
@@ -23,7 +23,6 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -360,6 +359,25 @@ public class AsyncService {
                 messagesRepository.save(newMessage);
             }
         }
+    }
+
+    public void broadcastPaymentReport(PaymentReport paymentReport) {
+         Students student = studentsRepository.findByStudentId(paymentReport.getStudentId()).orElse(null);
+         if (student == null) {
+             log.error("Could not find student with id {}", paymentReport.getStudentId());
+             return;
+         }
+
+         String fullName = student.getFirstName() + " " + student.getLastName();
+         String preparedMessage =
+                 fullName.toUpperCase() + ", an amount of " + paymentReport.getAmountPaid() +
+                         " has been credited to your student account. Your new outstanding balance is " +
+                         paymentReport.getNewBalance() + ". ___" + paymentReportHeader;
+         String formattedNumber = UtilityClass.toInternational(student.getParentPhoneNumber());
+         if (formattedNumber == null) {
+             log.error("Could not send Sms message {}", student.getParentPhoneNumber());
+         }
+         AgooSmsResponse smsResponse = smsInterface.sendSms(student.getInstitution().getBroadcastHeader(), preparedMessage, formattedNumber);
     }
 
     private float getOpeningBalance(String studentId, Institution institution, LocalDate date) {
