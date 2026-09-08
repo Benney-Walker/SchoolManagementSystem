@@ -552,6 +552,11 @@ public class FeesService {
 
         studentFeeRecord.getStudent().setNew(false);
         studentsRepository.saveAndFlush(studentFeeRecord.getStudent());
+        if (studentFeeRecord.getStudent().isNew()) {
+            studentFeeRecord.getStudent().setNew(false);
+            studentsRepository.saveAndFlush(studentFeeRecord.getStudent());
+        }
+
 
         loggingService.logGeneralActivity(
                 LogType.PAYMENT,
