@@ -58,4 +58,12 @@ public class RabbitMQProducer {
                 payload
         );
     }
+
+    public void paymentReportBroadcast(Object payload) {
+        rabbitTemplate.convertAndSend(
+                RabbitMQConfig.EXCHANGE_NAME,
+                RabbitMQConfig.PAYMENT_REPORT_BROADCAST_KEY,
+                payload
+        );
+    }
 }
