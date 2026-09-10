@@ -336,10 +336,13 @@ public class AsyncService {
                 }
 
                 String fullName = student.getFirstName() + " " + student.getLastName();
-                preparedMessage = attendanceMessageHeader + " " + dailyAttendance.getAttendanceDate().toString() + " " +
-                        fullName + " is " + status.name();
+                preparedMessage = attendanceMessageHeader + " - "
+                        + dailyAttendance.getAttendanceDate() + ". "
+                        + fullName + " was marked " + status.name() + " today. "
+                        + "Regards, "
+                        + student.getInstitution().getInstitutionName() + ".";
 
-                agooSmsResponse = smsInterface.sendSms(student.getInstitution().getBroadcastHeader(), preparedMessage, formattedNumber);
+                agooSmsResponse = smsInterface.sendSms(preparedMessage, formattedNumber);
                 if (agooSmsResponse == null) {
                     log.error(
                             "SMS broadcast failed for student {}",
@@ -350,19 +353,6 @@ public class AsyncService {
                 }
                 successCount++;
                 audienceCount++;
-            }
-
-            if (agooSmsResponse != null && audienceCount > 0) {
-                List<String> audience = new ArrayList<>();
-                audience.add(students.getFirst().getLevel().getLevelName());
-                Messages newMessage = Messages.builder()
-                        .message(preparedMessage)
-                        .audience(audience)
-                        .audienceCount(audienceCount)
-                        .successCount(successCount)
-                        .failureCount(failureCount)
-                        .build();
-                messagesRepository.save(newMessage);
             }
         }
     }
@@ -375,25 +365,22 @@ public class AsyncService {
          }
 
          String fullName = student.getFirstName() + " " + student.getLastName();
-         String preparedMessage =
-                 fullName.toUpperCase() + ", an amount of " + paymentReport.getAmountPaid() +
-                         " has been credited to your student account. Your new outstanding balance is " +
-                         paymentReport.getNewBalance() + ". ___" + paymentReportHeader;
+
+        String preparedMessage =
+                paymentReportHeader + " - "
+                        + fullName.toUpperCase() + ", "
+                        + "an amount of GHS " + paymentReport.getAmountPaid()
+                        + " has been credited to your student account. "
+                        + "Your new outstanding balance is GHS "
+                        + paymentReport.getNewBalance() + ". "
+                        + "Regards, "
+                        + student.getInstitution().getInstitutionName() + ".";
+
          String formattedNumber = UtilityClass.toInternational(student.getParentPhoneNumber());
          if (formattedNumber == null) {
              log.error("Could not send Sms message {}", student.getParentPhoneNumber());
          }
-         AgooSmsResponse smsResponse = smsInterface.sendSms(student.getInstitution().getBroadcastHeader(), preparedMessage, formattedNumber);
-         if (smsResponse != null) {
-             Messages newMessage = Messages.builder()
-                     .message(preparedMessage)
-                     .audience(List.of(fullName))
-                     .audienceCount(1)
-                     .successCount(1)
-                     .failureCount(0)
-                     .build();
-             messagesRepository.save(newMessage);
-         }
+         AgooSmsResponse smsResponse = smsInterface.sendSms(preparedMessage, formattedNumber);
     }
 
     private float getOpeningBalance(String studentId, Institution institution, LocalDate date) {
