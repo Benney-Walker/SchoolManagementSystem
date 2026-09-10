@@ -22,19 +22,19 @@ public class AgooSmsProvider implements SmsInterface {
     @Value("${agoo.sms.api.key}")
     private String API_KEY;
 
-    @Value("${agoo.sms.sender.id}")
-    private String SENDER_ID;
-
     @Value("${agoo.sms.url}")
     private String AGOO_API_URL;
 
     @Value("${agoo.bulk.sms.url}")
     private String AGOO_BULK_API_URL;
 
+    @Value("${agoo.sms.sender.id}")
+    private String AGOO_SENDER_ID;
+
     private final RestTemplate restTemplate = new RestTemplate();
 
     @Override
-    public AgooSmsResponse sendBulkSms(String senderId, String message, List<String> recipients) {
+    public AgooSmsResponse sendBulkSms(String message, List<String> recipients) {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -43,7 +43,7 @@ public class AgooSmsProvider implements SmsInterface {
         AgooBulkSmsPayload payload = AgooBulkSmsPayload.builder()
                 .message(message)
                 .recipients(recipients)
-                .senderId(senderId)
+                .senderId(AGOO_SENDER_ID)
                 .build();
 
         HttpEntity<AgooBulkSmsPayload> request = new HttpEntity<>(payload, headers);
@@ -62,14 +62,14 @@ public class AgooSmsProvider implements SmsInterface {
     }
 
     @Override
-    public AgooSmsResponse sendSms(String senderId, String message, String recipient) {
+    public AgooSmsResponse sendSms(String message, String recipient) {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.set("X-API-Key", API_KEY);
 
         AgooSmsPayload agooSmsPayload = AgooSmsPayload.builder()
-                .senderId(senderId)
+                .senderId(AGOO_SENDER_ID)
                 .message(message)
                 .to(recipient)
                 .build();

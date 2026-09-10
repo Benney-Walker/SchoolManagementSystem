@@ -95,7 +95,7 @@ public class BroadcastService {
             }
         }
 
-        AgooSmsResponse agooSmsResponse = smsInterface.sendBulkSms(staff.getInstitution().getBroadcastHeader(), smsRequest.getMessage(), broadcastRecipients);
+        AgooSmsResponse agooSmsResponse = smsInterface.sendBulkSms(smsRequest.getMessage(), broadcastRecipients);
         if (agooSmsResponse == null) {
             loggingService.logGeneralActivity(
                     LogType.BROADCAST,
