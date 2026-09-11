@@ -19,9 +19,9 @@ public class AgooSmsData {
 
     private int segments;
 
-    private BigDecimal totalCost;
+    private float totalCost;
 
-    private BigDecimal balance;
+    private float balance;
 
     private String status;
 }
