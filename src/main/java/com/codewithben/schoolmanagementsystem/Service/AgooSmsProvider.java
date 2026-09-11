@@ -1,8 +1,10 @@
-package com.codewithben.schoolmanagementsystem.Service;
+/*package com.codewithben.schoolmanagementsystem.Service;
 
 import com.codewithben.schoolmanagementsystem.DTO.Broadcast.Agoo.AgooBulkSmsPayload;
 import com.codewithben.schoolmanagementsystem.DTO.Broadcast.Agoo.AgooSmsPayload;
 import com.codewithben.schoolmanagementsystem.DTO.Broadcast.Agoo.AgooSmsResponse;
+import com.codewithben.schoolmanagementsystem.DTO.Broadcast.SmsResponse;
+import com.codewithben.schoolmanagementsystem.Entity.Messages;
 import com.codewithben.schoolmanagementsystem.Interface.SmsInterface;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -34,7 +36,7 @@ public class AgooSmsProvider implements SmsInterface {
     private final RestTemplate restTemplate = new RestTemplate();
 
     @Override
-    public AgooSmsResponse sendBulkSms(String message, List<String> recipients) {
+    public SmsResponse sendBulkSms(String message, List<String> recipients) {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -48,21 +50,31 @@ public class AgooSmsProvider implements SmsInterface {
 
         HttpEntity<AgooBulkSmsPayload> request = new HttpEntity<>(payload, headers);
 
+        SmsResponse smsResponse;
         try {
 
             ResponseEntity<AgooSmsResponse> response = restTemplate.postForEntity(
                     AGOO_BULK_API_URL, request, AgooSmsResponse.class
             );
 
-            return response.getBody();
+            AgooSmsResponse agooResponse = response.getBody();
+            smsResponse = SmsResponse.builder()
+                    .success(agooResponse.isSuccess())
+                    .audienceCount(agooResponse.getData().getRecipientCount())
+                    .smsCost(agooResponse.getData().getTotalCost())
+                    .build();
+            return smsResponse;
         } catch (Exception e) {
             log.error("Could not send bulk sms messages: " + e.getMessage());
-            return null;
+            smsResponse = SmsResponse.builder()
+                    .success(false)
+                    .build();
+            return smsResponse;
         }
     }
 
     @Override
-    public AgooSmsResponse sendSms(String message, String recipient) {
+    public SmsResponse sendSms(String message, String recipient) {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -76,16 +88,27 @@ public class AgooSmsProvider implements SmsInterface {
 
         HttpEntity<AgooSmsPayload> request = new HttpEntity<>(agooSmsPayload, headers);
 
+        SmsResponse smsResponse;
         try {
 
             ResponseEntity<AgooSmsResponse> response = restTemplate.postForEntity(
                     AGOO_API_URL, request, AgooSmsResponse.class
             );
+            AgooSmsResponse agooResponse = response.getBody();
 
-            return response.getBody();
+            smsResponse = SmsResponse.builder()
+                    .smsCost(agooResponse.getData().getTotalCost())
+                    .success(agooResponse.isSuccess())
+                    .audienceCount(agooResponse.getData().getRecipientCount())
+                    .build();
+
+            return smsResponse;
         } catch (Exception e) {
-            log.error("Could not send bulk sms messages: " + e.getMessage());
-            return null;
+            log.error("Could not send sms message: " + e.getMessage());
+            smsResponse = SmsResponse.builder()
+                    .success(false)
+                    .build();
+            return smsResponse;
         }
     }
-}
+}*/
