@@ -17,7 +17,7 @@ import java.util.List;
 public class SmsRequest {
 
     @NotNull(message = "Message cannot be empty")
-    @Size(max = 350, message = "Message cannot exceed 480 characters")
+    @Size(max = 350, message = "Message cannot exceed 350 characters")
     private String message;
 
     @NotEmpty(message = "At least an audience must be selected")
