@@ -2,6 +2,7 @@ package com.codewithben.schoolmanagementsystem.Service;
 
 import com.codewithben.schoolmanagementsystem.Constants.AttendanceStatus;
 import com.codewithben.schoolmanagementsystem.DTO.Broadcast.Agoo.AgooSmsResponse;
+import com.codewithben.schoolmanagementsystem.DTO.Broadcast.SmsResponse;
 import com.codewithben.schoolmanagementsystem.DTO.RabbitMQ.Attendance.DailyAttendance;
 import com.codewithben.schoolmanagementsystem.DTO.RabbitMQ.Fees.FeeCreation;
 import com.codewithben.schoolmanagementsystem.DTO.RabbitMQ.Fees.FeesUpdate;
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
@@ -310,6 +312,7 @@ public class AsyncService {
         utilityClass.reArrangePositions(classResultsList);
     }
 
+    @Transactional
     public void broadcastAttendanceStatus(DailyAttendance dailyAttendance) {
 
         List<Students> students = studentsRepository.findByStudentIdIn(dailyAttendance.getStudentsIds());
@@ -317,11 +320,13 @@ public class AsyncService {
         if (students != null && !students.isEmpty()) {
 
             int audienceCount = 0;
+            float smsCost = 0;
             int successCount  = 0;
             int failureCount = 0;
-            AgooSmsResponse agooSmsResponse = null;
+            SmsResponse smsResponse;
             String preparedMessage = "";
             for (Students student : students) {
+                smsResponse = null;
                 String formattedNumber = UtilityClass.toInternational(student.getParentPhoneNumber());
                 if (formattedNumber == null)
                     continue;
@@ -342,8 +347,8 @@ public class AsyncService {
                         + "Regards, "
                         + student.getInstitution().getInstitutionName() + ".";
 
-                agooSmsResponse = smsInterface.sendSms(preparedMessage, formattedNumber);
-                if (agooSmsResponse == null) {
+                smsResponse = smsInterface.sendSms(preparedMessage, formattedNumber);
+                if (!smsResponse.isSuccess()) {
                     log.error(
                             "SMS broadcast failed for student {}",
                             student.getStudentId()
@@ -351,9 +356,19 @@ public class AsyncService {
                     failureCount++;
                     continue;
                 }
+                smsCost += smsResponse.getSmsCost();
                 successCount++;
                 audienceCount++;
             }
+
+            Messages messages = new Messages();
+            messages.setSmsCost(smsCost);
+            messages.setAudienceCount(audienceCount);
+            messages.setAudience(Collections.singletonList(students.getFirst().getLevel().getLevelName()));
+            messages.setSuccessCount(successCount);
+            messages.setFailureCount(failureCount);
+            messages.setMessage("Daily attendance broadcast");
+            messagesRepository.saveAndFlush(messages);
         }
     }
 
@@ -380,7 +395,17 @@ public class AsyncService {
          if (formattedNumber == null) {
              log.error("Could not send Sms message {}", student.getParentPhoneNumber());
          }
-         AgooSmsResponse smsResponse = smsInterface.sendSms(preparedMessage, formattedNumber);
+         SmsResponse smsResponse = smsInterface.sendSms(preparedMessage, formattedNumber);
+         if (smsResponse.isSuccess()) {
+             Messages messages = new Messages();
+             messages.setMessage(preparedMessage);
+             messages.setAudience(Collections.singletonList(fullName));
+             messages.setAudienceCount(1);
+             messages.setSmsCost(smsResponse.getSmsCost());
+             messages.setSuccessCount(1);
+             messages.setFailureCount(0);
+             messagesRepository.saveAndFlush(messages);
+         }
     }
 
     private float getOpeningBalance(String studentId, Institution institution, LocalDate date) {

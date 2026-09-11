@@ -6,6 +6,7 @@ import com.codewithben.schoolmanagementsystem.Constants.LogType;
 import com.codewithben.schoolmanagementsystem.Constants.StaffRoles;
 import com.codewithben.schoolmanagementsystem.DTO.Broadcast.SmsRequest;
 import com.codewithben.schoolmanagementsystem.DTO.Broadcast.Agoo.AgooSmsResponse;
+import com.codewithben.schoolmanagementsystem.DTO.Broadcast.SmsResponse;
 import com.codewithben.schoolmanagementsystem.Entity.*;
 import com.codewithben.schoolmanagementsystem.Interface.SmsInterface;
 import com.codewithben.schoolmanagementsystem.Repository.LevelRepository;
@@ -95,12 +96,14 @@ public class BroadcastService {
             }
         }
 
-        AgooSmsResponse agooSmsResponse = smsInterface.sendBulkSms(smsRequest.getMessage(), broadcastRecipients);
-        if (agooSmsResponse == null) {
+        String preparedMessage = smsRequest.getMessage() + ". Best Regard, " + staff.getInstitution().getInstitutionName();
+
+        SmsResponse smsResponse = smsInterface.sendBulkSms(preparedMessage, broadcastRecipients);
+        if (!smsResponse.isSuccess()) {
             loggingService.logGeneralActivity(
                     LogType.BROADCAST,
                     LogAction.CREATE,
-                    "Could not send messages! Contact developers.",
+                    "Could not send messages! Contact developer.",
                     staffId, LogStatus.FAILED
             );
 
@@ -111,9 +114,10 @@ public class BroadcastService {
                 .message(smsRequest.getMessage())
                 .sentBy(staff)
                 .audience(getAudienceList(levelIds, staffRoles))
-                .audienceCount(agooSmsResponse.getData().getRecipientCount())
-                .successCount(agooSmsResponse.isSuccess() ? 1 : 0)
-                .failureCount(agooSmsResponse.isSuccess() ? 0 : 1)
+                .audienceCount(smsResponse.getAudienceCount())
+                .smsCost(smsResponse.getSmsCost())
+                .successCount(smsResponse.isSuccess() ? 1 : 0)
+                .failureCount(smsResponse.isSuccess() ? 0 : 1)
                 .build();
         messagesRepository.save(newMessage);
 
