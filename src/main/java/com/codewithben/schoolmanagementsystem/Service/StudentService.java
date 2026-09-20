@@ -248,7 +248,7 @@ public class StudentService {
             ));
         }
 
-        List<Students> levelStudents = utilityClass.getActiveStudents(level.getStudents());
+        List<Students> levelStudents = level.getStudents();
         if (levelStudents == null || levelStudents.isEmpty()) {
             loggingService.logGeneralActivity(LogType.STUDENT, LogAction.READ, "Class has no students", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
