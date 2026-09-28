@@ -328,59 +328,6 @@ public class StaffService {
         return ResponseEntity.ok().build();
     }
 
-    public ResponseEntity<?> loadStaffList(String staffId) {
-        Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
-        if (staff == null) {
-            loggingService.logGeneralActivity(LogType.STAFF, LogAction.READ, "Invalid staff Id", staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "Invalid staff Id"
-            ));
-        }
-
-        List<Staffs> staffs = staff.getInstitution().getStaff();
-
-        List<StaffCaching> staffList = new ArrayList<>();
-        for (Staffs staffMember : staffs) {
-
-            List<String> roles = new ArrayList<>();
-            List<StaffRolesEntity> staffRoles = staffMember.getRoles();
-            for (StaffRolesEntity staffRole : staffRoles) {
-                roles.add(staffRole.getStaffRole().name());
-            }
-
-            StaffCaching foundStaff = StaffCaching.builder()
-                    .staffName(
-                            staffMember.getFirstName() + " " + staffMember.getLastName()
-                    )
-                    .staffId(staffMember.getStaffId())
-                    .staffRoles(roles)
-                    .build();
-
-
-            staffList.add(foundStaff);
-        }
-
-        loggingService.logGeneralActivity(
-                LogType.STAFF, LogAction.READ,
-                "Fetched staff List",
-                staffId, LogStatus.SUCCESS);
-        return ResponseEntity.ok(getFinalStaffList(staffList));
-    }
-
-    private List<StaffCaching> getFinalStaffList(List<StaffCaching> staffList) {
-        List<StaffCaching> finalStaffList = new ArrayList<>();
-        if (staffList == null || staffList.isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        for (StaffCaching staffCaching : staffList) {
-            if (!staffCaching.getStaffRoles().contains("GENERAL_STAFF")) {
-                finalStaffList.add(staffCaching);
-            }
-        }
-        return finalStaffList;
-    }
-
     public ResponseEntity<?> loadAllStaffList(String staffId) {
 
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);

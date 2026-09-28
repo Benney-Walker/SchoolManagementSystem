@@ -50,8 +50,15 @@ public class StaffController {
         return staffService.countTotalTeachingStaffs(staffId);
     }
 
-    //Unused endpoint
     @GetMapping("/v1/staff-list")
+    public ResponseEntity<?> loadStaffList() {
+
+        String staffId = authenticatedStaffProvider.getStaffId();
+
+        return staffService.loadAllStaffList(staffId);
+    }
+
+    @GetMapping("/v1/load-staffs-info")
     public ResponseEntity<?> loadStaffInfo() {
 
         String staffId = authenticatedStaffProvider.getStaffId();
@@ -111,22 +118,6 @@ public class StaffController {
         String staffId = authenticatedStaffProvider.getStaffId();
 
         return resultsService.viewMasterScoreSheet(levelId, semesterId, staffId);
-    }
-
-    @GetMapping("/v1/load-staffs-info")
-    public ResponseEntity<?> loadStaffCache() {
-
-        String staffId = authenticatedStaffProvider.getStaffId();
-
-        return staffService.loadStaffList(staffId);
-    }
-
-    @GetMapping("/v2/staff-list")
-    public ResponseEntity<?> loadStaffList() {
-
-        String staffId = authenticatedStaffProvider.getStaffId();
-
-        return staffService.loadStaffList(staffId);
     }
 
     @GetMapping("/v1/load-semesters")
