@@ -2,6 +2,7 @@ package com.codewithben.schoolmanagementsystem.Service;
 
 import com.codewithben.schoolmanagementsystem.Entity.Staffs;
 import com.codewithben.schoolmanagementsystem.Repository.StaffsRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -12,12 +13,10 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
-    private final StaffsRepository staffsRepository;
 
-    public CustomUserDetailsService(StaffsRepository staffsRepository) {
-        this.staffsRepository = staffsRepository;
-    }
+    private final StaffsRepository staffsRepository;
 
     @Override
     public UserDetails loadUserByUsername(String staffId) throws UsernameNotFoundException {
