@@ -185,6 +185,14 @@ public class AsyncService {
             return;
         }
 
+        // Idempotency: a redelivered or retried message must not bill the student twice.
+        if (studentFeeRecordRepository.findByStudent_StudentIdAndFees_FeesId(
+                student.getStudentId(), fee.getFeesId()).isPresent()) {
+            log.info("Fee record already exists for student {} and fee {}; skipping",
+                    student.getStudentId(), fee.getFeesId());
+            return;
+        }
+
         List<LevelSpecialPayment> specialPayments = fee.getLevel().getLevelSpecialPayments();
 
         float specialPaymentAmount = getSpecialPaymentAmount(specialPayments, student);
