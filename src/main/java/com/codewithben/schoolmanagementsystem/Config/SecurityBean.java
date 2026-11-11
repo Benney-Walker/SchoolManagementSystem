@@ -4,6 +4,7 @@ import com.codewithben.schoolmanagementsystem.Utility.CustomAccessDeniedHandler;
 import com.codewithben.schoolmanagementsystem.Utility.CustomAuthenticationEntryPoint;
 import com.codewithben.schoolmanagementsystem.Utility.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -19,6 +20,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Configuration
@@ -31,6 +33,10 @@ public class SecurityBean {
     private final CustomAccessDeniedHandler customAccessDeniedHandler;
 
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+
+    // Comma-separated, from cors.allowed-origins (env: CORS_ALLOWED_ORIGINS).
+    @Value("${cors.allowed-origins}")
+    private String[] allowedOrigins;
 
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {
@@ -45,7 +51,7 @@ public class SecurityBean {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
-        config.setAllowedOrigins(List.of("http://localhost:5173", "https://project-1q3u6.vercel.app/"));
+        config.setAllowedOrigins(normalizeOrigins(allowedOrigins));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
@@ -81,5 +87,21 @@ public class SecurityBean {
                 );
 
         return http.build();
+    }
+
+    /**
+     * Browsers send the Origin header as scheme://host[:port] with no trailing
+     * slash, and CORS matching is exact, so "https://app.example.com/" would never
+     * match. Trim whitespace and trailing slashes, and drop empty entries.
+     */
+    static List<String> normalizeOrigins(String[] origins) {
+        if (origins == null) {
+            return List.of();
+        }
+        return Arrays.stream(origins)
+                .map(String::trim)
+                .map(origin -> origin.replaceAll("/+$", ""))
+                .filter(origin -> !origin.isEmpty())
+                .toList();
     }
 }
