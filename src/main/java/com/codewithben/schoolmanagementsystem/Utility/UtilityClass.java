@@ -12,7 +12,8 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -25,7 +26,10 @@ public class UtilityClass {
 
     private final ResultsRepository resultsRepository;
 
-    private final AtomicReference<List<GradeSystem>> cache = new AtomicReference<>();
+    // Grade bands cached per institution. Each school configures its own grading
+    // system, so the cache must be keyed by institutionId; a single shared entry
+    // would serve one school's bands to every other school.
+    private final Map<String, List<GradeSystem>> gradeCache = new ConcurrentHashMap<>();
 
     //Id generation method
     public String generateEntityId(String entityName) {
@@ -95,14 +99,23 @@ public class UtilityClass {
         }
     }
 
-    //Load (Cached) list ordered by LowerRange
+    //Load (Cached) list ordered by LowerRange, per institution
     private List<GradeSystem> getOrderedCacheList(String institutionId) {
-        List<GradeSystem> list = cache.get();
-        if (list == null) {
-            list = gradeSystemRepository.findAllByInstitution_InstitutionId(institutionId);
-            cache.set(list);
+        if (institutionId == null) {
+            return List.of();
         }
-        return list;
+        return gradeCache.computeIfAbsent(institutionId, id ->
+                gradeSystemRepository.findAllByInstitution_InstitutionId(id).stream()
+                        .sorted(Comparator.comparing(GradeSystem::getLowerRange))
+                        .toList());
+    }
+
+    // Drop an institution's cached grade bands so the next lookup reloads them.
+    // Call after any create/update/delete of that institution's grading criteria.
+    public void evictGradeCache(String institutionId) {
+        if (institutionId != null) {
+            gradeCache.remove(institutionId);
+        }
     }
 
     //Returns subject grade and its description based on the score
