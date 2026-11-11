@@ -13,6 +13,11 @@ public interface SubjectScoreRepository extends JpaRepository<SubjectScore, Long
             String subjectId, Long resultId
     );
 
+    // Batch form of the lookup above: one query for a whole class's scores in a subject.
+    List<SubjectScore> findBySubject_SubjectIdAndResults_ResultIdIn(
+            String subjectId, List<Long> resultIds
+    );
+
     Optional<SubjectScore> findByStudent_StudentIdAndSubject_SubjectIdAndSemester_SemesterID(
             String studentId, String subjectId, String semesterId
     );
