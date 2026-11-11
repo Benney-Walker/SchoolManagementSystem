@@ -380,6 +380,7 @@ public class AsyncService {
         }
     }
 
+    @Transactional
     public void broadcastPaymentReport(PaymentReport paymentReport) {
          Students student = studentsRepository.findByStudentId(paymentReport.getStudentId()).orElse(null);
          if (student == null) {
@@ -401,7 +402,8 @@ public class AsyncService {
 
          String formattedNumber = UtilityClass.toInternational(student.getParentPhoneNumber());
          if (formattedNumber == null) {
-             log.error("Could not send Sms message {}", student.getParentPhoneNumber());
+             log.error("Payment SMS not sent for student {}: invalid parent phone number", student.getStudentId());
+             return;
          }
          SmsResponse smsResponse = smsInterface.sendSms(preparedMessage, formattedNumber);
          if (smsResponse.isSuccess()) {
