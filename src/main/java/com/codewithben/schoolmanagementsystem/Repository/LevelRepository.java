@@ -13,5 +13,8 @@ public interface LevelRepository extends JpaRepository<Level, Long> {
 
     Optional<Level> findByLevelNameAndInstitution_InstitutionId(String levelName, String institutionID);
 
+    // Class lookup limited to the caller's school.
+    Optional<Level> findByLevelIDAndInstitution_InstitutionId(String levelID, String institutionId);
+
     List<Level> findAllByLevelIDIn(List<String> levelIds);
 }

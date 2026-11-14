@@ -25,10 +25,18 @@ public class FindStudentDTO {
 
     private String parentPhoneNumber;
     
+    // Null for a graduated student (no current class).
     private String gradeId;
 
     private String status;
 
     private String homeTown;
+
+    // Set only for graduated students; null otherwise.
+    private String graduationDate;
+
+    private String graduationClassName;
+
+    private String graduationAcademicYear;
 
 }

@@ -47,8 +47,17 @@ public class Students {
     @Column(nullable = false)
     private LocalDate registrationDate;
 
+    // Current class. Null once the student has graduated: a graduated student is no
+    // longer enrolled anywhere, so class rosters and class counts never include them.
+    // Past results, attendance and fee records keep their own link to the class.
     @ManyToOne
     private Level level;
+    // Set when the student graduates (see Utility.StudentEnrolment); cleared if they
+    // are re-activated. graduationClassName is a snapshot so a later class rename
+    // doesn't rewrite history.
+    private LocalDate graduationDate;
+    private String graduationClassName;
+    private String graduationAcademicYear;
 
     private boolean isNew;
 

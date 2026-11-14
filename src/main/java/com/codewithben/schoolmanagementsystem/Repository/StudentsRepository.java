@@ -20,4 +20,8 @@ public interface StudentsRepository extends JpaRepository<Students, Long> {
     );
 
     List<Students> findAllByInstitution_InstitutionIdAndLevel_LevelIDIn(String institutionId, List<String> levelIds);
+
+    // Student lookup limited to the caller's school.
+    Optional<Students> findByStudentIdAndInstitution_InstitutionId(String studentId, String institutionId);
+
 }

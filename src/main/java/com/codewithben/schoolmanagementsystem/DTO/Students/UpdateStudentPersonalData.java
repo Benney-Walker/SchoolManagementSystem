@@ -35,7 +35,8 @@ public class UpdateStudentPersonalData {
     @Pattern(regexp = "\\d{10}", message = "Parent phone number must be 10 digits")
     private String parentPhoneNumber;
 
-    @NotBlank(message = "Class (grade) is required")
+    // Required unless status is GRADUATED (checked in StudentService): a graduated
+    // student is not enrolled in any class.
     private String gradeId;
 
     private String status;

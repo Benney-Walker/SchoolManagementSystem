@@ -10,6 +10,7 @@ import com.codewithben.schoolmanagementsystem.DTO.Students.UpdateStudentPersonal
 import com.codewithben.schoolmanagementsystem.Entity.*;
 import com.codewithben.schoolmanagementsystem.Entity.AttendanceRecords;
 import com.codewithben.schoolmanagementsystem.Repository.*;
+import com.codewithben.schoolmanagementsystem.Utility.StudentEnrolment;
 import com.codewithben.schoolmanagementsystem.Utility.UtilityClass;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
@@ -138,9 +139,14 @@ public class StudentService {
             findStudentDTO.setParentName(student.getParentName());
             findStudentDTO.setParentPhoneNumber(student.getParentPhoneNumber());
             findStudentDTO.setDateOfBirth(student.getDateOfBirth().toString());
-            findStudentDTO.setGradeId(student.getLevel().getLevelID());
+            // Graduated students have no current class.
+            findStudentDTO.setGradeId(student.getLevel() == null ? null : student.getLevel().getLevelID());
             findStudentDTO.setStatus(student.getStudentStatus().toString());
             findStudentDTO.setHomeTown(student.getHomeTown());
+            findStudentDTO.setGraduationDate(
+                    student.getGraduationDate() == null ? null : student.getGraduationDate().toString());
+            findStudentDTO.setGraduationClassName(student.getGraduationClassName());
+            findStudentDTO.setGraduationAcademicYear(student.getGraduationAcademicYear());
             return findStudentDTO;
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -173,7 +179,19 @@ public class StudentService {
 
     public ResponseEntity<?> updateStudentPersonalData(UpdateStudentPersonalData data, String staffId) {
 
-        Students student = studentsRepository.findByStudentId(data.getStudentId()).orElse(null);
+        Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
+        if (staff == null) {
+            loggingService.logGeneralActivity(LogType.STUDENT, LogAction.UPDATE, "Invalid staff Id", staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                    "message", "Could not update student! Contact developer"
+            ));
+        }
+        String institutionId = staff.getInstitution().getInstitutionId();
+
+        // Scoped to the caller's school: another school's student is treated as not found.
+        Students student = studentsRepository
+                .findByStudentIdAndInstitution_InstitutionId(data.getStudentId(), institutionId)
+                .orElse(null);
         if (student == null) {
             loggingService.logGeneralActivity(LogType.STUDENT, LogAction.UPDATE, "Invalid student Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
@@ -181,60 +199,98 @@ public class StudentService {
             ));
         }
 
-        if (StudentStatus.valueOf(data.getStatus()) == StudentStatus.GRADUATED) {
-            Level level = levelRepository.findByLevelNameAndInstitution_InstitutionId(
-                    StudentStatus.GRADUATED.name(), student.getInstitution().getInstitutionId()
-                    ).orElse(null);
-            if (level == null) {
-                loggingService.logGeneralActivity(
-                        LogType.STUDENT, LogAction.UPDATE,
-                        "Internal Server error! Contact developer.",
-                        staffId, LogStatus.FAILED);
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                        "message", "Internal Server error! Contact developer."
-                ));
-            }
-
-            saveUpdate(data, student, level);
-            loggingService.logGeneralActivity(
-                    LogType.STUDENT, LogAction.UPDATE,
-                    "Updated student information: " + data.getFirstName() + " " + data.getLastName(),
-                    staffId, LogStatus.SUCCESS);
-            return ResponseEntity.ok().build();
-        }
-
-        Level level = levelRepository.findByLevelID(data.getGradeId()).orElse(null);
-        if (level == null) {
-            loggingService.logGeneralActivity(LogType.STUDENT, LogAction.UPDATE, "Invalid class Id", staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "Invalid class Id"
+        StudentStatus newStatus = parseStudentStatus(data.getStatus());
+        if (newStatus == null) {
+            loggingService.logGeneralActivity(LogType.STUDENT, LogAction.UPDATE, "Invalid student status", staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                    "message", "Status must be ACTIVE, INACTIVE or GRADUATED"
             ));
         }
 
-        saveUpdate(data, student, level);
+        // A graduated student has no class, so gradeId is only needed for other statuses.
+        Level newClass = null;
+        if (newStatus != StudentStatus.GRADUATED) {
+            if (data.getGradeId() == null || data.getGradeId().isBlank()) {
+                loggingService.logGeneralActivity(LogType.STUDENT, LogAction.UPDATE, "Class is required", staffId, LogStatus.FAILED);
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                        "message", "Class (grade) is required"
+                ));
+            }
+            newClass = levelRepository
+                    .findByLevelIDAndInstitution_InstitutionId(data.getGradeId(), institutionId)
+                    .orElse(null);
+            if (newClass == null || StudentEnrolment.isGraduatedPlaceholder(newClass)) {
+                loggingService.logGeneralActivity(LogType.STUDENT, LogAction.UPDATE, "Invalid class Id", staffId, LogStatus.FAILED);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                        "message", "Invalid class Id"
+                ));
+            }
+        }
+
+        boolean graduatingNow = newStatus == StudentStatus.GRADUATED
+                && student.getStudentStatus() != StudentStatus.GRADUATED;
+
+        applyPersonalDetails(data, student);
+        StudentEnrolment.applyStatus(
+                student, newStatus, newClass,
+                graduatingNow ? resolveAcademicYear(student.getInstitution()) : null,
+                LocalDate.now());
+        studentsRepository.save(student);
 
         loggingService.logGeneralActivity(
                 LogType.STUDENT, LogAction.UPDATE,
-                "Updated student information: " + data.getFirstName() + " " + data.getLastName(),
+                (graduatingNow ? "Graduated student: " : "Updated student information: ")
+                        + data.getFirstName() + " " + data.getLastName(),
                 staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok().build();
     }
 
-    private void saveUpdate(UpdateStudentPersonalData data, Students student, Level level) {
-        try {
-            student.setFirstName(data.getFirstName());
-            student.setLastName(data.getLastName());
-            student.setGender(data.getGender());
-            student.setParentName(data.getParentName());
-            student.setParentPhoneNumber(data.getParentPhoneNumber());
-            student.setStudentStatus(StudentStatus.valueOf(data.getStatus()));
-            student.setLevel(level);
-            student.setDateOfBirth(LocalDate.parse(data.getDateOfBirth()));
-            student.setHomeTown(data.getHomeTown());
-            studentsRepository.save(student);
-        } catch (IllegalArgumentException e) {
-            throw new RuntimeException(e);
+    private void applyPersonalDetails(UpdateStudentPersonalData data, Students student) {
+        student.setFirstName(data.getFirstName());
+        student.setLastName(data.getLastName());
+        student.setGender(data.getGender());
+        student.setParentName(data.getParentName());
+        student.setParentPhoneNumber(data.getParentPhoneNumber());
+        // Format is guaranteed by @Pattern on the DTO.
+        student.setDateOfBirth(LocalDate.parse(data.getDateOfBirth()));
+        student.setHomeTown(data.getHomeTown());
+    }
+
+    private static StudentStatus parseStudentStatus(String status) {
+        if (status == null) {
+            return null;
         }
+        try {
+            return StudentStatus.valueOf(status.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
+
+    /**
+     * Academic year to record on a graduation: the current term's, or, between
+     * terms (graduation usually happens after third term ends), the academic year
+     * of the most recent term that has started. Null if the school has no terms.
+     */
+    private String resolveAcademicYear(Institution institution) {
+        Semester current = utilityClass.getCurrentSemester(institution);
+        if (current != null) {
+            return current.getAcademicYear();
+        }
+        List<Semester> semesters = institution.getSemester();
+        if (semesters == null) {
+            return null;
+        }
+        LocalDate today = LocalDate.now();
+        Semester latestStarted = null;
+        for (Semester semester : semesters) {
+            LocalDate start = semester.getSemesterStartDate();
+            if (start != null && !start.isAfter(today)
+                    && (latestStarted == null || start.isAfter(latestStarted.getSemesterStartDate()))) {
+                latestStarted = semester;
+            }
+        }
+        return latestStarted == null ? null : latestStarted.getAcademicYear();
     }
 
 
@@ -284,6 +340,13 @@ public class StudentService {
                     staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "No reference results found for promotion"
+            ));
+        }
+
+        if (result.getStudent().getStudentStatus() == StudentStatus.GRADUATED) {
+            loggingService.logGeneralActivity(LogType.STUDENT, LogAction.UPDATE, "Student has graduated", staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                    "message", "Student has graduated and can't be promoted"
             ));
         }
 
@@ -345,6 +408,13 @@ public class StudentService {
             ));
         }
 
+        if (result.getStudent().getStudentStatus() == StudentStatus.GRADUATED) {
+            loggingService.logGeneralActivity(LogType.STUDENT, LogAction.UPDATE, "Student has graduated", staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                    "message", "Student has graduated and can't repeat a class"
+            ));
+        }
+
         if (!result.getSemester().getSemesterName().equals("THIRD_TERM")) {
             loggingService.logGeneralActivity(
                     LogType.STUDENT, LogAction.UPDATE,
@@ -366,7 +436,8 @@ public class StudentService {
         }
 
         result.setPromotionTo("Repeated");
-        result.setClassSize(utilityClass.getActiveStudents(result.getStudent().getLevel().getStudents()).size());
+        // The result's own class: same as the student's for a repeat, and never null.
+        result.setClassSize(utilityClass.getActiveStudents(result.getLevel().getStudents()).size());
         resultsRepository.save(result);
 
         loggingService.logGeneralActivity(
