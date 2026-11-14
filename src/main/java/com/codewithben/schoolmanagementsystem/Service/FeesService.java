@@ -265,7 +265,7 @@ public class FeesService {
 
             ClassFeesSummary classFeesSummary = new ClassFeesSummary(
                     level.getLevelName(),
-                    String.valueOf(level.getStudents().size()),
+                    String.valueOf(billedStudentCount(level)),
                     String.valueOf(getExpectedLevelFees(level.getLevelID())),
                     String.valueOf(getLevelFeesPaid(level.getLevelID())),
                     String.valueOf(getExpectedLevelFees(level.getLevelID()) - getLevelFeesPaid(level.getLevelID()))
@@ -319,6 +319,21 @@ public class FeesService {
         return ResponseEntity.ok(gradeFeesReportList);
     }
 
+    /*
+     * Only ACTIVE students are billed: inactive students are not charged, and
+     * graduated students have left their class. Every fee total (number of students,
+     * expected fees, amount paid, outstanding) uses this same set, so the figures
+     * compare like with like. Term fee records are already created for active
+     * students only (AsyncService), and the class fee report skips inactive ones.
+     */
+    private int billedStudentCount(Level level) {
+        return level.getStudents() == null ? 0 : utilityClass.getActiveStudents(level.getStudents()).size();
+    }
+
+    private static boolean isBilled(StudentFeeRecord record) {
+        return record.getStudent() != null && record.getStudent().getStudentStatus() == StudentStatus.ACTIVE;
+    }
+
     private float getExpectedLevelFees(String levelId) {
         Level level = levelRepository.findByLevelID(levelId).orElse(null);
         if (level == null) {
@@ -332,7 +347,7 @@ public class FeesService {
 
         float feesAmount = fees.getAmountToBePayed();
 
-        return feesAmount * level.getStudents().size();
+        return feesAmount * billedStudentCount(level);
     }
 
     private Double getLevelFeesPaid(String levelId) {
@@ -352,6 +367,7 @@ public class FeesService {
             return 0.0;
         }
         return studentFeeRecords.stream()
+                .filter(FeesService::isBilled)
                 .mapToDouble(StudentFeeRecord::getAmountPaid)
                 .sum();
     }
@@ -595,9 +611,10 @@ public class FeesService {
         List<StudentFeeRecord> studentFeeRecords = fees.getFeesRecords();
         if (studentFeeRecords == null || studentFeeRecords.isEmpty())
             return 0.0;
-        return studentFeeRecords.stream().mapToDouble(
-                StudentFeeRecord::getAmountPaid
-        ).sum();
+        return studentFeeRecords.stream()
+                .filter(FeesService::isBilled)
+                .mapToDouble(StudentFeeRecord::getAmountPaid)
+                .sum();
     }
 
     public ResponseEntity<?> getTotalSemesterFees(String staffId) {
@@ -629,7 +646,7 @@ public class FeesService {
         double totalSemesterFees = 0;
         for (Level level : levels) {
             double levelFees = getTotalLevelFees(
-                    level.getLevelID(), currentSemester.getSemesterID(), level.getStudents().size()
+                    level.getLevelID(), currentSemester.getSemesterID(), billedStudentCount(level)
             );
             totalSemesterFees += levelFees;
         }
