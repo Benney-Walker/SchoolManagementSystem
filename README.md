@@ -148,6 +148,7 @@ erDiagram
 - **`Conduct`** is boolean/enum-driven (`ConductRatings`), not free text, so report cards render ticks consistently.
 - **`Messages`** records each broadcast with audience, cost, and success/failure counts.
 - **Soft deletion** is used throughout via `DeletionStatus` / `StudentStatus` / `StaffStatus` rather than row removal, so historical results and payments stay intact.
+- **Graduation is a status, not a class.** Setting a student's status to `GRADUATED` (through `update-student-data`) removes them from their class (`Students.level` becomes null) and records `graduationDate`, `graduationClassName` and `graduationAcademicYear`. Class rosters and counts therefore never include graduates, while their past results, attendance and fee records keep their own link to the class. Re-activating a graduate enrols them in the chosen class and clears those fields. The rules are in `Utility/StudentEnrolment`. `Migration/GraduatedStudentsBackfill` detaches students graduated before this change, once, at startup.
 
 ---
 
@@ -320,9 +321,10 @@ All endpoints below require `Authorization: Bearer <accessToken>` unless noted. 
 |---|---|---|
 | GET | `/v1/total-students` | Enrollment count |
 | GET | `/v1/load-students/{levelId}` | Class roster |
-| GET | `/v1/find-student/{studentId}` | Student profile |
+| GET | `/v1/find-student/{studentId}` | Student profile (graduates: `gradeId` null, graduation fields set) |
+| GET | `/v1/graduated-students` | The school's graduated students, newest first; optional `?academicYear=2025/2026` (200 with `[]` when none) |
 | POST | `/v1/add-new-student` | Enroll a student |
-| PUT | `/v1/update-student-data` | Update a student |
+| PUT | `/v1/update-student-data` | Update a student; status `GRADUATED` graduates them (`gradeId` is then not required) |
 | GET | `/v1/load-subject-students/{subjectId}/{semesterId}` | Students to score |
 | POST | `/v1/save-scores/{subjectId}/{semesterId}` | Save subject scores |
 | GET | `/v1/load-students-for-attendance/{levelId}/{date}` | Roll-call list |
@@ -330,8 +332,8 @@ All endpoints below require `Authorization: Bearer <accessToken>` unless noted. 
 | GET | `/v1/attendance-records` | Attendance history |
 | GET | `/v1/dates-marked/{levelId}/{semesterId}` | Dates already marked |
 | GET | `/v1/absent-students` | Today's absentees |
-| PUT | `/v1/promote-student` | Promote to the next class |
-| PUT | `/v1/repeat-student` | Repeat the current class |
+| PUT | `/v1/promote-student` | Promote to the next class (409 for graduates) |
+| PUT | `/v1/repeat-student` | Repeat the current class (409 for graduates) |
 | GET | `/v3/generate-report-card` | Student report card (PDF) |
 
 ### `/api/finance` — Fees, payments, expenses
