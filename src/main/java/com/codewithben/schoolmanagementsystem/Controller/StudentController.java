@@ -53,6 +53,14 @@ public class StudentController {
         return studentService.findStudent(studentId, staffId);
     }
 
+    @GetMapping("/v1/graduated-students")
+    public ResponseEntity<?> loadGraduatedStudents(@RequestParam(required = false) String academicYear) {
+
+        String staffId  = authenticatedStaffProvider.getStaffId();
+
+        return studentService.getGraduatedStudents(academicYear, staffId);
+    }
+
     @PostMapping("/v1/add-new-student")
     public ResponseEntity<?> enrollNewStudent(@Valid @RequestBody AddNewStudent addNewStudent) {
 

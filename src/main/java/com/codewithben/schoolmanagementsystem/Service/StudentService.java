@@ -5,6 +5,7 @@ import com.codewithben.schoolmanagementsystem.DTO.Attendance.TodaysAbsentees;
 import com.codewithben.schoolmanagementsystem.DTO.RabbitMQ.Student.NewStudentFee;
 import com.codewithben.schoolmanagementsystem.DTO.Students.AddNewStudent;
 import com.codewithben.schoolmanagementsystem.DTO.Students.FindStudentDTO;
+import com.codewithben.schoolmanagementsystem.DTO.Students.GraduatedStudentDTO;
 import com.codewithben.schoolmanagementsystem.DTO.Students.StudentsHolder;
 import com.codewithben.schoolmanagementsystem.DTO.Students.UpdateStudentPersonalData;
 import com.codewithben.schoolmanagementsystem.Entity.*;
@@ -14,6 +15,7 @@ import com.codewithben.schoolmanagementsystem.Utility.StudentEnrolment;
 import com.codewithben.schoolmanagementsystem.Utility.UtilityClass;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -127,6 +129,51 @@ public class StudentService {
                 "Fetched student information: " + student.getFirstName() + " " + student.getLastName(),
                 staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok(getStudentData(student));
+    }
+
+    /**
+     * The caller's school's graduated students, newest graduation first (students
+     * graduated before graduation details were recorded come last), then by name.
+     * Optionally limited to one academic year, e.g. "2025/2026".
+     * Returns 200 with an empty list when there are none.
+     */
+    public ResponseEntity<?> getGraduatedStudents(String academicYear, String staffId) {
+
+        Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
+        if (staff == null) {
+            loggingService.logGeneralActivity(LogType.STUDENT, LogAction.READ, "Invalid staff Id", staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                    "message", "Could not load graduated students! Contact developer"
+            ));
+        }
+        String institutionId = staff.getInstitution().getInstitutionId();
+
+        Sort newestFirst = Sort.by(
+                Sort.Order.desc("graduationDate"),
+                Sort.Order.asc("lastName"),
+                Sort.Order.asc("firstName"));
+        List<Students> graduates = (academicYear == null || academicYear.isBlank())
+                ? studentsRepository.findAllByInstitution_InstitutionIdAndStudentStatus(
+                        institutionId, StudentStatus.GRADUATED, newestFirst)
+                : studentsRepository.findAllByInstitution_InstitutionIdAndStudentStatusAndGraduationAcademicYear(
+                        institutionId, StudentStatus.GRADUATED, academicYear.trim(), newestFirst);
+
+        List<GraduatedStudentDTO> rows = new ArrayList<>(graduates.size());
+        for (Students student : graduates) {
+            rows.add(GraduatedStudentDTO.builder()
+                    .studentId(student.getStudentId())
+                    .studentName(student.getFirstName() + " " + student.getLastName())
+                    .gender(student.getGender())
+                    .parentName(student.getParentName())
+                    .parentPhoneNumber(student.getParentPhoneNumber())
+                    .graduationClassName(student.getGraduationClassName())
+                    .graduationAcademicYear(student.getGraduationAcademicYear())
+                    .graduationDate(student.getGraduationDate() == null ? null : student.getGraduationDate().toString())
+                    .build());
+        }
+
+        loggingService.logGeneralActivity(LogType.STUDENT, LogAction.READ, "Fetched graduated students", staffId, LogStatus.SUCCESS);
+        return ResponseEntity.ok(rows);
     }
 
     private FindStudentDTO getStudentData(Students student) {

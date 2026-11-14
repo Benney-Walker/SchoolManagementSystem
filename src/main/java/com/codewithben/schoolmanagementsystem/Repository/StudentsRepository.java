@@ -2,6 +2,7 @@ package com.codewithben.schoolmanagementsystem.Repository;
 
 import com.codewithben.schoolmanagementsystem.Constants.StudentStatus;
 import com.codewithben.schoolmanagementsystem.Entity.Students;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -24,6 +25,15 @@ public interface StudentsRepository extends JpaRepository<Students, Long> {
 
     // Student lookup limited to the caller's school.
     Optional<Students> findByStudentIdAndInstitution_InstitutionId(String studentId, String institutionId);
+
+    // A school's students in one status, e.g. its graduates.
+    List<Students> findAllByInstitution_InstitutionIdAndStudentStatus(
+            String institutionId, StudentStatus studentStatus, Sort sort
+    );
+
+    List<Students> findAllByInstitution_InstitutionIdAndStudentStatusAndGraduationAcademicYear(
+            String institutionId, StudentStatus studentStatus, String graduationAcademicYear, Sort sort
+    );
 
     // Students in a status who are still attached to a class (used to backfill graduates).
     List<Students> findAllByStudentStatusAndLevelIsNotNull(StudentStatus studentStatus);
