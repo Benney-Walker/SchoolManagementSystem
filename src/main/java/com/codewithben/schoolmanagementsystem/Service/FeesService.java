@@ -260,15 +260,30 @@ public class FeesService {
             ));
         }
 
+        //Figures are for the current term, looked up once for every class
+        Semester currentSemester = utilityClass.getCurrentSemester(staff.getInstitution());
+        if (currentSemester == null) {
+            loggingService.logGeneralActivity(LogType.FEES, LogAction.READ, "Current semester not added to system", staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Current semester not added to system"
+            ));
+        }
+
         List<ClassFeesSummary> classFeesSummaryList = new ArrayList<>();
         for (Level level : levels) {
+            Fees fees = feesRepository.findBySemester_SemesterIDAndLevel_LevelID(
+                    currentSemester.getSemesterID(), level.getLevelID()
+            ).orElse(null);
+
+            float expectedFees = getExpectedLevelFees(level, fees);
+            double feesPaid = getLevelFeesPaid(fees);
 
             ClassFeesSummary classFeesSummary = new ClassFeesSummary(
                     level.getLevelName(),
                     String.valueOf(billedStudentCount(level)),
-                    String.valueOf(getExpectedLevelFees(level.getLevelID())),
-                    String.valueOf(getLevelFeesPaid(level.getLevelID())),
-                    String.valueOf(getExpectedLevelFees(level.getLevelID()) - getLevelFeesPaid(level.getLevelID()))
+                    String.valueOf(expectedFees),
+                    String.valueOf(feesPaid),
+                    String.valueOf(expectedFees - feesPaid)
             );
             classFeesSummaryList.add(classFeesSummary);
         }
@@ -334,30 +349,16 @@ public class FeesService {
         return record.getStudent() != null && record.getStudent().getStudentStatus() == StudentStatus.ACTIVE;
     }
 
-    private float getExpectedLevelFees(String levelId) {
-        Level level = levelRepository.findByLevelID(levelId).orElse(null);
-        if (level == null) {
-            return 0;
-        }
-        Semester currentSemester = utilityClass.getCurrentSemester(level.getInstitution());
-        Fees fees = feesRepository.findBySemester_SemesterIDAndLevel_LevelID(currentSemester.getSemesterID(), levelId).orElse(null);
+    //Term fee x billed students. 0 when the class has no fees set for the term.
+    private float getExpectedLevelFees(Level level, Fees fees) {
         if (fees == null) {
             return 0;
         }
-
-        float feesAmount = fees.getAmountToBePayed();
-
-        return feesAmount * billedStudentCount(level);
+        return fees.getAmountToBePayed() * billedStudentCount(level);
     }
 
-    private Double getLevelFeesPaid(String levelId) {
-        Level level = levelRepository.findByLevelID(levelId).orElse(null);
-        if (level == null) {
-            return 0.0;
-        }
-
-        Semester currentSemester = utilityClass.getCurrentSemester(level.getInstitution());
-        Fees fees = feesRepository.findBySemester_SemesterIDAndLevel_LevelID(currentSemester.getSemesterID(), levelId).orElse(null);
+    //Total paid by billed students. 0 when the class has no fees set for the term.
+    private double getLevelFeesPaid(Fees fees) {
         if (fees == null) {
             return 0.0;
         }
