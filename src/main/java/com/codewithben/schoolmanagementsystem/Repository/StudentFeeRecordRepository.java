@@ -12,4 +12,6 @@ public interface StudentFeeRecordRepository extends JpaRepository<StudentFeeReco
     Optional<StudentFeeRecord> findByStudent_StudentIdAndFees_FeesId(String studentId, String feesId);
 
     Optional<StudentFeeRecord> findByStudent_StudentIdAndSemester_SemesterID(String studentId, String semesterId);
+
+    boolean existsByStudent_StudentIdAndSemester_SemesterID(String studentId, String semesterId);
 }

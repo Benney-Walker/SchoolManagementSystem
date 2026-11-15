@@ -116,6 +116,20 @@ class StudentEnrolmentTest {
     }
 
     @Test
+    void settingAnInactiveOrGraduatedStudentToActiveIsAReactivation() {
+        assertTrue(StudentEnrolment.isReactivation(StudentStatus.INACTIVE, StudentStatus.ACTIVE));
+        assertTrue(StudentEnrolment.isReactivation(StudentStatus.GRADUATED, StudentStatus.ACTIVE));
+    }
+
+    @Test
+    void otherStatusChangesAreNotReactivations() {
+        assertFalse(StudentEnrolment.isReactivation(StudentStatus.ACTIVE, StudentStatus.ACTIVE));
+        assertFalse(StudentEnrolment.isReactivation(StudentStatus.ACTIVE, StudentStatus.INACTIVE));
+        assertFalse(StudentEnrolment.isReactivation(StudentStatus.INACTIVE, StudentStatus.GRADUATED));
+        assertFalse(StudentEnrolment.isReactivation(StudentStatus.GRADUATED, StudentStatus.INACTIVE));
+    }
+
+    @Test
     void placeholderDetection() {
         assertTrue(StudentEnrolment.isGraduatedPlaceholder(level("GRADUATED")));
         assertFalse(StudentEnrolment.isGraduatedPlaceholder(level("JHS 3")));

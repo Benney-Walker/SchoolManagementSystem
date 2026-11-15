@@ -33,6 +33,15 @@ public final class StudentEnrolment {
     }
 
     /**
+     * True when a student who is not being billed (INACTIVE or GRADUATED) is set back
+     * to ACTIVE. Only ACTIVE students are billed, so such a student must be billed for
+     * the current term.
+     */
+    public static boolean isReactivation(StudentStatus currentStatus, StudentStatus newStatus) {
+        return newStatus == StudentStatus.ACTIVE && currentStatus != StudentStatus.ACTIVE;
+    }
+
+    /**
      * Applies a status change to the student. Does not save.
      *
      * <ul>

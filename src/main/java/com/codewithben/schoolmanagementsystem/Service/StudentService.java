@@ -43,6 +43,8 @@ public class StudentService {
 
     private final LoggingService loggingService;
 
+    private final StudentFeeRecordRepository studentFeeRecordRepository;
+
     //Method for adding new student
     @Transactional
     public ResponseEntity<?> addNewStudent(AddNewStudent addNewStudent, String staffId) {
@@ -224,6 +226,8 @@ public class StudentService {
         return ResponseEntity.ok(students.size());
     }
 
+    // Transactional so that if billing a re-activated student can't be queued, the status change is rolled back too.
+    @Transactional
     public ResponseEntity<?> updateStudentPersonalData(UpdateStudentPersonalData data, String staffId) {
 
         Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
@@ -276,6 +280,7 @@ public class StudentService {
 
         boolean graduatingNow = newStatus == StudentStatus.GRADUATED
                 && student.getStudentStatus() != StudentStatus.GRADUATED;
+        boolean reactivating = StudentEnrolment.isReactivation(student.getStudentStatus(), newStatus);
 
         applyPersonalDetails(data, student);
         StudentEnrolment.applyStatus(
@@ -284,12 +289,49 @@ public class StudentService {
                 LocalDate.now());
         studentsRepository.save(student);
 
+        if (reactivating) {
+            billReactivatedStudent(student, newClass);
+        }
+
+        String action = graduatingNow ? "Graduated student: "
+                : reactivating ? "Re-activated student: "
+                : "Updated student information: ";
         loggingService.logGeneralActivity(
                 LogType.STUDENT, LogAction.UPDATE,
-                (graduatingNow ? "Graduated student: " : "Updated student information: ")
-                        + data.getFirstName() + " " + data.getLastName(),
+                action + data.getFirstName() + " " + data.getLastName(),
                 staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok().build();
+    }
+
+    /*
+     * Only ACTIVE students are billed, so a student set back to ACTIVE is billed the
+     * full term fee for the current term. It goes through the same queue that bills a
+     * newly enrolled student, so special fees and any balance carried over from earlier
+     * terms are applied the same way.
+     *
+     * Not queued when:
+     * - there is no current term: they are billed when next term's fees are set, like
+     *   every active student;
+     * - they already have a fee record for this term: they were billed before becoming
+     *   inactive, and that record (with its payments) applies again. Billing again
+     *   would charge them twice.
+     * If the class has no fees set for the term yet, the consumer skips the message and
+     * the student is billed when the fees are set.
+     */
+    private void billReactivatedStudent(Students student, Level level) {
+        Semester currentSemester = utilityClass.getCurrentSemester(student.getInstitution());
+        if (currentSemester == null) {
+            return;
+        }
+        if (studentFeeRecordRepository.existsByStudent_StudentIdAndSemester_SemesterID(
+                student.getStudentId(), currentSemester.getSemesterID())) {
+            return;
+        }
+        NewStudentFee newStudentFee = NewStudentFee.builder()
+                .studentId(student.getStudentId())
+                .levelId(level.getLevelID())
+                .build();
+        rabbitMQProducer.sendStudentFeeCreationEvent(newStudentFee);
     }
 
     private void applyPersonalDetails(UpdateStudentPersonalData data, Students student) {
