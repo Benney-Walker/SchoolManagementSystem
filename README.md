@@ -296,6 +296,11 @@ All endpoints below require `Authorization: Bearer <accessToken>` unless noted. 
 | GET | `/v1/recent-logs` | Recent audit entries |
 | GET | `/v1/get-staff-logs` | Audit entries for one staff member |
 | GET | `/v1/get-timely-logs` | Audit entries within a date range |
+| GET | `/v1/school-profile` | School details printed on reports: `{schoolName, motto, address, hasLogo, hasSignature, uploadsEnabled}` (any staff) |
+| PUT | `/v1/school-profile` | Set motto and address, body `{motto, address}`; empty clears (PRINCIPAL / ADMINISTRATOR) |
+| PUT | `/v1/school-branding/{logo\|signature}` | Upload the logo or principal's signature, multipart field `file`; PNG or JPEG, logo ≤ 1 MB, signature ≤ 512 KB, stored as PNG ≤ 600 px (PRINCIPAL / ADMINISTRATOR; 503 if storage isn't configured) |
+| DELETE | `/v1/school-branding/{logo\|signature}` | Remove the logo or signature (PRINCIPAL / ADMINISTRATOR) |
+| GET | `/v1/school-branding/{logo\|signature}` | The stored image as PNG for previews; 404 if none (any staff) |
 
 ### `/api/staff` — Staff & academics
 
@@ -379,9 +384,13 @@ PDFs are generated server-side and streamed to the client as bytes.
 | SBA report | JasperReports | `reports/sba_report.jrxml` |
 | Master score sheet | JasperReports / OpenPDF | `reports/` |
 | Class report cards (batch) | JasperReports | per-student, merged |
-| Expenses report | `PdfGenerationService` (OpenPDF) | built in code |
+| Expenses report | JasperReports | `reports/expenses_report.jasper` (**template not yet committed**) |
 
-Report cards combine subject scores, computed class/exam splits, grading-band interpretation, conduct ratings, attendance totals and promotion status. Institution-specific assets live under `src/main/resources/reports/`.
+Report cards combine subject scores, computed class/exam splits, grading-band interpretation, conduct ratings, attendance totals and promotion status.
+
+**School branding.** Every report receives the same five parameters: `schoolName`, `schoolMotto`, `schoolAddress` (strings; motto and address may be null) and `logo`, `signature` (`java.awt.Image`, null when not uploaded). Logo and signature files live in a private Cloudflare R2 bucket; the institution stores their URLs; `BrandingAssetService` downloads and caches them. If an image can't be loaded the report is still produced, without it. Templates must not contain school-specific text or image paths.
+
+> After changing a `.jrxml`, recompile the matching `.jasper` in Jaspersoft Studio 7.0.3 and commit both: the service loads the compiled `.jasper` files.
 
 > The runtime image installs `libfreetype6`, `fontconfig` and `fonts-dejavu` — JasperReports needs real fonts present or PDF generation fails on a slim container.
 
@@ -400,6 +409,7 @@ All secrets come from the environment (via `.env`, which is git-ignored). Requir
 | `RABBITMQ_HOST`, `RABBITMQ_PORT`, `RABBITMQ_USERNAME`, `RABBITMQ_PASSWORD` | Message broker |
 | `AGOO_SMS_URL`, `AGOO_BULK_SMS_URL`, `AGOO_API_KEY`, `AGOO_SENDER_ID` | Agoo SMS provider |
 | `VYNFY_SMS_URL`, `VYNFY_API_KEY`, `VYNFY_SENDER_ID` | Vynfy SMS provider |
+| `R2_ENDPOINT`, `R2_BUCKET`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, optional `R2_REGION` (default `auto`) | Cloudflare R2 bucket for school logos and signatures. Optional: while empty the app starts, uploads return 503 and reports print without images. Endpoint is `https://<account-id>.r2.cloudflarestorage.com`; keep the bucket private. |
 
 Logging rolls to `logs/school-management.log` (10 MB per file, 14 days, 200 MB cap).
 
