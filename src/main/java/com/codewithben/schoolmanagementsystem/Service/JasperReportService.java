@@ -3,6 +3,8 @@ package com.codewithben.schoolmanagementsystem.Service;
 import com.codewithben.schoolmanagementsystem.DTO.Expenses.ExpensesRecord;
 import com.codewithben.schoolmanagementsystem.DTO.Report.GenerateStudentResult;
 import com.codewithben.schoolmanagementsystem.DTO.Report.SbaReport;
+import com.codewithben.schoolmanagementsystem.Entity.Institution;
+import lombok.RequiredArgsConstructor;
 import net.sf.jasperreports.engine.*;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import net.sf.jasperreports.engine.util.JRLoader;
@@ -16,8 +18,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Fills the compiled report templates and exports them to PDF.
+ *
+ * Every report carries the school's own branding (name, motto, address, logo, principal's
+ * signature) through the same five parameters; see {@link #brandingParameters}. Logo and
+ * signature come from storage via BrandingAssetService and are passed as images, or null
+ * when the school hasn't uploaded one (the templates then leave the space blank).
+ */
 @Service
+@RequiredArgsConstructor
 public class JasperReportService {
+
+    private final BrandingAssetService brandingAssetService;
 
     private JasperReport cachedStudentReport;
 
@@ -25,79 +38,82 @@ public class JasperReportService {
 
     private JasperReport cachedExpensesReport;
 
+
     public byte[] generateStudentReportCard(
             GenerateStudentResult generateStudentResults,
-            String schoolName) throws Exception {
+            Institution institution) throws Exception {
 
         JasperReport jasperReport = getCompiledStudentReport();
 
         JRBeanCollectionDataSource dataSource =
                 new JRBeanCollectionDataSource(Collections.singletonList(generateStudentResults));
 
-        Map<String, Object> parameters = new HashMap<>();
-        parameters.put("schoolName", schoolName);
-        parameters.put("logoPath", "reports/Daffodils/daffodils_Logo.png");
-        parameters.put("signaturePath", "reports/Daffodils/principal_signature.png");
-
         JasperPrint print =
-                JasperFillManager.fillReport(jasperReport, parameters, dataSource);
+                JasperFillManager.fillReport(jasperReport, brandingParameters(institution), dataSource);
 
         return JasperExportManager.exportReportToPdf(print);
     }
 
     public byte[] generateClassReportCards(
             List<GenerateStudentResult> generateStudentResults,
-            String schoolName) throws Exception {
+            Institution institution) throws Exception {
 
         JasperReport jasperReport = getCompiledStudentReport();
 
         JRBeanCollectionDataSource dataSource =
                 new JRBeanCollectionDataSource(generateStudentResults);
 
-        Map<String, Object> parameters = new HashMap<>();
-        parameters.put("schoolName", schoolName);
-        parameters.put("logoPath", "reports/Daffodils/daffodils_Logo.png");
-        parameters.put("signaturePath", "reports/Daffodils/principal_signature.png");
-
         JasperPrint print =
-                JasperFillManager.fillReport(jasperReport, parameters, dataSource);
+                JasperFillManager.fillReport(jasperReport, brandingParameters(institution), dataSource);
 
         return JasperExportManager.exportReportToPdf(print);
     }
 
-    public byte[] generateSbaReport(SbaReport sbaReport, String schoolName) throws Exception {
+    public byte[] generateSbaReport(SbaReport sbaReport, Institution institution) throws Exception {
         JasperReport jasperReport = getCompiledSbaReport();
 
         JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(
                 Collections.singletonList(sbaReport)
         );
 
-        Map<String, Object> parameters = new HashMap<>();
-        parameters.put("schoolName", schoolName);
-        parameters.put("logoPath", "reports/Daffodils/daffodils_Logo.png");
-        parameters.put("signaturePath", "reports/Daffodils/principal_signature.png");
-
         JasperPrint print =
-                JasperFillManager.fillReport(jasperReport, parameters, dataSource);
+                JasperFillManager.fillReport(jasperReport, brandingParameters(institution), dataSource);
 
         return JasperExportManager.exportReportToPdf(print);
     }
 
-    public byte[] generateExpensesReport(List<ExpensesRecord> expensesReport, String schoolName) throws Exception {
+    public byte[] generateExpensesReport(List<ExpensesRecord> expensesReport, Institution institution) throws Exception {
         JasperReport jasperReport = getCompiledExpensesReport();
 
         JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(
                 Collections.singletonList(expensesReport)
         );
 
-        Map<String, Object> parameters = new HashMap<>();
-        parameters.put("schoolName", schoolName);
-        parameters.put("logoPath", "reports/Daffodils/daffodils_Logo.png");
-
         JasperPrint print =
-                JasperFillManager.fillReport(jasperReport, parameters, dataSource);
+                JasperFillManager.fillReport(jasperReport, brandingParameters(institution), dataSource);
 
         return JasperExportManager.exportReportToPdf(print);
+    }
+
+    /*
+     * Report parameters shared by every template:
+     *   schoolName    (String)          always set
+     *   schoolMotto   (String)          null when not set
+     *   schoolAddress (String)          null when not set
+     *   logo          (java.awt.Image)  null when not uploaded or unavailable
+     *   signature     (java.awt.Image)  null when not uploaded or unavailable
+     * Images are decoded once and reused, so class report cards print the same logo on
+     * every page (an InputStream would be used up by the first page).
+     */
+    Map<String, Object> brandingParameters(Institution institution) {
+        BrandingAssetService.ReportBranding branding = brandingAssetService.brandingFor(institution);
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("schoolName", branding.schoolName());
+        parameters.put("schoolMotto", branding.motto());
+        parameters.put("schoolAddress", branding.address());
+        parameters.put("logo", branding.logo());
+        parameters.put("signature", branding.signature());
+        return parameters;
     }
 
 
@@ -131,7 +147,7 @@ public class JasperReportService {
     private JasperReport getCompiledExpensesReport() throws JRException, IOException {
         if (cachedExpensesReport == null) {
             InputStream template = getClass()
-                    .getResourceAsStream("reports/expenses_report.jasper");
+                    .getResourceAsStream("/reports/expenses_report.jasper");
             if (template == null) {
                 throw new FileNotFoundException("Report template not found");
             }

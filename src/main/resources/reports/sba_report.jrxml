@@ -23,15 +23,11 @@
         <field name="calculatedExamScore" class="java.lang.String"/>
         <field name="totalScore" class="java.lang.String"/>
     </dataset>
-    <parameter name="schoolName" class="java.lang.String">
-        <defaultValueExpression><![CDATA["DAFFODILS INTERNATIONAL SCHOOL"]]></defaultValueExpression>
-    </parameter>
-    <parameter name="logoPath" class="java.lang.String">
-        <defaultValueExpression><![CDATA["D:/BUSINESS/SchoolManagementSystem/src/main/resources/reports/daffodils Logo.png"]]></defaultValueExpression>
-    </parameter>
-    <parameter name="signaturePath" class="java.lang.String">
-        <defaultValueExpression><![CDATA["D:/BUSINESS/SchoolManagementSystem/src/main/resources/reports/Signature.png"]]></defaultValueExpression>
-    </parameter>
+    <parameter name="schoolName" class="java.lang.String"/>
+    <parameter name="schoolMotto" class="java.lang.String"/>
+    <parameter name="schoolAddress" class="java.lang.String"/>
+    <parameter name="logo" class="java.awt.Image"/>
+    <parameter name="signature" class="java.awt.Image"/>
     <field name="semesterName" class="java.lang.String"/>
     <field name="academicYear" class="java.lang.String"/>
     <field name="className" class="java.lang.String"/>
@@ -40,11 +36,17 @@
     <field name="sbaRecords" class="java.util.List"/>
     <detail>
         <band height="350" splitType="Stretch">
-            <element kind="image" uuid="d3c4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f" x="10" y="0" width="70" height="60" scaleImage="RetainShape">
-                <expression><![CDATA[$P{logoPath}]]></expression>
+            <element kind="image" uuid="d3c4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f" x="10" y="0" width="70" height="60" scaleImage="RetainShape" onErrorType="Blank">
+                <expression><![CDATA[$P{logo}]]></expression>
             </element>
-            <element kind="textField" uuid="e4d5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f80" x="90" y="5" width="622" height="25" fontSize="18.0" bold="true" hTextAlign="Center">
-                <expression><![CDATA[$P{schoolName}]]></expression>
+            <element kind="textField" uuid="e4d5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f80" x="90" y="5" width="622" height="25" fontSize="18.0" textAdjust="ScaleFont" bold="true" hTextAlign="Center">
+                <expression><![CDATA[$P{schoolName} == null ? "" : $P{schoolName}.toUpperCase()]]></expression>
+            </element>
+            <element kind="textField" uuid="3bfe9139-146b-49cd-84e5-674586ff21f0" x="90" y="30" width="622" height="14" fontSize="9.0" textAdjust="ScaleFont" italic="true" hTextAlign="Center">
+                <expression><![CDATA[$P{schoolMotto} == null ? "" : "MOTTO: " + $P{schoolMotto}.toUpperCase()]]></expression>
+            </element>
+            <element kind="textField" uuid="dd86076e-4c31-4349-b70b-375af000bc9e" x="90" y="44" width="622" height="14" fontSize="9.0" textAdjust="ScaleFont" hTextAlign="Center">
+                <expression><![CDATA[$P{schoolAddress} == null ? "" : $P{schoolAddress}.toUpperCase()]]></expression>
             </element>
             <element kind="staticText" uuid="f5e6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8091" x="0" y="60" width="802" height="20" fontSize="13.0" bold="true" hTextAlign="Center">
                 <text><![CDATA[SUBJECT BASED ASSESSMENT REPORT]]></text>
@@ -209,8 +211,8 @@
                     </column>
                 </component>
             </element>
-            <element kind="image" uuid="b3a4918c-0910-4223-3445-566778899001" positionType="Float" x="10" y="250" width="120" height="40" scaleImage="RetainShape">
-                <expression><![CDATA[$P{signaturePath}]]></expression>
+            <element kind="image" uuid="b3a4918c-0910-4223-3445-566778899001" positionType="Float" x="10" y="250" width="120" height="40" scaleImage="RetainShape" onErrorType="Blank">
+                <expression><![CDATA[$P{signature}]]></expression>
             </element>
             <element kind="line" uuid="c4b5a29d-1021-4334-4556-677889900112" positionType="Float" x="10" y="292" width="150" height="1">
                 <pen lineWidth="0.5"/>
