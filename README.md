@@ -148,7 +148,8 @@ erDiagram
 - **`Conduct`** is boolean/enum-driven (`ConductRatings`), not free text, so report cards render ticks consistently.
 - **`Messages`** records each broadcast with audience, cost, and success/failure counts.
 - **Soft deletion** is used throughout via `DeletionStatus` / `StudentStatus` / `StaffStatus` rather than row removal, so historical results and payments stay intact.
-- **Graduation is a status, not a class.** Setting a student's status to `GRADUATED` (through `update-student-data`) removes them from their class (`Students.level` becomes null) and records `graduationDate`, `graduationClassName` and `graduationAcademicYear`. Class rosters and counts therefore never include graduates, while their past results, attendance and fee records keep their own link to the class. Re-activating a graduate enrols them in the chosen class and clears those fields. The rules are in `Utility/StudentEnrolment`. `Migration/GraduatedStudentsBackfill` detaches students graduated before this change, once, at startup.
+- **Graduation is a status, not a class.** Setting a student's status to `GRADUATED` (through `update-student-data`) removes them from their class (`Students.level` becomes null) and records `graduationDate`, `graduationClassName` and `graduationAcademicYear`. Class rosters and counts therefore never include graduates, while their past results, attendance and fee records keep their own link to the class. Re-activating a graduate enrols them in the chosen class and clears those fields. The rules are in `Utility/StudentEnrolment`.
+- **Only ACTIVE students are billed.** When an INACTIVE or GRADUATED student is set back to ACTIVE, they are billed the full fee for the current term through `new_student_fee_creation_queue` (the same path as a new enrolment), unless they already have a fee record for that term. `Migration/GraduatedStudentsBackfill` detaches students graduated before this change, once, at startup.
 
 ---
 
@@ -324,7 +325,7 @@ All endpoints below require `Authorization: Bearer <accessToken>` unless noted. 
 | GET | `/v1/find-student/{studentId}` | Student profile (graduates: `gradeId` null, graduation fields set) |
 | GET | `/v1/graduated-students` | The school's graduated students, newest first; optional `?academicYear=2025/2026` (200 with `[]` when none) |
 | POST | `/v1/add-new-student` | Enroll a student |
-| PUT | `/v1/update-student-data` | Update a student; status `GRADUATED` graduates them (`gradeId` is then not required) |
+| PUT | `/v1/update-student-data` | Update a student; status `GRADUATED` graduates them (`gradeId` is then not required); setting an inactive or graduated student to `ACTIVE` bills them for the current term |
 | GET | `/v1/load-subject-students/{subjectId}/{semesterId}` | Students to score |
 | POST | `/v1/save-scores/{subjectId}/{semesterId}` | Save subject scores |
 | GET | `/v1/load-students-for-attendance/{levelId}/{date}` | Roll-call list |
