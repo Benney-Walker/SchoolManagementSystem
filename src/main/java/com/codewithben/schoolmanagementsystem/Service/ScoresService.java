@@ -164,17 +164,50 @@ public class ScoresService {
         List<Results> affectedResults = new ArrayList<>();
         List<SubjectScore> affectedSubjectScores = new ArrayList<>();
 
+        // Pre-load in batch instead of querying per student inside the loop:
+        // existing results for these students this term, then the students that
+        // don't have one yet, then this subject's existing scores on those results.
+        List<String> studentIds = scores.stream()
+                .map(StudentsScoresTable::getStudentId)
+                .distinct()
+                .toList();
+
+        Map<String, Results> resultsByStudentId = new HashMap<>();
+        if (!studentIds.isEmpty()) {
+            for (Results existing : resultsRepository.findAllBySemester_SemesterIDAndStudent_StudentIdIn(semesterId, studentIds)) {
+                resultsByStudentId.put(existing.getStudent().getStudentId(), existing);
+            }
+        }
+
+        List<String> studentsWithoutResults = studentIds.stream()
+                .filter(id -> !resultsByStudentId.containsKey(id))
+                .toList();
+        Map<String, Students> newStudentsById = new HashMap<>();
+        if (!studentsWithoutResults.isEmpty()) {
+            for (Students student : studentsRepository.findByStudentIdIn(studentsWithoutResults)) {
+                newStudentsById.put(student.getStudentId(), student);
+            }
+        }
+
+        Map<Long, SubjectScore> scoresByResultId = new HashMap<>();
+        if (!resultsByStudentId.isEmpty()) {
+            List<Long> existingResultIds = resultsByStudentId.values().stream()
+                    .map(Results::getResultId)
+                    .toList();
+            for (SubjectScore existingScore : subjectScoreRepository
+                    .findBySubject_SubjectIdAndResults_ResultIdIn(subjectId, existingResultIds)) {
+                scoresByResultId.put(existingScore.getResults().getResultId(), existingScore);
+            }
+        }
+
         for (StudentsScoresTable score : scores) {
 
             // Get or create Results for this student + semester + level
-            Results result = resultsRepository
-                    .findByStudent_StudentIdAndSemester_SemesterID(
-                            score.getStudentId(), semesterId)
-                    .orElse(null);
+            Results result = resultsByStudentId.get(score.getStudentId());
 
             if (result == null) {
 
-                Students student = studentsRepository.findByStudentId(score.getStudentId()).orElse(null);
+                Students student = newStudentsById.get(score.getStudentId());
                 if (student == null) {
                     continue;
                 }
@@ -188,13 +221,14 @@ public class ScoresService {
                 result.setTotalScore(Double.valueOf(String.format("%.2f", 0.0)));
                 result.setAverageScore(Double.valueOf(String.format("%.2f", 0.0)));
                 resultsRepository.save(result);
+                // Register it so a duplicate student id later in the same request reuses this row.
+                resultsByStudentId.put(score.getStudentId(), result);
             }
 
-            SubjectScore subjectScore = subjectScoreRepository
-                    .findBySubject_SubjectIdAndResults_ResultId(
-                            subjectId,
-                            result.getResultId()
-                    ).orElse(new SubjectScore());
+            // A result created in this request has no scores yet, so the map lookup misses
+            // and a new SubjectScore is used, matching the previous per-row query.
+            SubjectScore subjectScore = scoresByResultId.computeIfAbsent(
+                    result.getResultId(), id -> new SubjectScore());
 
             saveNewScore(subjectScore, score, result, subject, result.getStudent(), semester);
 

@@ -81,6 +81,7 @@ public class InstitutionService {
         gradeSystem.setGradeDescription(gradingCriteria.getGradeDescription());
         gradeSystem.setInstitution(staff.getInstitution());
         gradeSystemRepository.save(gradeSystem);
+        utilityClass.evictGradeCache(staff.getInstitution().getInstitutionId());
 
         loggingService.logGeneralActivity(LogType.GRADE, LogAction.CREATE, logData, staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok().build();
@@ -130,9 +131,18 @@ public class InstitutionService {
         String logData = "Lower Range: " + gradingCriteria.getLowerRange() + " Higher Range: " + gradingCriteria.getUpperRange()
                 + " Grade: " + gradingCriteria.getGrade() + " Description: " + gradingCriteria.getGradeDescription();
 
+        Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         GradeSystem criteria = gradeSystemRepository.findById(gradingCriteria.getId()).orElse(null);
-        if (criteria == null) {
-            loggingService.logGeneralActivity(LogType.GRADE, LogAction.CREATE, logData, staffId, LogStatus.FAILED);
+
+        // Criteria IDs are sequential, so the lookup must also confirm the row belongs
+        // to the caller's institution; otherwise one school could edit another's bands.
+        // Both cases return the same 404 so the response doesn't reveal other tenants' IDs.
+        boolean belongsToCaller = staff != null && criteria != null
+                && criteria.getInstitution() != null
+                && criteria.getInstitution().getInstitutionId()
+                        .equals(staff.getInstitution().getInstitutionId());
+        if (!belongsToCaller) {
+            loggingService.logGeneralActivity(LogType.GRADE, LogAction.UPDATE, logData, staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Criteria do not exist on system"
             ));
@@ -143,8 +153,9 @@ public class InstitutionService {
         criteria.setGrade(gradingCriteria.getGrade());
         criteria.setGradeDescription(gradingCriteria.getGradeDescription());
         gradeSystemRepository.save(criteria);
+        utilityClass.evictGradeCache(criteria.getInstitution().getInstitutionId());
 
-        loggingService.logGeneralActivity(LogType.GRADE, LogAction.CREATE, logData, staffId, LogStatus.SUCCESS);
+        loggingService.logGeneralActivity(LogType.GRADE, LogAction.UPDATE, logData, staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok().build();
     }
 }

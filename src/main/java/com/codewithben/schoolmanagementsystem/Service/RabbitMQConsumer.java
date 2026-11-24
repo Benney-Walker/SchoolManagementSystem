@@ -44,12 +44,14 @@ public class RabbitMQConsumer {
         asyncService.updateResults(resultsUpdate);
     }
 
-    @RabbitListener(queues = RabbitMQConfig.DAILY_ATTENDANCE_QUEUE_NAME)
+    @RabbitListener(queues = RabbitMQConfig.DAILY_ATTENDANCE_QUEUE_NAME,
+            containerFactory = RabbitMQConfig.NO_RETRY_LISTENER_FACTORY)
     public void consumeDailyAttendanceEvent(DailyAttendance dailyAttendance) {
         asyncService.broadcastAttendanceStatus(dailyAttendance);
     }
 
-    @RabbitListener(queues = RabbitMQConfig.PAYMENT_REPORT_BROADCAST_QUEUE_NAME)
+    @RabbitListener(queues = RabbitMQConfig.PAYMENT_REPORT_BROADCAST_QUEUE_NAME,
+            containerFactory = RabbitMQConfig.NO_RETRY_LISTENER_FACTORY)
     public void consumePaymentBroadcast(PaymentReport report) {
         asyncService.broadcastPaymentReport(report);
     }
