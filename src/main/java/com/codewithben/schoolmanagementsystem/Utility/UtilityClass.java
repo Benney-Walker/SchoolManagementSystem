@@ -31,49 +31,59 @@ public class UtilityClass {
     public String generateEntityId(String entityName) {
         String newCode = "";
 
-        if (entityName.equals("STAFF")) {
-            String prefix = "ST";
-            long entityCode = 100100L;
-            newCode = getStringCode(entityName, prefix, entityCode);
+        switch (entityName) {
+            case "STAFF" -> {
+                String prefix = "ST";
+                long entityCode = 100100L;
+                newCode = getStringCode(entityName, prefix, entityCode);
 
-        } else if (entityName.equals("STUDENT")) {
-            String prefix = "STD";
-            long entityCode = 100200L;
-            newCode = getStringCode(entityName, prefix, entityCode);
+            }
+            case "STUDENT" -> {
+                String prefix = "STD";
+                long entityCode = 100200L;
+                newCode = getStringCode(entityName, prefix, entityCode);
 
-        } else if (entityName.equals("SUBJECT")) {
-            String prefix = "SUB";
-            long entityCode = 100300L;
-            newCode = getStringCode(entityName, prefix, entityCode);
+            }
+            case "SUBJECT" -> {
+                String prefix = "SUB";
+                long entityCode = 100300L;
+                newCode = getStringCode(entityName, prefix, entityCode);
 
-        } else if (entityName.equals("LEVEL")) {
-            String prefix = "LV";
-            long entityCode = 100400L;
-            newCode = getStringCode(entityName, prefix, entityCode);
+            }
+            case "LEVEL" -> {
+                String prefix = "LV";
+                long entityCode = 100400L;
+                newCode = getStringCode(entityName, prefix, entityCode);
 
-        } else if (entityName.equals("REPORT")) {
-            String prefix = "RP";
-            long entityCode = 100500L;
-            newCode = getStringCode(entityName, prefix, entityCode);
+            }
+            case "REPORT" -> {
+                String prefix = "RP";
+                long entityCode = 100500L;
+                newCode = getStringCode(entityName, prefix, entityCode);
 
-        } else if (entityName.equals("INSTITUTION")) {
-            String prefix = "INS";
-            long entityCode = 100600L;
-            newCode = getStringCode(entityName, prefix, entityCode);
+            }
+            case "INSTITUTION" -> {
+                String prefix = "INS";
+                long entityCode = 100600L;
+                newCode = getStringCode(entityName, prefix, entityCode);
 
-        } else if (entityName.equals("SEMESTER")) {
-            String prefix = "SE";
-            long entityCode = 100700L;
-            newCode = getStringCode(entityName, prefix, entityCode);
+            }
+            case "SEMESTER" -> {
+                String prefix = "SE";
+                long entityCode = 100700L;
+                newCode = getStringCode(entityName, prefix, entityCode);
 
-        } else if (entityName.equals("FEES_PAYMENT")) {
-            String prefix = "TX";
-            long entityCode = 100800300L;
-            newCode = getStringCode(entityName, prefix, entityCode);
-        } else if (entityName.equals("FEES")) {
-            String prefix = "FE";
-            long entityCode = 100900300L;
-            newCode = getStringCode(entityName, prefix, entityCode);
+            }
+            case "FEES_PAYMENT" -> {
+                String prefix = "TX";
+                long entityCode = 100800300L;
+                newCode = getStringCode(entityName, prefix, entityCode);
+            }
+            case "FEES" -> {
+                String prefix = "FE";
+                long entityCode = 100900300L;
+                newCode = getStringCode(entityName, prefix, entityCode);
+            }
         }
 
         return newCode;
