@@ -350,8 +350,8 @@ All endpoints below require `Authorization: Bearer <accessToken>` unless noted. 
 | DELETE | `/v1/delete-payment-record/{transactionId}` | Remove a payment |
 | GET | `/v1/search-fees-report` | Student fee position |
 | GET | `/v1/fetch-grade-fees-report/{levelId}/{semesterId}` | Class fee report |
-| GET | `/v1/class-summary-fees` | Per-class collection summary |
-| GET | `/v1/total-fees` · `/v1/fees-paid` | Dashboard money metrics |
+| GET | `/v1/class-summary-fees` | Per-class collection summary for the current term (active students only; 404 if no current term) |
+| GET | `/v1/total-fees` · `/v1/fees-paid` | Dashboard money metrics for the current term (active students only) |
 | GET | `/v1/recent-fees-transactions` | Latest payments |
 | POST | `/v1/add-new-expenses` | Record an expense |
 | GET | `/v1/read-expenses-records/{semesterId}` | Expenses for a term |
