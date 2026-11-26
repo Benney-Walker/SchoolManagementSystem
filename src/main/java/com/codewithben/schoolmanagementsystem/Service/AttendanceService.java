@@ -217,6 +217,7 @@ public class AttendanceService {
                 .levelId(levelId)
                 .semesterId(semester.getSemesterID())
                 .studentIds(studentIds)
+                .staffId(staffId)
                 .build();
         rabbitMQProducer.sendCreateResultsEvent(createResults);
 

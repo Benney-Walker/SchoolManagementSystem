@@ -227,6 +227,15 @@ public class AsyncService {
         List<Results> resultsList = resultsRepository
                 .findAllBySemester_SemesterIDAndStudent_StudentIdIn(createResults.getSemesterId(), createResults.getStudentIds());
 
+        // Results.updatedBy is NOT NULL: a row created without it made the whole batch fail
+        // (retried, then dead-lettered), so attendance never reached the results. Use the staff
+        // member who marked attendance, else the class teacher.
+        Staffs createdBy = createResults.getStaffId() == null ? null
+                : staffsRepository.findByStaffId(createResults.getStaffId()).orElse(null);
+        if (createdBy == null) {
+            createdBy = level.getStaff();
+        }
+
         boolean found;
         List<Results> newResultsList = new ArrayList<>();
         for (String studentId : createResults.getStudentIds()) {
@@ -244,12 +253,20 @@ public class AsyncService {
                 if (student == null) {
                     continue;
                 }
-                Results result = resultsRepository
-                        .findByStudent_StudentIdAndSemester_SemesterID(studentId, createResults.getSemesterId())
-                        .orElse(new Results());
+                if (createdBy == null) {
+                    log.error("Cannot create results for class {}: no staff to record as creator", level.getLevelID());
+                    continue;
+                }
+                // Same starting values as a result created when scores are saved: totals 0
+                // rather than null, so ranking and the report views never see a null total.
+                Results result = new Results();
                 result.setStudent(student);
                 result.setSemester(semester);
                 result.setLevel(level);
+                result.setUpdatedBy(createdBy);
+                result.setCreatedAt(LocalDate.now());
+                result.setTotalScore(0.0);
+                result.setAverageScore(0.0);
                 newResultsList.add(result);
             }
         }

@@ -18,4 +18,8 @@ public class CreateResults {
     private String levelId;
 
     private List<String> studentIds;
+
+    // Staff member who marked the attendance; recorded as the creator of new results.
+    // Null in messages queued before this field existed (the class teacher is used then).
+    private String staffId;
 }
