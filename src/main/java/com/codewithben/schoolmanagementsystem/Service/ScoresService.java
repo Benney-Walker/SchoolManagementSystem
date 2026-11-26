@@ -3,6 +3,8 @@ package com.codewithben.schoolmanagementsystem.Service;
 import com.codewithben.schoolmanagementsystem.Constants.LogAction;
 import com.codewithben.schoolmanagementsystem.Constants.LogStatus;
 import com.codewithben.schoolmanagementsystem.Constants.LogType;
+import com.codewithben.schoolmanagementsystem.Constants.StaffRoles;
+import com.codewithben.schoolmanagementsystem.Constants.StudentStatus;
 import com.codewithben.schoolmanagementsystem.DTO.Students.StudentsScoresTable;
 import com.codewithben.schoolmanagementsystem.DTO.Subject.SubjectScores;
 import com.codewithben.schoolmanagementsystem.Entity.*;
@@ -44,8 +46,10 @@ public class ScoresService {
 
     public ResponseEntity<?> loadStudentsForScores(String semesterId, String subjectId, String staffId) {
 
+        Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
         Subjects subject = subjectsRepository.findBySubjectId(subjectId).orElse(null);
-        if (subject == null) {
+        // Another school's subject is answered exactly like an unknown one.
+        if (subject == null || staff == null || !sameSchool(staff, subject.getLevel().getInstitution())) {
             loggingService.logGeneralActivity(LogType.SUBJECT_SCORE, LogAction.READ, "Invalid subject Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Invalid subject Id"
@@ -179,23 +183,71 @@ public class ScoresService {
         }
 
         Subjects subject = subjectsRepository.findBySubjectId(subjectId).orElse(null);
-        if (subject == null) {
-            loggingService.logGeneralActivity(LogType.SUBJECT_SCORE, LogAction.CREATE,"Invalid staff Id", staffId, LogStatus.FAILED);
+        // Another school's subject or term is answered exactly like an unknown one.
+        if (subject == null || !sameSchool(staff, subject.getLevel().getInstitution())) {
+            loggingService.logGeneralActivity(LogType.SUBJECT_SCORE, LogAction.CREATE,"Invalid subject Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Invalid subject ID"
+            ));
+        }
+        if (!sameSchool(staff, semester.getInstitution())) {
+            loggingService.logGeneralActivity(LogType.SUBJECT_SCORE, LogAction.CREATE,"Invalid semester Id", staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Invalid term Id"
+            ));
+        }
+        // /api/student admits every staff role, including ACCOUNTANT; only teaching staff and
+        // school leadership enter scores.
+        if (!canEnterScores(staff)) {
+            loggingService.logGeneralActivity(LogType.SUBJECT_SCORE, LogAction.CREATE,"Not allowed to enter scores", staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                    "message", "You are not allowed to enter scores"
             ));
         }
 
         List<Results> affectedResults = new ArrayList<>();
         List<SubjectScore> affectedSubjectScores = new ArrayList<>();
 
-        // Pre-load in batch instead of querying per student inside the loop:
-        // existing results for these students this term, then the students that
-        // don't have one yet, then this subject's existing scores on those results.
-        List<String> studentIds = scores.stream()
+        // Only ACTIVE students who are in this subject's class can receive its scores. Anyone
+        // else (unknown id, another school, another class, inactive or graduated) is skipped
+        // and reported back, instead of being given a result in this class. One query.
+        List<String> requestedIds = scores.stream()
                 .map(StudentsScoresTable::getStudentId)
                 .distinct()
                 .toList();
+        String classId = subject.getLevel().getLevelID();
+        Map<String, Students> eligibleStudentsById = new HashMap<>();
+        List<Map<String, String>> skipped = new ArrayList<>();
+        Map<String, Students> foundById = new HashMap<>();
+        for (Students student : studentsRepository.findByStudentIdIn(requestedIds)) {
+            foundById.put(student.getStudentId(), student);
+        }
+        for (String id : requestedIds) {
+            Students student = foundById.get(id);
+            boolean inClass = student != null
+                    && student.getLevel() != null
+                    && classId.equals(student.getLevel().getLevelID());
+            if (!inClass) {
+                skipped.add(Map.of("studentId", id, "reason", "Not a student of this class"));
+            } else if (student.getStudentStatus() != StudentStatus.ACTIVE) {
+                skipped.add(Map.of("studentId", id, "reason", "Student is not active"));
+            } else {
+                eligibleStudentsById.put(id, student);
+            }
+        }
+        if (eligibleStudentsById.isEmpty()) {
+            loggingService.logGeneralActivity(LogType.SUBJECT_SCORE, LogAction.CREATE,
+                    "No eligible students for " + subject.getSubjectName(), staffId, LogStatus.FAILED);
+            return ResponseEntity.badRequest().body(Map.of(
+                    "message", "None of these students can receive scores for this subject",
+                    "skipped", skipped
+            ));
+        }
+
+        // Pre-load in batch instead of querying per student inside the loop:
+        // existing results for these students this term, then this subject's
+        // existing scores on those results.
+        List<String> studentIds = new ArrayList<>(eligibleStudentsById.keySet());
 
         Map<String, Results> resultsByStudentId = new HashMap<>();
         if (!studentIds.isEmpty()) {
@@ -204,15 +256,6 @@ public class ScoresService {
             }
         }
 
-        List<String> studentsWithoutResults = studentIds.stream()
-                .filter(id -> !resultsByStudentId.containsKey(id))
-                .toList();
-        Map<String, Students> newStudentsById = new HashMap<>();
-        if (!studentsWithoutResults.isEmpty()) {
-            for (Students student : studentsRepository.findByStudentIdIn(studentsWithoutResults)) {
-                newStudentsById.put(student.getStudentId(), student);
-            }
-        }
 
         Map<Long, SubjectScore> scoresByResultId = new HashMap<>();
         if (!resultsByStudentId.isEmpty()) {
@@ -227,15 +270,15 @@ public class ScoresService {
 
         for (StudentsScoresTable score : scores) {
 
+            Students student = eligibleStudentsById.get(score.getStudentId());
+            if (student == null) {
+                continue; // skipped above and reported in the response
+            }
+
             // Get or create Results for this student + semester + level
             Results result = resultsByStudentId.get(score.getStudentId());
 
             if (result == null) {
-
-                Students student = newStudentsById.get(score.getStudentId());
-                if (student == null) {
-                    continue;
-                }
 
                 result = new Results();
                 result.setStudent(student);
@@ -243,8 +286,8 @@ public class ScoresService {
                 result.setSemester(semester);
                 result.setUpdatedBy(staff);
                 result.setCreatedAt(LocalDate.now());
-                result.setTotalScore(Double.valueOf(String.format("%.2f", 0.0)));
-                result.setAverageScore(Double.valueOf(String.format("%.2f", 0.0)));
+                result.setTotalScore(0.0);
+                result.setAverageScore(0.0);
                 resultsRepository.save(result);
                 // Register it so a duplicate student id later in the same request reuses this row.
                 resultsByStudentId.put(score.getStudentId(), result);
@@ -274,9 +317,28 @@ public class ScoresService {
                 LogType.SUBJECT_SCORE, LogAction.CREATE,
                 "Saved " + subject.getSubjectName() + " scores for " + subject.getLevel().getLevelName(),
                 staffId, LogStatus.SUCCESS);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(Map.of(
+                "message", skipped.isEmpty()
+                        ? "Scores saved"
+                        : "Scores saved; " + skipped.size() + " student(s) skipped",
+                "saved", eligibleStudentsById.size(),
+                "skipped", skipped
+        ));
     }
 
+
+    private static boolean sameSchool(Staffs staff, Institution institution) {
+        return staff.getInstitution() != null && institution != null
+                && Objects.equals(staff.getInstitution().getInstitutionId(), institution.getInstitutionId());
+    }
+
+    private static boolean canEnterScores(Staffs staff) {
+        return staff.getRoles() != null && staff.getRoles().stream()
+                .map(StaffRolesEntity::getStaffRole)
+                .anyMatch(role -> role == StaffRoles.TEACHING_STAFF
+                        || role == StaffRoles.PRINCIPAL
+                        || role == StaffRoles.ADMINISTRATOR);
+    }
 
     /*
      * Stores the marks and the scores derived from them. Class score, exam score and total are
