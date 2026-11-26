@@ -278,15 +278,19 @@ public class AsyncService {
         List<AttendanceRecords> attendanceRecords = attendanceRecordsRepository
                 .findByAttendanceDate_Level_LevelIDAndAttendanceDate_Semester_SemesterID(createResults.getLevelId(), createResults.getSemesterId());
 
+        // Days present per student. Absent days are stored as records too (status ABSENT), so
+        // they must not be counted; and the count is always written, so a day corrected from
+        // present to absent lowers it again.
         List<Results> affectedResults = new ArrayList<>();
         for (Results result : resultsList) {
             int presentCount = 0;
             for (AttendanceRecords attendanceRecord : attendanceRecords) {
-                if (result.getStudent().getStudentId().equals(attendanceRecord.getStudent().getStudentId())) {
+                if (attendanceRecord.getStatus() == AttendanceStatus.PRESENT
+                        && result.getStudent().getStudentId().equals(attendanceRecord.getStudent().getStudentId())) {
                     presentCount++;
                 }
             }
-            if (presentCount > 0) {
+            if (result.getPresentAttendanceCount() != presentCount) {
                 result.setPresentAttendanceCount(presentCount);
                 affectedResults.add(result);
             }
