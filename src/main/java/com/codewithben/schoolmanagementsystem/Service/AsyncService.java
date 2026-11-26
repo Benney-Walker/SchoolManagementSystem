@@ -57,6 +57,8 @@ public class AsyncService {
 
     private final SmsInterface smsInterface;
 
+    private final ResultTotalsService resultTotalsService;
+
     @Value("${attendance.default.message}")
     private String attendanceMessageHeader;
 
@@ -275,13 +277,15 @@ public class AsyncService {
         resultsRepository.saveAllAndFlush(affectedResults);
     }
 
+    /*
+     * Save-scores no longer publishes this event: totals are rebuilt in the same transaction
+     * as the save (ResultTotalsService). This consumer stays so that messages already queued
+     * when this version is deployed are still processed, the same way. It can be removed,
+     * with the queue, once update_results_queue is empty in every environment.
+     */
     @Transactional
     public void updateResults(ResultsUpdate resultsUpdate) {
         Staffs staff = staffsRepository.findByStaffId(resultsUpdate.getStaffId()).orElse(null);
-        if (staff == null) {
-            log.error("Could not find staff with id {}", resultsUpdate.getStaffId());
-            return;
-        }
 
         Subjects subject = subjectsRepository.findBySubjectId(resultsUpdate.getSubjectId()).orElse(null);
         if (subject == null) {
@@ -295,29 +299,8 @@ public class AsyncService {
             return;
         }
 
-        int classSize = utilityClass.getActiveStudents(subject.getLevel().getStudents()).size();
-        int savedSubjects = subject.getLevel().getSubjects().size();
-
-        String levelId = null;
-        String semesterId = null;
-        for (Results result : affectedResults) {
-            if (levelId == null || semesterId == null) {
-                levelId = result.getLevel().getLevelID();
-                semesterId = result.getSemester().getSemesterID();
-            }
-            utilityClass.updateResultTotals(result, staff, classSize);
-            int savedScoresSubjects = subjectScoreRepository.countByResults_ResultId(result.getResultId());
-            result.setReady(savedScoresSubjects == savedSubjects);
-        }
-
-        resultsRepository.saveAllAndFlush(affectedResults);
-
-        List<Results> classResultsList = resultsRepository.findByLevel_LevelIDAndSemester_SemesterID(
-                levelId, semesterId
-        );
-        if (classResultsList == null || classResultsList.isEmpty()) return;
-        classResultsList.sort(Comparator.comparing(Results::getTotalScore).reversed());
-        utilityClass.reArrangePositions(classResultsList);
+        String semesterId = affectedResults.getFirst().getSemester().getSemesterID();
+        resultTotalsService.recalculate(affectedResults, subject.getLevel(), semesterId, staff);
     }
 
     @Transactional

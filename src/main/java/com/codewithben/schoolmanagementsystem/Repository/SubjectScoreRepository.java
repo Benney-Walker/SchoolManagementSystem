@@ -23,4 +23,7 @@ public interface SubjectScoreRepository extends JpaRepository<SubjectScore, Long
     );
 
     int countByResults_ResultId(Long resultId);
+
+    // All subject scores of several results in one query (used to rebuild term totals).
+    List<SubjectScore> findAllByResults_ResultIdIn(List<Long> resultIds);
 }

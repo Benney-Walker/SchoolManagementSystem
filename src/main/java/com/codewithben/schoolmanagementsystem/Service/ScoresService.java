@@ -3,7 +3,6 @@ package com.codewithben.schoolmanagementsystem.Service;
 import com.codewithben.schoolmanagementsystem.Constants.LogAction;
 import com.codewithben.schoolmanagementsystem.Constants.LogStatus;
 import com.codewithben.schoolmanagementsystem.Constants.LogType;
-import com.codewithben.schoolmanagementsystem.DTO.RabbitMQ.Results.ResultsUpdate;
 import com.codewithben.schoolmanagementsystem.DTO.Students.StudentsScoresTable;
 import com.codewithben.schoolmanagementsystem.DTO.Subject.SubjectScores;
 import com.codewithben.schoolmanagementsystem.Entity.*;
@@ -40,7 +39,7 @@ public class ScoresService {
 
     private final UtilityClass utilityClass;
 
-    private final RabbitMQProducer rabbitMQProducer;
+    private final ResultTotalsService resultTotalsService;
 
     public ResponseEntity<?> loadStudentsForScores(String semesterId, String subjectId, String staffId) {
 
@@ -239,15 +238,11 @@ public class ScoresService {
         resultsRepository.saveAllAndFlush(affectedResults);
         subjectScoreRepository.saveAllAndFlush(affectedSubjectScores);
 
-        List<Long> affectedResultsIds = affectedResults.stream().map(
-                Results::getResultId
-        ).toList();
-        ResultsUpdate resultsUpdate = ResultsUpdate.builder()
-                .staffId(staffId)
-                .subjectId(subjectId)
-                .affectedResultsIds(affectedResultsIds)
-                .build();
-        rabbitMQProducer.sendUpdateResultsEvent(resultsUpdate);
+        // Totals, ready flag and class positions are rebuilt here, in the same transaction,
+        // so they always include the scores just saved. (They used to be rebuilt by a
+        // RabbitMQ consumer that could run before this transaction committed and read the
+        // old scores, or miss newly created results entirely.)
+        resultTotalsService.recalculate(affectedResults, subject.getLevel(), semesterId, staff);
 
         loggingService.logGeneralActivity(
                 LogType.SUBJECT_SCORE, LogAction.CREATE,
