@@ -7,6 +7,7 @@ import com.codewithben.schoolmanagementsystem.DTO.Students.StudentsScoresTable;
 import com.codewithben.schoolmanagementsystem.DTO.Subject.SubjectScores;
 import com.codewithben.schoolmanagementsystem.Entity.*;
 import com.codewithben.schoolmanagementsystem.Repository.*;
+import com.codewithben.schoolmanagementsystem.Utility.ScoreRules;
 import com.codewithben.schoolmanagementsystem.Utility.UtilityClass;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
@@ -134,6 +135,31 @@ public class ScoresService {
             ));
         }
 
+        // Check every row before touching the database. Bean Validation does not run on a List
+        // request body, so this is the real input check. Invalid input returns 400 (which the
+        // desktop outbox treats as permanent), instead of a NumberFormatException/NPE 500 that
+        // the outbox retries forever and that blocks every queued change behind it.
+        if (scores == null || scores.isEmpty()) {
+            loggingService.logGeneralActivity(LogType.SUBJECT_SCORE, LogAction.CREATE, "No scores sent", staffId, LogStatus.FAILED);
+            return ResponseEntity.badRequest().body(Map.of(
+                    "message", "No scores to save"
+            ));
+        }
+        List<ScoreRules.FieldError> scoreErrors = new ArrayList<>();
+        for (StudentsScoresTable row : scores) {
+            scoreErrors.addAll(ScoreRules.validate(row));
+        }
+        if (!scoreErrors.isEmpty()) {
+            loggingService.logGeneralActivity(LogType.SUBJECT_SCORE, LogAction.CREATE,
+                    "Rejected scores: " + scoreErrors.size() + " invalid value(s)", staffId, LogStatus.FAILED);
+            return ResponseEntity.badRequest().body(Map.of(
+                    "message", "Some scores are invalid. " + scoreErrors.getFirst().studentId() + ": "
+                            + scoreErrors.getFirst().message()
+                            + (scoreErrors.size() > 1 ? " (and " + (scoreErrors.size() - 1) + " more)" : ""),
+                    "errors", scoreErrors
+            ));
+        }
+
         Semester semester = semesterRepository.findBySemesterID(semesterId).orElse(null);
         if (semester == null) {
             loggingService.logGeneralActivity(LogType.SUBJECT_SCORE, LogAction.CREATE,"Invalid semester Id", staffId, LogStatus.FAILED);
@@ -229,7 +255,7 @@ public class ScoresService {
             SubjectScore subjectScore = scoresByResultId.computeIfAbsent(
                     result.getResultId(), id -> new SubjectScore());
 
-            saveNewScore(subjectScore, score, result, subject, result.getStudent(), semester);
+            saveNewScore(subjectScore, ScoreRules.compute(score), result, subject, result.getStudent(), semester);
 
             affectedSubjectScores.add(subjectScore);
             affectedResults.add(result);
@@ -252,34 +278,31 @@ public class ScoresService {
     }
 
 
-    public void saveNewScore(SubjectScore subjectScore, StudentsScoresTable score, Results result, Subjects subject, Students student, Semester semester) {
-
-        double projectWork = Double.parseDouble(score.getProjectScore());
-        double classTest1 = Double.parseDouble(score.getClassTest1Score());
-        double classTest2 = Double.parseDouble(score.getClassTest2Score());
-        double groupWork = Double.parseDouble(score.getGroupWorkScore());
-        double classScore = Double.parseDouble(score.getClassScore());
-        double examScore = Double.parseDouble(score.getExamScore());
-        double calculatedExamScore = Double.parseDouble(score.getCalculatedExamScore());
-        double totalScore =  classScore + calculatedExamScore;
+    /*
+     * Stores the marks and the scores derived from them. Class score, exam score and total are
+     * computed on the server (ScoreRules); the values the client sends for them are ignored, so
+     * the stored total always matches the marks.
+     */
+    public void saveNewScore(SubjectScore subjectScore, ScoreRules.ComputedScores computed, Results result,
+                             Subjects subject, Students student, Semester semester) {
 
         subjectScore.setSubject(subject);
         subjectScore.setStudent(student);
         subjectScore.setResults(result);
-        subjectScore.setProjectWork(Double.parseDouble(String.format("%.1f", projectWork)));
-        subjectScore.setClassTest1(Double.parseDouble(String.format("%.1f", classTest1)));
-        subjectScore.setGroupWork(Double.parseDouble(String.format("%.1f", groupWork)));
-        subjectScore.setClassTest2(Double.parseDouble(String.format("%.1f", classTest2)));
-        subjectScore.setClassScore(Double.valueOf(String.format("%.1f", classScore)));
-        subjectScore.setExamScore(Double.parseDouble(String.format("%.1f", examScore)));
-        subjectScore.setCalculatedExamScore(calculatedExamScore);
+        subjectScore.setProjectWork(computed.project());
+        subjectScore.setClassTest1(computed.classTest1());
+        subjectScore.setGroupWork(computed.groupWork());
+        subjectScore.setClassTest2(computed.classTest2());
+        subjectScore.setClassScore(computed.classScore());
+        subjectScore.setExamScore(computed.exam());
+        subjectScore.setCalculatedExamScore(computed.calculatedExamScore());
         subjectScore.setSemester(semester);
         subjectScore.setGrade(
-                utilityClass.extractGrade(totalScore, student.getInstitution().getInstitutionId())
+                utilityClass.extractGrade(computed.total(), student.getInstitution().getInstitutionId())
         );
         subjectScore.setGradeDescriptor(
-                utilityClass.extractDescription(totalScore, student.getInstitution().getInstitutionId())
+                utilityClass.extractDescription(computed.total(), student.getInstitution().getInstitutionId())
         );
-        subjectScore.setTotalScore(totalScore);
+        subjectScore.setTotalScore(computed.total());
     }
 }
