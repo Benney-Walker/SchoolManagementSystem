@@ -10,6 +10,7 @@ import com.codewithben.schoolmanagementsystem.Entity.Staffs;
 import com.codewithben.schoolmanagementsystem.Repository.GradeSystemRepository;
 import com.codewithben.schoolmanagementsystem.Repository.InstitutiionRepository;
 import com.codewithben.schoolmanagementsystem.Repository.StaffsRepository;
+import com.codewithben.schoolmanagementsystem.Utility.GradeBands;
 import com.codewithben.schoolmanagementsystem.Utility.UtilityClass;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -69,9 +70,15 @@ public class InstitutionService {
 
         if (criteria != null) {
             loggingService.logGeneralActivity(LogType.GRADE, LogAction.CREATE, logData, staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
                     "message", "Criteria already exist"
             ));
+        }
+
+        ResponseEntity<?> invalidBand = checkBand(gradingCriteria, null,
+                staff.getInstitution().getInstitutionId(), LogAction.CREATE, logData, staffId);
+        if (invalidBand != null) {
+            return invalidBand;
         }
 
         GradeSystem gradeSystem = new GradeSystem();
@@ -148,6 +155,25 @@ public class InstitutionService {
             ));
         }
 
+        String institutionId = criteria.getInstitution().getInstitutionId();
+
+        // Renaming a band to another band's grade would leave two bands with one grade.
+        GradeSystem sameGrade = gradeSystemRepository
+                .findByGradeAndInstitution_InstitutionId(gradingCriteria.getGrade(), institutionId)
+                .orElse(null);
+        if (sameGrade != null && sameGrade.getId() != criteria.getId()) {
+            loggingService.logGeneralActivity(LogType.GRADE, LogAction.UPDATE, logData, staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                    "message", "Criteria already exist"
+            ));
+        }
+
+        ResponseEntity<?> invalidBand = checkBand(gradingCriteria, criteria.getId(),
+                institutionId, LogAction.UPDATE, logData, staffId);
+        if (invalidBand != null) {
+            return invalidBand;
+        }
+
         criteria.setLowerRange(gradingCriteria.getLowerRange());
         criteria.setUpperRange(gradingCriteria.getUpperRange());
         criteria.setGrade(gradingCriteria.getGrade());
@@ -157,5 +183,30 @@ public class InstitutionService {
 
         loggingService.logGeneralActivity(LogType.GRADE, LogAction.UPDATE, logData, staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok().build();
+    }
+
+    /*
+     * A band must have lower <= upper within 0-100 (400) and must not overlap another band of
+     * the school (409); sharing one end point is allowed (GradeBands). Overlapping or reversed
+     * bands made the grade a score got depend on the order bands were loaded.
+     */
+    private ResponseEntity<?> checkBand(GradingCriteria band, Integer ignoreId, String institutionId,
+                                        LogAction action, String logData, String staffId) {
+        String rangeProblem = GradeBands.rangeProblem(band.getLowerRange(), band.getUpperRange());
+        if (rangeProblem != null) {
+            loggingService.logGeneralActivity(LogType.GRADE, action, logData, staffId, LogStatus.FAILED);
+            return ResponseEntity.badRequest().body(Map.of("message", rangeProblem));
+        }
+
+        GradeSystem clash = GradeBands.overlapping(band.getLowerRange(), band.getUpperRange(),
+                gradeSystemRepository.findAllByInstitution_InstitutionId(institutionId), ignoreId);
+        if (clash != null) {
+            loggingService.logGeneralActivity(LogType.GRADE, action, logData, staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                    "message", "Range overlaps grade " + clash.getGrade() + " ("
+                            + clash.getLowerRange() + " - " + clash.getUpperRange() + ")"
+            ));
+        }
+        return null;
     }
 }
