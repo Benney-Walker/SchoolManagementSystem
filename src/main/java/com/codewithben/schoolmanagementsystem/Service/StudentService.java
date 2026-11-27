@@ -45,6 +45,8 @@ public class StudentService {
 
     private final StudentFeeRecordRepository studentFeeRecordRepository;
 
+    private final SchoolScopeService schoolScopeService;
+
     //Method for adding new student
     @Transactional
     public ResponseEntity<?> addNewStudent(AddNewStudent addNewStudent, String staffId) {
@@ -61,13 +63,12 @@ public class StudentService {
             ));
         }
 
-        Level level = levelRepository.findByLevelID(addNewStudent.getLevelId()).orElse(null);
-        if (level == null) {
-            loggingService.logGeneralActivity(LogType.STUDENT, LogAction.CREATE, "Invalid Class Id", staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "Invalid class Id"
-            ));
-        }
+        // The class must be one of the caller's school: a student could otherwise be enrolled
+        // into another school's class (and billed with its fees).
+        SchoolScopeService.Scoped<Level> foundLevel =
+                schoolScopeService.level(staff, addNewStudent.getLevelId(), LogType.STUDENT, LogAction.CREATE);
+        if (foundLevel.failed()) return foundLevel.error();
+        Level level = foundLevel.value();
 
         LocalDate dob = LocalDate.parse(addNewStudent.getDateOfBirth(), DateTimeFormatter.ISO_DATE);
 
@@ -118,13 +119,13 @@ public class StudentService {
 
     public ResponseEntity<?> findStudent(String studentId, String staffId) {
 
-        Students student = studentsRepository.findByStudentId(studentId).orElse(null);
-        if (student == null) {
-            loggingService.logGeneralActivity(LogType.STUDENT, LogAction.READ, "Invalid Student Id", staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "Invalid student Id"
-            ));
-        }
+        // Caller's school only: this returns the parent's name and phone number (issue 2).
+        SchoolScopeService.Scoped<Staffs> caller = schoolScopeService.caller(staffId);
+        if (caller.failed()) return caller.error();
+        SchoolScopeService.Scoped<Students> found =
+                schoolScopeService.student(caller.value(), studentId, LogType.STUDENT, LogAction.READ);
+        if (found.failed()) return found.error();
+        Students student = found.value();
 
         loggingService.logGeneralActivity(
                 LogType.STUDENT, LogAction.READ,
@@ -386,13 +387,12 @@ public class StudentService {
 
     public ResponseEntity<?> getGradeStudents(String levelId, String staffId) {
 
-        Level level = levelRepository.findByLevelID(levelId).orElse(null);
-        if (level == null) {
-            loggingService.logGeneralActivity(LogType.STUDENT, LogAction.READ, "Invalid class Id", staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
-                    "message", "Invalid class Id"
-            ));
-        }
+        SchoolScopeService.Scoped<Staffs> caller = schoolScopeService.caller(staffId);
+        if (caller.failed()) return caller.error();
+        SchoolScopeService.Scoped<Level> found =
+                schoolScopeService.level(caller.value(), levelId, LogType.STUDENT, LogAction.READ);
+        if (found.failed()) return found.error();
+        Level level = found.value();
 
         List<Students> levelStudents = level.getStudents();
         if (levelStudents == null || levelStudents.isEmpty()) {
@@ -419,6 +419,12 @@ public class StudentService {
     }
 
     public ResponseEntity<?> promoteStudent(String studentId, String promotionClassId, String semesterId, String staffId) {
+
+        SchoolScopeService.Scoped<Staffs> caller = schoolScopeService.caller(staffId);
+        if (caller.failed()) return caller.error();
+        SchoolScopeService.Scoped<Students> scopedStudent =
+                schoolScopeService.student(caller.value(), studentId, LogType.STUDENT, LogAction.UPDATE);
+        if (scopedStudent.failed()) return scopedStudent.error();
 
         Results result = resultsRepository.findByStudent_StudentIdAndSemester_SemesterID(
                 studentId, semesterId
@@ -460,7 +466,10 @@ public class StudentService {
             ));
         }
 
-        Level promotionClass = levelRepository.findByLevelID(promotionClassId).orElse(null);
+        // The class promoted into must also be one of the caller's school.
+        Level promotionClass = promotionClassId == null ? null : levelRepository
+                .findByLevelIDAndInstitution_InstitutionId(promotionClassId, caller.value().getInstitution().getInstitutionId())
+                .orElse(null);
         if (promotionClass == null) {
             loggingService.logGeneralActivity(LogType.STUDENT, LogAction.UPDATE, "Invalid promotion Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
@@ -484,6 +493,12 @@ public class StudentService {
     }
 
     public ResponseEntity<?> repeatStudent(String studentId, String semesterId, String staffId) {
+
+        SchoolScopeService.Scoped<Staffs> caller = schoolScopeService.caller(staffId);
+        if (caller.failed()) return caller.error();
+        SchoolScopeService.Scoped<Students> scopedStudent =
+                schoolScopeService.student(caller.value(), studentId, LogType.STUDENT, LogAction.UPDATE);
+        if (scopedStudent.failed()) return scopedStudent.error();
 
         Results result = resultsRepository.findByStudent_StudentIdAndSemester_SemesterID(
                 studentId, semesterId
