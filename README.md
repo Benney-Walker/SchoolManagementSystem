@@ -334,13 +334,15 @@ All endpoints below require `Authorization: Bearer <accessToken>` unless noted. 
 | GET | `/v1/load-subject-students/{subjectId}/{semesterId}` | Students to score |
 | POST | `/v1/save-scores/{subjectId}/{semesterId}` | Save subject scores |
 | GET | `/v1/load-students-for-attendance/{levelId}/{date}` | Roll-call list |
-| POST | `/v2/mark-attendance` | Submit attendance |
+| POST | `/v2/mark-attendance` | Submit attendance (only students of that class at your school are recorded; rows with a status other than PRESENT/ABSENT are skipped) |
 | GET | `/v1/attendance-records` | Attendance history |
 | GET | `/v1/dates-marked/{levelId}/{semesterId}` | Dates already marked |
 | GET | `/v1/absent-students` | Today's absentees |
 | PUT | `/v1/promote-student` | Promote to the next class (409 for graduates) |
 | PUT | `/v1/repeat-student` | Repeat the current class (409 for graduates) |
 | GET | `/v3/generate-report-card` | Student report card (PDF) |
+
+Every `/api/student` endpoint that takes a student, class or term id only finds records of the caller's school; anything else is answered 404, like a missing record (`Service/SchoolScopeService`).
 
 ### `/api/finance` — Fees, payments, expenses
 
