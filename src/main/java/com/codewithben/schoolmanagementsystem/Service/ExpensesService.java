@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +37,9 @@ import java.util.Objects;
  * is answered exactly like a missing one (404). Before this, terms and expenses were looked
  * up by id alone, so an accountant could read, edit, delete or print another school's
  * expenses by changing the id. /api/finance/** already admits only ACCOUNTANT and PRINCIPAL.
+ *
+ * Deleting an expense is a soft delete (deletedAt/deletedBy); deleted expenses are left out
+ * of every list, total and report.
  */
 @Slf4j
 @RequiredArgsConstructor
@@ -219,11 +223,14 @@ public class ExpensesService {
             return notFound(LogAction.DELETE, "Expenses record not found", staffId);
         }
 
-        expensesRepo.delete(expenses);
+        // Soft delete: the row stays for the audit trail but no longer counts anywhere.
+        expenses.setDeletedAt(LocalDateTime.now());
+        expenses.setDeletedBy(staffId);
+        expensesRepo.save(expenses);
         loggingService.logGeneralActivity(
                 LogType.EXPENSES,
                 LogAction.DELETE,
-                "Expenses record deleted",
+                "Expenses record deleted: " + expenses.getDescription() + " (" + expenses.getAmountSpent() + ")",
                 staffId,
                 LogStatus.SUCCESS
         );
@@ -238,7 +245,7 @@ public class ExpensesService {
     /** The term's expenses, oldest first. The term must already be checked against the caller's school. */
     private List<ExpensesRecord> readExpensesRecords(Semester semester) {
 
-        List<Expenses> expensesList = expensesRepo.findBySemester_SemesterID(semester.getSemesterID());
+        List<Expenses> expensesList = expensesRepo.findBySemester_SemesterIDAndDeletedAtIsNull(semester.getSemesterID());
         if (expensesList == null) {
             return List.of();
         }
@@ -282,7 +289,7 @@ public class ExpensesService {
 
     private Expenses schoolExpense(Staffs staff, String expenseId) {
         return expenseId == null ? null : expensesRepo
-                .findByExpenseIdAndSemester_Institution_InstitutionId(expenseId, staff.getInstitution().getInstitutionId())
+                .findByExpenseIdAndSemester_Institution_InstitutionIdAndDeletedAtIsNull(expenseId, staff.getInstitution().getInstitutionId())
                 .orElse(null);
     }
 

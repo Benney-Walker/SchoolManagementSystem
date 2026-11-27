@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -35,4 +36,14 @@ public class Expenses {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "institution_id")
     private Institution institution;
+
+    /*
+     * Soft delete: a deleted expense keeps its row, with when and by whom, so the term's
+     * spending can still be audited. Null means not deleted (existing rows need no update).
+     * Every read goes through ExpensesRepo's ...DeletedAtIsNull finders.
+     */
+    private LocalDateTime deletedAt;
+
+    @Column(length = 64)
+    private String deletedBy;
 }

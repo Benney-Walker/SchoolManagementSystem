@@ -10,9 +10,9 @@ import java.util.Optional;
 @Repository
 public interface ExpensesRepo extends JpaRepository<Expenses, Long> {
 
-    /** Callers must first check the term belongs to the caller's school. */
-    List<Expenses> findBySemester_SemesterID(String semesterId);
+    /** The term's expenses that aren't deleted. Callers must first check the term belongs to the caller's school. */
+    List<Expenses> findBySemester_SemesterIDAndDeletedAtIsNull(String semesterId);
 
-    /** An expense of the given school (through its term), so ids from other schools are not found. */
-    Optional<Expenses> findByExpenseIdAndSemester_Institution_InstitutionId(String expenseId, String institutionId);
+    /** An expense of the given school (through its term) that isn't deleted, so ids from other schools are not found. */
+    Optional<Expenses> findByExpenseIdAndSemester_Institution_InstitutionIdAndDeletedAtIsNull(String expenseId, String institutionId);
 }
