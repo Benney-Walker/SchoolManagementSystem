@@ -362,8 +362,8 @@ All endpoints below require `Authorization: Bearer <accessToken>` unless noted. 
 | GET | `/v1/read-expenses-records/{semesterId}` | Expenses for a term |
 | GET | `/v1/total-expenses` | Total expenses this term |
 | PUT | `/v1/update-expense-record` | Amend an expense |
-| DELETE | `/v1/delete-expenses/{expensesId}` | Delete an expense |
-| GET | `/v1/generate-expenses-report/{semesterId}` | Expenses report (PDF) |
+| DELETE | `/v1/delete-expenses/{expensesId}` | Delete an expense (soft delete: the row keeps `deletedAt`/`deletedBy` and is left out of lists, totals and reports) |
+| GET | `/v1/generate-expenses-report/{semesterId}` | Expenses report (PDF), caller's school only |
 | POST | `/v1/add-special-fee` | Create a special fee across classes |
 | GET | `/v1/load-special-fees/{paymentType}` | Special fees by type |
 | PUT | `/v1/update-special-fee` | Amend a special fee |
@@ -385,8 +385,8 @@ PDFs are generated server-side and streamed to the client as bytes.
 |---|---|---|
 | Terminal report card | JasperReports | `reports/student_report_card.jrxml` |
 | SBA report | JasperReports | `reports/sba_report.jrxml` |
-| Master score sheet | JasperReports / OpenPDF | `reports/` |
-| Class report cards (batch) | JasperReports | per-student, merged |
+| Master score sheet | OpenPDF (`PdfGenerationService`) | built in code; columns follow the class's subjects |
+| Class report cards (batch) | JasperReports | `reports/student_report_card.jrxml`, one page per student |
 | Expenses report | JasperReports | `reports/expenses_report.jasper` (**template not yet committed**) |
 
 Report cards combine subject scores, computed class/exam splits, grading-band interpretation, conduct ratings, attendance totals and promotion status.
@@ -396,6 +396,19 @@ Report cards combine subject scores, computed class/exam splits, grading-band in
 > After changing a `.jrxml`, recompile the matching `.jasper` in Jaspersoft Studio 7.0.3 and commit both: the service loads the compiled `.jasper` files.
 
 > The runtime image installs `libfreetype6`, `fontconfig` and `fonts-dejavu` — JasperReports needs real fonts present or PDF generation fails on a slim container.
+
+**Fonts.** Every PDF uses **DejaVu Sans Condensed**, embedded with Unicode encoding, from the `jasperreports-fonts` dependency. The templates set it through a default style; the master sheet loads the same files. The built-in PDF fonts (Helvetica, Times) cover Latin-1 only, so Akan letters (Ɛ ɛ Ɔ ɔ) and ₵ would print blank. Conduct ticks are `\u2714` (✔). Don't use `pdfFontName`: it's ignored when a font extension is active.
+
+**Template check at startup.** `JasperReportService.verifyTemplates` loads every `.jasper` when the app starts and logs an ERROR for a missing template, a branding parameter the template doesn't declare (a `.jasper` not recompiled after its `.jrxml` changed), or a field the data bean doesn't have. Check the startup log after every template change.
+
+**Responses.** All report PDFs go through `PdfResponses.pdf`: `Content-Disposition: inline; filename="Basic-6-First-Term-2026-2027-master-sheet.pdf"` and `Cache-Control: no-store` (report cards and expenses carry personal and financial data). A PDF that fails to generate is logged with its stack trace, audited as FAILED and answered with a 500 `{message}`.
+
+| Report | Data passed to the template |
+|---|---|
+| Report card | `GenerateStudentResult` (one per student); table dataset `SubjectsDataset` → `SubjectReportDTO` |
+| SBA report | one `SbaReport`; table dataset `SbaRecordsDataset` → `SbaRecords` (students alphabetical) |
+| Expenses report | one `ExpensesReport {semesterName, academicYear, records, totalAmount, recordCount, dateOfReport}`; table dataset over `records` → `ExpensesRecord` |
+| Master score sheet | `MasterScoreSheet`; rows sorted by position (not ranked yet last), subjects alphabetical, one decimal place |
 
 ---
 

@@ -4,6 +4,7 @@ import com.codewithben.schoolmanagementsystem.Constants.LogAction;
 import com.codewithben.schoolmanagementsystem.Constants.LogStatus;
 import com.codewithben.schoolmanagementsystem.Constants.LogType;
 import com.codewithben.schoolmanagementsystem.DTO.Expenses.ExpensesRecord;
+import com.codewithben.schoolmanagementsystem.DTO.Expenses.ExpensesReport;
 import com.codewithben.schoolmanagementsystem.DTO.Expenses.NewExpenses;
 import com.codewithben.schoolmanagementsystem.DTO.Expenses.UpdateExpensesRecord;
 import com.codewithben.schoolmanagementsystem.Entity.Expenses;
@@ -12,20 +13,34 @@ import com.codewithben.schoolmanagementsystem.Entity.Staffs;
 import com.codewithben.schoolmanagementsystem.Repository.ExpensesRepo;
 import com.codewithben.schoolmanagementsystem.Repository.SemesterRepository;
 import com.codewithben.schoolmanagementsystem.Repository.StaffsRepository;
+import com.codewithben.schoolmanagementsystem.Utility.PdfResponses;
 import com.codewithben.schoolmanagementsystem.Utility.UtilityClass;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Collections;
+import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
+/**
+ * Expenses of the caller's own school.
+ *
+ * Every lookup is limited to the caller's school: a term or expense id from another school
+ * is answered exactly like a missing one (404). Before this, terms and expenses were looked
+ * up by id alone, so an accountant could read, edit, delete or print another school's
+ * expenses by changing the id. /api/finance/** already admits only ACCOUNTANT and PRINCIPAL.
+ *
+ * Deleting an expense is a soft delete (deletedAt/deletedBy); deleted expenses are left out
+ * of every list, total and report.
+ */
 @Slf4j
 @RequiredArgsConstructor
 @Service
@@ -45,25 +60,21 @@ public class ExpensesService {
 
     public ResponseEntity<?> addNewExpenses(NewExpenses newExpenses, String staffId) {
 
-        String extraInfo = "Extra info empty";
+        Staffs staff = caller(staffId);
+        if (staff == null) {
+            return sessionExpired();
+        }
 
-        Semester semester = semesterRepository.findBySemesterID(newExpenses.getSemesterId()).orElse(null);
+        Semester semester = schoolSemester(staff, newExpenses.getSemesterId());
         if(semester == null){
-            loggingService.logGeneralActivity(
-                    LogType.EXPENSES,
-                    LogAction.CREATE,
-                    "Term not found",
-                    staffId,
-                    LogStatus.FAILED
-                    );
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "Term not found"
-            ));
+            return notFound(LogAction.CREATE, "Term not found", staffId);
         }
 
-        if (newExpenses.getExtraInfo() != null &&  newExpenses.getExtraInfo().isEmpty()) {
-            extraInfo = newExpenses.getExtraInfo();
-        }
+        // Was "!= null && isEmpty()", which kept the typed text only when it was empty, so every
+        // expense was saved as "Extra info empty".
+        String extraInfo = newExpenses.getExtraInfo() == null || newExpenses.getExtraInfo().isBlank()
+                ? "Extra info empty"
+                : newExpenses.getExtraInfo().trim();
 
         Expenses expenses = Expenses.builder()
                 .description(newExpenses.getDescription())
@@ -87,18 +98,19 @@ public class ExpensesService {
 
     public ResponseEntity<?> readExpenses(String semesterId, String staffId) {
 
-        List<ExpensesRecord> expensesList = readExpensesRecords(semesterId);
+        Staffs staff = caller(staffId);
+        if (staff == null) {
+            return sessionExpired();
+        }
+
+        Semester semester = schoolSemester(staff, semesterId);
+        if (semester == null) {
+            return notFound(LogAction.READ, "Term not found", staffId);
+        }
+
+        List<ExpensesRecord> expensesList = readExpensesRecords(semester);
         if(expensesList.isEmpty()){
-            loggingService.logGeneralActivity(
-                    LogType.EXPENSES,
-                    LogAction.READ,
-                    "No expenses found for this term",
-                    staffId,
-                    LogStatus.FAILED
-            );
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "No expenses found for this term"
-            ));
+            return notFound(LogAction.READ, "No expenses found for this term", staffId);
         }
 
         return ResponseEntity.ok(expensesList);
@@ -106,32 +118,19 @@ public class ExpensesService {
 
     public ResponseEntity<?> updateExpenseRecord(UpdateExpensesRecord expensesRecord, String staffId) {
 
-        Semester semester = semesterRepository.findBySemesterID(expensesRecord.getSemesterId()).orElse(null);
-        if(semester == null){
-            loggingService.logGeneralActivity(
-                    LogType.EXPENSES,
-                    LogAction.UPDATE,
-                    "Term not found",
-                    staffId,
-                    LogStatus.FAILED
-            );
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "Term not found"
-            ));
+        Staffs staff = caller(staffId);
+        if (staff == null) {
+            return sessionExpired();
         }
 
-        Expenses existingRecord = expensesRepo.findByExpenseId(expensesRecord.getExpensesId()).orElse(null);
+        Semester semester = schoolSemester(staff, expensesRecord.getSemesterId());
+        if(semester == null){
+            return notFound(LogAction.UPDATE, "Term not found", staffId);
+        }
+
+        Expenses existingRecord = schoolExpense(staff, expensesRecord.getExpensesId());
         if(existingRecord == null){
-            loggingService.logGeneralActivity(
-                    LogType.EXPENSES,
-                    LogAction.UPDATE,
-                    "Expenses record not found",
-                    staffId,
-                    LogStatus.FAILED
-            );
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "Expenses record not found"
-            ));
+            return notFound(LogAction.UPDATE, "Expenses record not found", staffId);
         }
 
         existingRecord.setDescription(expensesRecord.getDescription());
@@ -152,137 +151,156 @@ public class ExpensesService {
 
     public ResponseEntity<?> totalSemesterExpenses(String staffId) {
 
-        Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
+        Staffs staff = caller(staffId);
         if(staff == null){
-            log.error("Invalid staff id provided for total expenses");
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return sessionExpired();
         }
 
         Semester semester = utilityClass.getCurrentSemester(staff.getInstitution());
         if (semester == null) {
-            loggingService.logGeneralActivity(
-                    LogType.EXPENSES,
-                    LogAction.READ,
-                    "Current semester not added",
-                    staffId,
-                    LogStatus.FAILED
-            );
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "Current semester not found"
-            ));
+            return notFound(LogAction.READ, "Current semester not found", staffId);
         }
 
-        List<Expenses> semesterExpenses = expensesRepo.findBySemester_SemesterID(
-                semester.getSemesterID()
-        );
-        if(semesterExpenses == null || semesterExpenses.isEmpty()){
-            loggingService.logGeneralActivity(
-                    LogType.EXPENSES,
-                    LogAction.READ,
-                    "No expenses found",
-                    staffId,
-                    LogStatus.FAILED
-            );
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "No expenses found"
-            ));
+        List<ExpensesRecord> semesterExpenses = readExpensesRecords(semester);
+        if(semesterExpenses.isEmpty()){
+            return notFound(LogAction.READ, "No expenses found", staffId);
         }
 
-        return ResponseEntity.ok(
-                semesterExpenses.stream().mapToDouble(Expenses::getAmountSpent).sum()
-        );
+        return ResponseEntity.ok(total(semesterExpenses));
     }
 
     public ResponseEntity<?> generateExpensesReport(String semesterId, String staffId) {
 
-        // The school comes from the caller. It used to be kept in a field of this shared
-        // (singleton) service, so two schools generating reports at the same time could get
-        // each other's name on the PDF.
-        Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
-        if (staff == null || staff.getInstitution() == null) {
-            loggingService.logGeneralActivity(
-                    LogType.EXPENSES,
-                    LogAction.READ,
-                    "Staff not found for expenses report",
-                    staffId,
-                    LogStatus.FAILED
-            );
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
-                    "message", "Internal Server error! Contact developer"
-            ));
+        // The school comes from the caller, never from shared state on this singleton.
+        Staffs staff = caller(staffId);
+        if (staff == null) {
+            return sessionExpired();
         }
 
-        List<ExpensesRecord> expensesList = readExpensesRecords(semesterId);
-        if(expensesList.isEmpty()){
-            loggingService.logGeneralActivity(
-                    LogType.EXPENSES,
-                    LogAction.READ,
-                    "No expenses found for this term",
-                    staffId,
-                    LogStatus.FAILED
-            );
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "No expenses found for this term"
-            ));
+        Semester semester = schoolSemester(staff, semesterId);
+        if (semester == null) {
+            return notFound(LogAction.READ, "Term not found", staffId);
         }
+
+        List<ExpensesRecord> expensesList = readExpensesRecords(semester);
+        if(expensesList.isEmpty()){
+            return notFound(LogAction.READ, "No expenses found for this term", staffId);
+        }
+
+        ExpensesReport report = ExpensesReport.builder()
+                .semesterName(semester.getSemesterName())
+                .academicYear(semester.getAcademicYear())
+                .records(expensesList)
+                .totalAmount(total(expensesList))
+                .recordCount(expensesList.size())
+                .dateOfReport(LocalDate.now().toString())
+                .build();
 
         try {
-            byte[] expensesPdfReport = jasperReportService.generateExpensesReport(
-                    expensesList, staff.getInstitution()
-            );
-            return ResponseEntity.ok().contentType(MediaType.APPLICATION_PDF).body(expensesPdfReport);
+            byte[] expensesPdfReport = jasperReportService.generateExpensesReport(report, staff.getInstitution());
+            return PdfResponses.pdf(expensesPdfReport,
+                    semester.getSemesterName(), semester.getAcademicYear(), "expenses");
         } catch (Exception e) {
+            // Logged with the stack trace and audited, so a missing or stale template is visible.
             log.error("Could not generate expenses report for semester {}", semesterId, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            loggingService.logGeneralActivity(LogType.EXPENSES, LogAction.READ,
+                    "Could not generate expenses report", staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                    "message", "Could not generate the report. Try again, or contact support if it keeps failing"
+            ));
         }
     }
 
     public ResponseEntity<?> deleteExpenses(String expensesId, String staffId) {
-        Expenses expenses = expensesRepo.findByExpenseId(expensesId).orElse(null);
-        if(expenses == null){
-            loggingService.logGeneralActivity(
-                    LogType.EXPENSES,
-                    LogAction.DELETE,
-                    "Expenses record not found",
-                    staffId,
-                    LogStatus.FAILED
-            );
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "Expenses record not found"
-            ));
+
+        Staffs staff = caller(staffId);
+        if (staff == null) {
+            return sessionExpired();
         }
 
-        expensesRepo.delete(expenses);
+        Expenses expenses = schoolExpense(staff, expensesId);
+        if(expenses == null){
+            return notFound(LogAction.DELETE, "Expenses record not found", staffId);
+        }
+
+        // Soft delete: the row stays for the audit trail but no longer counts anywhere.
+        expenses.setDeletedAt(LocalDateTime.now());
+        expenses.setDeletedBy(staffId);
+        expensesRepo.save(expenses);
         loggingService.logGeneralActivity(
                 LogType.EXPENSES,
                 LogAction.DELETE,
-                "Expenses record deleted",
+                "Expenses record deleted: " + expenses.getDescription() + " (" + expenses.getAmountSpent() + ")",
                 staffId,
                 LogStatus.SUCCESS
         );
         return ResponseEntity.ok().build();
     }
 
-    private List<ExpensesRecord> readExpensesRecords(String semesterId){
 
-        List<Expenses> expensesList = expensesRepo.findBySemester_SemesterID(semesterId);
-        if(expensesList == null || expensesList.isEmpty()){
+    /*================================================
+                        HELPERS
+     =================================================*/
 
-            return Collections.emptyList();
+    /** The term's expenses, oldest first. The term must already be checked against the caller's school. */
+    private List<ExpensesRecord> readExpensesRecords(Semester semester) {
+
+        List<Expenses> expensesList = expensesRepo.findBySemester_SemesterIDAndDeletedAtIsNull(semester.getSemesterID());
+        if (expensesList == null) {
+            return List.of();
         }
 
-        List<ExpensesRecord> records = new ArrayList<>();
-        for (Expenses expenses : expensesList) {
-            ExpensesRecord record = ExpensesRecord.builder()
-                    .expensesId(expenses.getExpenseId())
-                    .description(expenses.getDescription())
-                    .amountSpent(expenses.getAmountSpent())
-                    .extraInfo(expenses.getExtraInfo())
-                    .expenseDate(expenses.getExpenseDate().toString())
-                    .build();
-            records.add(record);
-        }
-        return records;
+        return expensesList.stream()
+                .sorted(Comparator.comparing(Expenses::getExpenseDate, Comparator.nullsLast(Comparator.naturalOrder()))
+                        .thenComparing(Expenses::getDescription, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)))
+                .map(expenses -> ExpensesRecord.builder()
+                        .expensesId(expenses.getExpenseId())
+                        .description(expenses.getDescription())
+                        .amountSpent(expenses.getAmountSpent())
+                        .extraInfo(expenses.getExtraInfo())
+                        .expenseDate(expenses.getExpenseDate() == null ? "" : expenses.getExpenseDate().toString())
+                        .build())
+                .toList();
     }
 
+    /* Summed in BigDecimal so float noise (0.1 + 0.2) doesn't reach the report. */
+    static double total(List<ExpensesRecord> records) {
+        BigDecimal sum = BigDecimal.ZERO;
+        for (ExpensesRecord record : records) {
+            sum = sum.add(new BigDecimal(Float.toString(record.getAmountSpent())));
+        }
+        return sum.setScale(2, RoundingMode.HALF_UP).doubleValue();
+    }
+
+    private Staffs caller(String staffId) {
+        Staffs staff = staffId == null ? null : staffsRepository.findByStaffId(staffId).orElse(null);
+        return staff == null || staff.getInstitution() == null ? null : staff;
+    }
+
+    /** The term if it belongs to the caller's school, else null. */
+    private Semester schoolSemester(Staffs staff, String semesterId) {
+        Semester semester = semesterId == null ? null : semesterRepository.findBySemesterID(semesterId).orElse(null);
+        if (semester == null || semester.getInstitution() == null
+                || !Objects.equals(semester.getInstitution().getInstitutionId(), staff.getInstitution().getInstitutionId())) {
+            return null;
+        }
+        return semester;
+    }
+
+    private Expenses schoolExpense(Staffs staff, String expenseId) {
+        return expenseId == null ? null : expensesRepo
+                .findByExpenseIdAndSemester_Institution_InstitutionIdAndDeletedAtIsNull(expenseId, staff.getInstitution().getInstitutionId())
+                .orElse(null);
+    }
+
+    private ResponseEntity<?> notFound(LogAction action, String message, String staffId) {
+        loggingService.logGeneralActivity(LogType.EXPENSES, action, message, staffId, LogStatus.FAILED);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", message));
+    }
+
+    private ResponseEntity<?> sessionExpired() {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                "message", "Session expired. Login again"
+        ));
+    }
 }

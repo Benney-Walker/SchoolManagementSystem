@@ -3,22 +3,25 @@ package com.codewithben.schoolmanagementsystem.Service;
 import com.codewithben.schoolmanagementsystem.Constants.LogAction;
 import com.codewithben.schoolmanagementsystem.Constants.LogStatus;
 import com.codewithben.schoolmanagementsystem.Constants.LogType;
+import com.codewithben.schoolmanagementsystem.Constants.StudentStatus;
 import com.codewithben.schoolmanagementsystem.DTO.Report.GenerateStudentResult;
 import com.codewithben.schoolmanagementsystem.DTO.Report.MasterScoreSheet;
 import com.codewithben.schoolmanagementsystem.DTO.Report.SbaReport;
 import com.codewithben.schoolmanagementsystem.DTO.Result.SbaRecords;
 import com.codewithben.schoolmanagementsystem.Entity.*;
 import com.codewithben.schoolmanagementsystem.Repository.*;
+import com.codewithben.schoolmanagementsystem.Utility.PdfResponses;
 import com.codewithben.schoolmanagementsystem.Utility.UtilityClass;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.*;
 
+@Slf4j
 @AllArgsConstructor
 @Service
 public class ReportService {
@@ -45,53 +48,41 @@ public class ReportService {
 
     private final UtilityClass utilityClass;
 
+    private final ResultAccessService resultAccess;
+
+    private final ReportCardService reportCardService;
+
     public ResponseEntity<?> generateStudentReport(String studentId, String semesterId, String staffId) {
 
-        Semester semester = semesterRepository.findBySemesterID(semesterId).orElse(null);
-        if (semester == null) {
-            loggingService.logGeneralActivity(LogType.REPORT, LogAction.READ, "Invalid Term Id", staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "Invalid term Id"
-            ));
+        // Caller's own school only; accountants can't download report cards.
+        ResultAccessService.Lookup<Staffs> viewer = resultAccess.viewer(staffId, LogType.REPORT);
+        if (viewer.failed()) {
+            return viewer.error();
         }
-
-        Results studentResult = resultsRepository.findByStudent_StudentIdAndSemester_SemesterID(studentId, semesterId).orElse(null);
-        if (studentResult == null) {
-            loggingService.logGeneralActivity(LogType.RESULT, LogAction.READ, "No record found for this student for this semester", staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "No record found for this student for this semester"
-            ));
+        ResultAccessService.Lookup<Semester> semesterLookup = resultAccess.semester(viewer.value(), semesterId, LogType.REPORT);
+        if (semesterLookup.failed()) {
+            return semesterLookup.error();
         }
+        Semester semester = semesterLookup.value();
 
-        if (semester.getSemesterName().equals("THIRD_TERM") && studentResult.getPromotionTo().equals("-")) {
-            loggingService.logGeneralActivity(LogType.REPORT, LogAction.READ,
-                    "Promotion activity not carried out",
-                    staffId, LogStatus.FAILED);
+        ResultAccessService.Lookup<Results> resultLookup =
+                resultAccess.studentResult(viewer.value(), studentId, semester, LogType.REPORT);
+        if (resultLookup.failed()) {
+            return resultLookup.error();
+        }
+        Results studentResult = resultLookup.value();
+
+        // One set of rules for preview, PDF and class report cards (ReportCardService):
+        // conduct recorded, every subject scored, third-term promotion done.
+        ReportCardService.Outcome outcome = reportCardService.assemble(
+                studentResult, semester, reportCardService.termContext(semester));
+        if (outcome.refused()) {
+            loggingService.logGeneralActivity(LogType.REPORT, LogAction.READ, outcome.problem(), staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
-                    "message", "Promotion activity not carried out"
+                    "message", outcome.problem()
             ));
         }
-
-        String totalAttendance = String.valueOf(
-                attendanceService.getTotalAttendanceCount(semester)
-        );
-
-        if (studentResult.getConduct() == null) {
-            loggingService.logGeneralActivity(
-                    LogType.REPORT, LogAction.READ,
-                    "Student conducts not uploaded yet",
-                    staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
-                    "message", "Student conducts not uploaded yet"
-            ));
-        }
-
-        String resumingDate = utilityClass.getResumingDate(semester);
-
-        GenerateStudentResult result = resultsService.generateStudentResult(studentResult, resumingDate, totalAttendance);
-        result.setStudentConductReport(
-                conductService.getStudentConductReport(studentResult.getConduct())
-        );
+        GenerateStudentResult result = outcome.reportCard();
 
         try {
             byte[] studentReport = jasperReportService.generateStudentReportCard(result, studentResult.getStudent().getInstitution());
@@ -102,34 +93,32 @@ public class ReportService {
                             studentResult.getStudent().getLastName(),
                     staffId, LogStatus.SUCCESS
             );
-            return ResponseEntity.ok().contentType(MediaType.APPLICATION_PDF).body(studentReport);
+            return PdfResponses.pdf(studentReport,
+                    studentResult.getStudent().getFirstName(), studentResult.getStudent().getLastName(),
+                    semester.getSemesterName(), semester.getAcademicYear(), "report card");
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            return pdfFailed("report card for student " + studentId, staffId, e);
         }
     }
 
     public ResponseEntity<?> generateClassBulkReport(String staffId, String levelId, String semesterId) {
 
-        Level level = levelRepository.findByLevelID(levelId).orElse(null);
-        if (level == null) {
-            loggingService.logGeneralActivity(LogType.REPORT, LogAction.READ, "Invalid class Id", staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "Invalid class Id"
-            ));
+        ResultAccessService.Lookup<Staffs> viewer = resultAccess.viewer(staffId, LogType.REPORT);
+        if (viewer.failed()) {
+            return viewer.error();
         }
-
-        Semester semester = semesterRepository.findBySemesterID(semesterId).orElse(null);
-        if (semester == null) {
-            loggingService.logGeneralActivity(LogType.REPORT, LogAction.READ, "Invalid Term Id", staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "Invalid term Id"
-            ));
+        ResultAccessService.Lookup<Level> levelLookup = resultAccess.level(viewer.value(), levelId, LogType.REPORT);
+        if (levelLookup.failed()) {
+            return levelLookup.error();
         }
+        Level level = levelLookup.value();
+        ResultAccessService.Lookup<Semester> semesterLookup = resultAccess.semester(viewer.value(), semesterId, LogType.REPORT);
+        if (semesterLookup.failed()) {
+            return semesterLookup.error();
+        }
+        Semester semester = semesterLookup.value();
 
-        String totalAttendance = String.valueOf(
-                attendanceService.getTotalAttendanceCount(semester)
-        );
-        String resumingDate = utilityClass.getResumingDate(semester);
+        ReportCardService.TermContext term = reportCardService.termContext(semester);
 
         List<Results> classResultsList = resultsRepository
                 .findByLevel_LevelIDAndSemester_SemesterID(levelId, semesterId);
@@ -140,22 +129,29 @@ public class ReportService {
             ));
         }
 
+        // Every report card in the class follows the same rules as a single one. Students who
+        // have left (INACTIVE) get no report card, so they don't block the class.
         List<GenerateStudentResult> reportData = new ArrayList<>();
-        //retrieve results
         for (Results result : classResultsList) {
-            if (result.getConduct() == null) {
+            if (result.getStudent() == null || result.getStudent().getStudentStatus() == StudentStatus.INACTIVE) {
+                continue;
+            }
+            ReportCardService.Outcome outcome = reportCardService.assemble(result, semester, term);
+            if (outcome.refused()) {
                 String studentName = result.getStudent().getFirstName() + " " + result.getStudent().getLastName();
-                loggingService.logGeneralActivity(LogType.REPORT, LogAction.READ, "No Conduct records found for " + studentName, staffId, LogStatus.FAILED);
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                        "message", "No Conduct records found for " + result.getStudent().getFirstName()
+                loggingService.logGeneralActivity(LogType.REPORT, LogAction.READ,
+                        studentName + ": " + outcome.problem(), staffId, LogStatus.FAILED);
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                        "message", studentName + ": " + outcome.problem()
                 ));
             }
-
-            GenerateStudentResult generateStudentResult = resultsService.generateStudentResult(result, resumingDate, totalAttendance);
-            generateStudentResult.setStudentConductReport(
-                    conductService.getStudentConductReport(result.getConduct())
-            );
-            reportData.add(generateStudentResult);
+            reportData.add(outcome.reportCard());
+        }
+        if (reportData.isEmpty()) {
+            loggingService.logGeneralActivity(LogType.REPORT, LogAction.READ, "No records are found", staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "No records are found"
+            ));
         }
 
         try {
@@ -167,36 +163,35 @@ public class ReportService {
                     "Downloaded bulk report for " + level.getLevelName(),
                     staffId, LogStatus.SUCCESS
             );
-            return ResponseEntity.ok().contentType(MediaType.APPLICATION_PDF).body(studentBulkReportPdf);
+            return PdfResponses.pdf(studentBulkReportPdf,
+                    level.getLevelName(), semester.getSemesterName(), semester.getAcademicYear(), "report cards");
         } catch (Exception e) {
-            throw new RuntimeException("Error while generating report for " + e);
+            return pdfFailed("class report cards for " + level.getLevelName(), staffId, e);
         }
     }
 
     public ResponseEntity<?> generateSbaReport(String staffId, String levelId, String semesterId, String subjectId) {
-        Subjects subject = subjectsRepository.findBySubjectId(subjectId).orElse(null);
-        if (subject == null) {
-            loggingService.logGeneralActivity(LogType.REPORT, LogAction.READ, "Invalid subject Id", staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "Invalid Subject Id"
-            ));
+        ResultAccessService.Lookup<Staffs> viewer = resultAccess.viewer(staffId, LogType.REPORT);
+        if (viewer.failed()) {
+            return viewer.error();
         }
-
-        Level level = levelRepository.findByLevelID(levelId).orElse(null);
-        if (level == null) {
-            loggingService.logGeneralActivity(LogType.REPORT, LogAction.READ, "Invalid class Id", staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "Invalid class Id"
-            ));
+        ResultAccessService.Lookup<Level> levelLookup = resultAccess.level(viewer.value(), levelId, LogType.REPORT);
+        if (levelLookup.failed()) {
+            return levelLookup.error();
         }
-
-        Semester semester = semesterRepository.findBySemesterID(semesterId).orElse(null);
-        if (semester == null) {
-            loggingService.logGeneralActivity(LogType.REPORT, LogAction.READ, "Invalid Term Id", staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "Invalid term Id"
-            ));
+        Level level = levelLookup.value();
+        ResultAccessService.Lookup<Semester> semesterLookup = resultAccess.semester(viewer.value(), semesterId, LogType.REPORT);
+        if (semesterLookup.failed()) {
+            return semesterLookup.error();
         }
+        Semester semester = semesterLookup.value();
+        // The subject must belong to this class (and so to the caller's school).
+        ResultAccessService.Lookup<Subjects> subjectLookup =
+                resultAccess.subject(viewer.value(), subjectId, level, LogType.REPORT);
+        if (subjectLookup.failed()) {
+            return subjectLookup.error();
+        }
+        Subjects subject = subjectLookup.value();
 
         List<Results> resultsList = resultsRepository
                 .findByLevel_LevelIDAndSemester_SemesterID(levelId, semesterId);
@@ -227,13 +222,29 @@ public class ReportService {
                     "Generated Sba report for " + level.getLevelName() + "' " +
                             subject.getSubjectName(), staffId, LogStatus.SUCCESS
             );
-            return ResponseEntity.ok().contentType(MediaType.APPLICATION_PDF).body(sbaReportPdf);
+            return PdfResponses.pdf(sbaReportPdf,
+                    level.getLevelName(), subject.getSubjectName(), semester.getSemesterName(),
+                    semester.getAcademicYear(), "SBA");
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            return pdfFailed("SBA report for " + level.getLevelName() + " " + subject.getSubjectName(), staffId, e);
         }
     }
 
     public ResponseEntity<?> generateMasterScoreSheet(String levelId, String semesterId, String staffId) {
+
+        // The class and term were not checked at all before.
+        ResultAccessService.Lookup<Staffs> viewer = resultAccess.viewer(staffId, LogType.REPORT);
+        if (viewer.failed()) {
+            return viewer.error();
+        }
+        ResultAccessService.Lookup<Level> levelLookup = resultAccess.level(viewer.value(), levelId, LogType.REPORT);
+        if (levelLookup.failed()) {
+            return levelLookup.error();
+        }
+        ResultAccessService.Lookup<Semester> semesterLookup = resultAccess.semester(viewer.value(), semesterId, LogType.REPORT);
+        if (semesterLookup.failed()) {
+            return semesterLookup.error();
+        }
 
         List<Results> resultsList = resultsRepository
                 .findByLevel_LevelIDAndSemester_SemesterID(levelId, semesterId);
@@ -247,16 +258,33 @@ public class ReportService {
         MasterScoreSheet masterScoreSheet = resultsService.generateMasterSheetRecord(resultsList);
 
         try {
-            byte[] scoreSheetPdf = pdfGenerationService.generateMasterSheetScore(masterScoreSheet);
+            byte[] scoreSheetPdf = pdfGenerationService.generateMasterSheetScore(
+                    masterScoreSheet, viewer.value().getInstitution());
             loggingService.logGeneralActivity(
                     LogType.RESULT, LogAction.READ,
                     "Generated master score sheet for " + masterScoreSheet.getClassName(),
                     staffId, LogStatus.SUCCESS
             );
-            return ResponseEntity.ok().contentType(MediaType.APPLICATION_PDF).body(scoreSheetPdf);
+            return PdfResponses.pdf(scoreSheetPdf,
+                    masterScoreSheet.getClassName(), masterScoreSheet.getSemesterName(),
+                    masterScoreSheet.getAcademicYear(), "master sheet");
         } catch (Exception e)  {
-            throw new RuntimeException("Error while generating report for " + e);
+            return pdfFailed("master score sheet for " + masterScoreSheet.getClassName(), staffId, e);
         }
+    }
+
+    /*
+     * A PDF that could not be filled or exported (usually a template that doesn't match the
+     * code; see JasperReportService.verifyTemplates). It used to be rethrown as a bare
+     * RuntimeException: a generic 500, no audit entry and, for some reports, no stack trace.
+     */
+    private ResponseEntity<?> pdfFailed(String what, String staffId, Exception e) {
+        log.error("Could not generate {}", what, e);
+        loggingService.logGeneralActivity(LogType.REPORT, LogAction.READ,
+                "Could not generate " + what, staffId, LogStatus.FAILED);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                "message", "Could not generate the report. Try again, or contact support if it keeps failing"
+        ));
     }
 
 }

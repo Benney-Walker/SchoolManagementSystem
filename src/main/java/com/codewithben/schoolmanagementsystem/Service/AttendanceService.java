@@ -415,7 +415,13 @@ public class AttendanceService {
     public int getTotalAttendanceCount(Semester semester) {
         LocalDate startDate = semester.getSemesterStartDate();
         LocalDate endDate = semester.getSemesterEndDate();
+        if (startDate == null || endDate == null) {
+            return 0;
+        }
+        List<SchoolHoliday> holidays = semester.getInstitution() == null || semester.getInstitution().getSchoolHolidays() == null
+                ? List.of() : semester.getInstitution().getSchoolHolidays();
 
+        // School days in the term: weekdays from start to end, minus school holidays (Ben, 2026-11-27).
         int totalAttendance = 0;
 
         for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
@@ -427,8 +433,10 @@ public class AttendanceService {
 
             boolean isHoliday = false;
 
-            for (SchoolHoliday holiday : semester.getInstitution().getSchoolHolidays()) {
-
+            for (SchoolHoliday holiday : holidays) {
+                if (holiday.getStartDate() == null || holiday.getEndDate() == null) {
+                    continue;
+                }
                 if (!date.isBefore(holiday.getStartDate()) && !date.isAfter(holiday.getEndDate())) {
                     isHoliday = true;
                     break;

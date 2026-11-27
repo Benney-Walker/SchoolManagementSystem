@@ -68,6 +68,16 @@
             <version>7.0.3</version>
         </dependency>
 
+        <!-- DejaVu font families (Sans, Sans Condensed, Serif, Mono) registered as a JasperReports
+             font extension, embedded in PDFs with Unicode encoding. The report templates use
+             "DejaVu Sans Condensed"; the master score sheet (OpenPDF) loads the same font files.
+             Without it, Akan letters (Ɛ, Ɔ) and the cedi sign print blank. -->
+        <dependency>
+            <groupId>net.sf.jasperreports</groupId>
+            <artifactId>jasperreports-fonts</artifactId>
+            <version>7.0.3</version>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-crypto</artifactId>
