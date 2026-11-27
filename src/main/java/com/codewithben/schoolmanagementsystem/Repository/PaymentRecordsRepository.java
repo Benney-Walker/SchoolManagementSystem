@@ -7,10 +7,11 @@ import java.util.List;
 import java.util.Optional;
 
 public interface PaymentRecordsRepository extends JpaRepository<PaymentRecords, Long> {
-    Optional<PaymentRecords> findByRecordsId(String id);
+    /** A payment of the given school that isn't deleted, so other schools' ids are not found. */
+    Optional<PaymentRecords> findByRecordsIdAndInstitution_InstitutionIdAndDeletedAtIsNull(String id, String institutionId);
 
     List<PaymentRecords>
-    findFirst15ByInstitution_InstitutionIdAndFeeRecord_Semester_SemesterIDOrderByDateOfPaymentDesc(
-                    String institutionId, String feeRecordId
+    findFirst15ByInstitution_InstitutionIdAndFeeRecord_Semester_SemesterIDAndDeletedAtIsNullOrderByDateOfPaymentDesc(
+                    String institutionId, String semesterId
             );
 }

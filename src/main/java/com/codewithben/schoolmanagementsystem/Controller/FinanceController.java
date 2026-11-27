@@ -64,12 +64,14 @@ public class FinanceController {
         return feesService.updatePaymentRecord(update, staffId);
     }
 
+    /* ?reason= is required (why the payment is removed); accountant only, current term only. */
     @DeleteMapping("/v1/delete-payment-record/{transactionId}")
-    public ResponseEntity<?> deletePaymentRecord(@PathVariable String transactionId) {
+    public ResponseEntity<?> deletePaymentRecord(@PathVariable String transactionId,
+                                                 @RequestParam(required = false) String reason) {
 
         String staffId = authenticatedStaffProvider.getStaffId();
 
-        return feesService.deletePaymentRecord(transactionId, staffId);
+        return feesService.deletePaymentRecord(transactionId, reason, staffId);
     }
 
     @GetMapping("/v1/search-fees-report")

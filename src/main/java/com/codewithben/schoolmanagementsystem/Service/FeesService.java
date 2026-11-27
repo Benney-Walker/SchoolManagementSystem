@@ -8,6 +8,7 @@ import com.codewithben.schoolmanagementsystem.DTO.RabbitMQ.Fees.PaymentReport;
 import com.codewithben.schoolmanagementsystem.DTO.Report.GradeFeesReport;
 import com.codewithben.schoolmanagementsystem.Entity.*;
 import com.codewithben.schoolmanagementsystem.Repository.*;
+import com.codewithben.schoolmanagementsystem.Utility.PaymentRules;
 import com.codewithben.schoolmanagementsystem.Utility.UtilityClass;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
@@ -17,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -81,7 +83,8 @@ public class FeesService {
         //ArrayList to Store Fees Report
         List<PaymentHistory> paymentHistoryList = new ArrayList<>();
 
-        for (PaymentRecords paymentRecords : studentFeeRecord.getPaymentRecords()) {
+        // Deleted payments are left out (issue 3).
+        for (PaymentRecords paymentRecords : PaymentRules.activePayments(studentFeeRecord.getPaymentRecords())) {
 
             PaymentHistory paymentHistory = new PaymentHistory(
                     paymentRecords.getDateOfPayment().toString(),
@@ -143,7 +146,8 @@ public class FeesService {
         }
 
         List<StudentPaymentRecords> studentPaymentRecordsList = new ArrayList<>();
-        for (PaymentRecords paymentRecord : studentFeeRecord.getPaymentRecords()) {
+        // Deleted payments are left out (issue 3).
+        for (PaymentRecords paymentRecord : PaymentRules.activePayments(studentFeeRecord.getPaymentRecords())) {
 
 
             StudentPaymentRecords studentPaymentRecords = StudentPaymentRecords.builder()
@@ -171,9 +175,20 @@ public class FeesService {
         return ResponseEntity.ok(studentPaymentRecordsList);
     }
 
+    @Transactional
     public ResponseEntity<?> updatePaymentRecord(StudentPaymentRecords update, String staffId) {
 
-        PaymentRecords paymentRecord = paymentRecordsRepository.findByRecordsId(update.getPaymentId()).orElse(null);
+        Staffs staff = staffId == null ? null : staffsRepository.findByStaffId(staffId).orElse(null);
+        if (staff == null || staff.getInstitution() == null) {
+            return sessionExpired();
+        }
+
+        // Only this school's payments, and never a deleted one (editing it would bring its
+        // amount back into the totals).
+        PaymentRecords paymentRecord = update.getPaymentId() == null ? null : paymentRecordsRepository
+                .findByRecordsIdAndInstitution_InstitutionIdAndDeletedAtIsNull(
+                        update.getPaymentId(), staff.getInstitution().getInstitutionId())
+                .orElse(null);
         if (paymentRecord == null) {
             loggingService.logGeneralActivity(LogType.FEES, LogAction.UPDATE, "Invalid payment Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
@@ -186,9 +201,8 @@ public class FeesService {
             paymentRecordsRepository.save(paymentRecord);
 
             StudentFeeRecord studentFeeRecord = paymentRecord.getFeeRecord();
-            float newTotalPaid = (float) studentFeeRecord.getPaymentRecords()
-                    .stream().mapToDouble(PaymentRecords::getAmountPaid).sum();
-            float newBalance = (float) studentFeeRecord.getTotalAmount() - newTotalPaid;
+            float newTotalPaid = PaymentRules.totalPaid(studentFeeRecord.getPaymentRecords());
+            float newBalance = PaymentRules.balance(studentFeeRecord.getTotalAmount(), newTotalPaid);
 
             studentFeeRecord.setAmountPaid(newTotalPaid);
             studentFeeRecord.setBalance(newBalance);
@@ -208,38 +222,95 @@ public class FeesService {
         return ResponseEntity.ok().build();
     }
 
-    public ResponseEntity<?> deletePaymentRecord(String transactionId, String staffId) {
+    /*
+     * Deletes a fee payment entered by mistake (issue 3). Ben, 2026-11-27: the accountant only,
+     * a reason is required, current term only.
+     *
+     * Before: the balance became balance + (amountPaid - deleted amount) instead of
+     * balance + deleted amount (fee 1000, payments 300 + 200, delete the 200 -> balance 800,
+     * not 700), the payment row was written back unchanged (still in history, and deleting it
+     * again subtracted it again), and any school's payment could be deleted by id.
+     *
+     * Now: the payment is soft-deleted (deletedAt, deletedBy, deletionReason) and the fee
+     * record's amountPaid and balance are recomputed from the payments that remain.
+     */
+    @Transactional
+    public ResponseEntity<?> deletePaymentRecord(String transactionId, String reason, String staffId) {
 
-        synchronized (transactionId.intern()) {
-            PaymentRecords paymentRecord = paymentRecordsRepository.findByRecordsId(transactionId).orElse(null);
-            if (paymentRecord == null) {
-                loggingService.logGeneralActivity(LogType.FEES, LogAction.DELETE, "Invalid payment record Id", staffId, LogStatus.FAILED);
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                        "message", "Invalid payment record Id"
-                ));
-            }
-
-            StudentFeeRecord studentFeeRecord = paymentRecord.getFeeRecord();
-            //Calculate total paid and new balance
-            float oldTotalAmountPaid = studentFeeRecord.getAmountPaid();
-            float newTotalAmountPaid = oldTotalAmountPaid - paymentRecord.getAmountPaid();
-            float newBalance = studentFeeRecord.getBalance() + newTotalAmountPaid;
-            //Save records
-            studentFeeRecord.setAmountPaid(newTotalAmountPaid);
-            studentFeeRecord.setBalance(newBalance);
-            studentFeeRecordRepository.save(studentFeeRecord);
-
-            paymentRecordsRepository.save(paymentRecord);
-
-            loggingService.logGeneralActivity(
-                    LogType.FEES, LogAction.DELETE,
-                    "Deleted Payment record with Id: " + paymentRecord.getRecordsId() +
-                    " for " + paymentRecord.getFeeRecord().getStudent().getFirstName() + " " +
-                    paymentRecord.getFeeRecord().getStudent().getLastName(),
-                    staffId, LogStatus.SUCCESS);
-
-            return ResponseEntity.ok().build();
+        Staffs staff = staffId == null ? null : staffsRepository.findByStaffId(staffId).orElse(null);
+        if (staff == null || staff.getInstitution() == null) {
+            return sessionExpired();
         }
+
+        boolean accountant = staff.getRoles() != null && staff.getRoles().stream()
+                .anyMatch(role -> role != null && role.getStaffRole() == StaffRoles.ACCOUNTANT);
+        if (!accountant) {
+            loggingService.logGeneralActivity(LogType.FEES, LogAction.DELETE,
+                    "Payment delete refused: caller is not the accountant", staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                    "message", "Only the accountant can delete a payment record"
+            ));
+        }
+
+        String reasonProblem = PaymentRules.deletionReasonProblem(reason);
+        if (reasonProblem != null) {
+            return ResponseEntity.badRequest().body(Map.of("message", reasonProblem));
+        }
+
+        PaymentRecords paymentRecord = transactionId == null ? null : paymentRecordsRepository
+                .findByRecordsIdAndInstitution_InstitutionIdAndDeletedAtIsNull(
+                        transactionId, staff.getInstitution().getInstitutionId())
+                .orElse(null);
+        if (paymentRecord == null) {
+            loggingService.logGeneralActivity(LogType.FEES, LogAction.DELETE, "Invalid payment record Id", staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "Invalid payment record Id"
+            ));
+        }
+
+        // A past term's balance was carried into the next term as its opening balance, so
+        // changing it now wouldn't flow forward.
+        StudentFeeRecord studentFeeRecord = paymentRecord.getFeeRecord();
+        Semester currentSemester = utilityClass.getCurrentSemester(staff.getInstitution());
+        if (currentSemester == null || studentFeeRecord.getSemester() == null
+                || !currentSemester.getSemesterID().equals(studentFeeRecord.getSemester().getSemesterID())) {
+            loggingService.logGeneralActivity(LogType.FEES, LogAction.DELETE,
+                    "Payment " + paymentRecord.getRecordsId() + " is not in the current term", staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                    "message", "Only payments of the current term can be deleted"
+            ));
+        }
+
+        paymentRecord.setDeletedAt(LocalDateTime.now());
+        paymentRecord.setDeletedBy(staffId);
+        paymentRecord.setDeletionReason(reason.strip());
+        paymentRecordsRepository.save(paymentRecord);
+
+        float newTotalPaid = PaymentRules.totalPaid(studentFeeRecord.getPaymentRecords());
+        float newBalance = PaymentRules.balance(studentFeeRecord.getTotalAmount(), newTotalPaid);
+        studentFeeRecord.setAmountPaid(newTotalPaid);
+        studentFeeRecord.setBalance(newBalance);
+        studentFeeRecordRepository.save(studentFeeRecord);
+
+        Students student = studentFeeRecord.getStudent();
+        loggingService.logGeneralActivity(
+                LogType.FEES, LogAction.DELETE,
+                "Deleted payment " + paymentRecord.getRecordsId() + " of GHS " + paymentRecord.getAmountPaid()
+                        + " for " + student.getFirstName() + " " + student.getLastName()
+                        + ". Reason: " + reason.strip(),
+                staffId, LogStatus.SUCCESS);
+
+        return ResponseEntity.ok(Map.of(
+                "message", "Payment deleted",
+                "amountPaid", newTotalPaid,
+                "balance", newBalance
+        ));
+    }
+
+    private ResponseEntity<?> sessionExpired() {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                "message", "Session expired. Login again"
+        ));
     }
 
     public ResponseEntity<?> loadClassFeesSummary(String staffId) {
@@ -721,7 +792,7 @@ public class FeesService {
         }
 
         List<PaymentRecords> paymentRecords = paymentRecordsRepository
-                .findFirst15ByInstitution_InstitutionIdAndFeeRecord_Semester_SemesterIDOrderByDateOfPaymentDesc(
+                .findFirst15ByInstitution_InstitutionIdAndFeeRecord_Semester_SemesterIDAndDeletedAtIsNullOrderByDateOfPaymentDesc(
                         currentSemester.getInstitution().getInstitutionId(), currentSemester.getSemesterID()
                 );
         if (paymentRecords == null || paymentRecords.isEmpty()) {
