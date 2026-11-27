@@ -251,7 +251,8 @@ public class ReportService {
         MasterScoreSheet masterScoreSheet = resultsService.generateMasterSheetRecord(resultsList);
 
         try {
-            byte[] scoreSheetPdf = pdfGenerationService.generateMasterSheetScore(masterScoreSheet);
+            byte[] scoreSheetPdf = pdfGenerationService.generateMasterSheetScore(
+                    masterScoreSheet, viewer.value().getInstitution());
             loggingService.logGeneralActivity(
                     LogType.RESULT, LogAction.READ,
                     "Generated master score sheet for " + masterScoreSheet.getClassName(),

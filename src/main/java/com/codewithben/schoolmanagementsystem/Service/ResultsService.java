@@ -324,6 +324,14 @@ public class ResultsService {
         List<MasterScoreSheetRow> rows = new ArrayList<>();
         for (Results result : resultsList) {
 
+            // Header from the first result, even if nobody has scores yet (the sheet used to
+            // print "CLASS: null" then).
+            if (semesterName == null || className == null || academicYear == null) {
+                semesterName = result.getSemester().getSemesterName();
+                className = result.getLevel().getLevelName();
+                academicYear = result.getSemester().getAcademicYear();
+            }
+
             List<SubjectScore> subjectScores = result.getSubjectScores();
             if (subjectScores == null || subjectScores.isEmpty()) continue;
 
@@ -355,19 +363,24 @@ public class ResultsService {
                     .position(Integer.parseInt(position))
                     .build();
             rows.add(record);
-
-            if (semesterName == null || className == null || academicYear == null) {
-                semesterName = result.getSemester().getSemesterName();
-                className = result.getLevel().getLevelName();
-                academicYear = result.getSemester().getAcademicYear();
-            }
         }
 
         // Subject columns in alphabetical order (they used to follow the order scores were
         // first seen, so two classes' sheets could have different column orders).
         subjects.sort(String.CASE_INSENSITIVE_ORDER);
+        rows.sort(BY_POSITION);
         return new MasterScoreSheet(className, semesterName, academicYear, subjects, rows);
     }
+
+    /*
+     * Master sheet rows by position (Ben, 2026-11-27): 1st first, students not ranked yet
+     * (position 0) at the bottom, ties and unranked students by name. Rows used to come out
+     * in database order.
+     */
+    static final Comparator<MasterScoreSheetRow> BY_POSITION = Comparator
+            .comparing((MasterScoreSheetRow row) -> row.getPosition() == null || row.getPosition() <= 0
+                    ? Integer.MAX_VALUE : row.getPosition())
+            .thenComparing(row -> row.getStudentName() == null ? "" : row.getStudentName().toLowerCase(Locale.ROOT));
 
     // Results created by attendance (or before totals were computed) may have no total yet.
     private static String scoreText(Double score) {
