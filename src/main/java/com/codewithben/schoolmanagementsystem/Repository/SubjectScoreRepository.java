@@ -26,4 +26,7 @@ public interface SubjectScoreRepository extends JpaRepository<SubjectScore, Long
 
     // All subject scores of several results in one query (used to rebuild term totals).
     List<SubjectScore> findAllByResults_ResultIdIn(List<Long> resultIds);
+
+    // Scores saved without a grade (used once at startup by UngradedScoresBackfill).
+    List<SubjectScore> findAllByGradeIsNullAndTotalScoreIsNotNull();
 }
