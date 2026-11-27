@@ -45,23 +45,27 @@ public class ReportService {
 
     private final UtilityClass utilityClass;
 
+    private final ResultAccessService resultAccess;
+
     public ResponseEntity<?> generateStudentReport(String studentId, String semesterId, String staffId) {
 
-        Semester semester = semesterRepository.findBySemesterID(semesterId).orElse(null);
-        if (semester == null) {
-            loggingService.logGeneralActivity(LogType.REPORT, LogAction.READ, "Invalid Term Id", staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "Invalid term Id"
-            ));
+        // Caller's own school only; accountants can't download report cards.
+        ResultAccessService.Lookup<Staffs> viewer = resultAccess.viewer(staffId, LogType.REPORT);
+        if (viewer.failed()) {
+            return viewer.error();
         }
+        ResultAccessService.Lookup<Semester> semesterLookup = resultAccess.semester(viewer.value(), semesterId, LogType.REPORT);
+        if (semesterLookup.failed()) {
+            return semesterLookup.error();
+        }
+        Semester semester = semesterLookup.value();
 
-        Results studentResult = resultsRepository.findByStudent_StudentIdAndSemester_SemesterID(studentId, semesterId).orElse(null);
-        if (studentResult == null) {
-            loggingService.logGeneralActivity(LogType.RESULT, LogAction.READ, "No record found for this student for this semester", staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "No record found for this student for this semester"
-            ));
+        ResultAccessService.Lookup<Results> resultLookup =
+                resultAccess.studentResult(viewer.value(), studentId, semester, LogType.REPORT);
+        if (resultLookup.failed()) {
+            return resultLookup.error();
         }
+        Results studentResult = resultLookup.value();
 
         if (semester.getSemesterName().equals("THIRD_TERM") && studentResult.getPromotionTo().equals("-")) {
             loggingService.logGeneralActivity(LogType.REPORT, LogAction.READ,
@@ -110,21 +114,20 @@ public class ReportService {
 
     public ResponseEntity<?> generateClassBulkReport(String staffId, String levelId, String semesterId) {
 
-        Level level = levelRepository.findByLevelID(levelId).orElse(null);
-        if (level == null) {
-            loggingService.logGeneralActivity(LogType.REPORT, LogAction.READ, "Invalid class Id", staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "Invalid class Id"
-            ));
+        ResultAccessService.Lookup<Staffs> viewer = resultAccess.viewer(staffId, LogType.REPORT);
+        if (viewer.failed()) {
+            return viewer.error();
         }
-
-        Semester semester = semesterRepository.findBySemesterID(semesterId).orElse(null);
-        if (semester == null) {
-            loggingService.logGeneralActivity(LogType.REPORT, LogAction.READ, "Invalid Term Id", staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "Invalid term Id"
-            ));
+        ResultAccessService.Lookup<Level> levelLookup = resultAccess.level(viewer.value(), levelId, LogType.REPORT);
+        if (levelLookup.failed()) {
+            return levelLookup.error();
         }
+        Level level = levelLookup.value();
+        ResultAccessService.Lookup<Semester> semesterLookup = resultAccess.semester(viewer.value(), semesterId, LogType.REPORT);
+        if (semesterLookup.failed()) {
+            return semesterLookup.error();
+        }
+        Semester semester = semesterLookup.value();
 
         String totalAttendance = String.valueOf(
                 attendanceService.getTotalAttendanceCount(semester)
@@ -174,29 +177,27 @@ public class ReportService {
     }
 
     public ResponseEntity<?> generateSbaReport(String staffId, String levelId, String semesterId, String subjectId) {
-        Subjects subject = subjectsRepository.findBySubjectId(subjectId).orElse(null);
-        if (subject == null) {
-            loggingService.logGeneralActivity(LogType.REPORT, LogAction.READ, "Invalid subject Id", staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "Invalid Subject Id"
-            ));
+        ResultAccessService.Lookup<Staffs> viewer = resultAccess.viewer(staffId, LogType.REPORT);
+        if (viewer.failed()) {
+            return viewer.error();
         }
-
-        Level level = levelRepository.findByLevelID(levelId).orElse(null);
-        if (level == null) {
-            loggingService.logGeneralActivity(LogType.REPORT, LogAction.READ, "Invalid class Id", staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "Invalid class Id"
-            ));
+        ResultAccessService.Lookup<Level> levelLookup = resultAccess.level(viewer.value(), levelId, LogType.REPORT);
+        if (levelLookup.failed()) {
+            return levelLookup.error();
         }
-
-        Semester semester = semesterRepository.findBySemesterID(semesterId).orElse(null);
-        if (semester == null) {
-            loggingService.logGeneralActivity(LogType.REPORT, LogAction.READ, "Invalid Term Id", staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "Invalid term Id"
-            ));
+        Level level = levelLookup.value();
+        ResultAccessService.Lookup<Semester> semesterLookup = resultAccess.semester(viewer.value(), semesterId, LogType.REPORT);
+        if (semesterLookup.failed()) {
+            return semesterLookup.error();
         }
+        Semester semester = semesterLookup.value();
+        // The subject must belong to this class (and so to the caller's school).
+        ResultAccessService.Lookup<Subjects> subjectLookup =
+                resultAccess.subject(viewer.value(), subjectId, level, LogType.REPORT);
+        if (subjectLookup.failed()) {
+            return subjectLookup.error();
+        }
+        Subjects subject = subjectLookup.value();
 
         List<Results> resultsList = resultsRepository
                 .findByLevel_LevelIDAndSemester_SemesterID(levelId, semesterId);
@@ -234,6 +235,20 @@ public class ReportService {
     }
 
     public ResponseEntity<?> generateMasterScoreSheet(String levelId, String semesterId, String staffId) {
+
+        // The class and term were not checked at all before.
+        ResultAccessService.Lookup<Staffs> viewer = resultAccess.viewer(staffId, LogType.REPORT);
+        if (viewer.failed()) {
+            return viewer.error();
+        }
+        ResultAccessService.Lookup<Level> levelLookup = resultAccess.level(viewer.value(), levelId, LogType.REPORT);
+        if (levelLookup.failed()) {
+            return levelLookup.error();
+        }
+        ResultAccessService.Lookup<Semester> semesterLookup = resultAccess.semester(viewer.value(), semesterId, LogType.REPORT);
+        if (semesterLookup.failed()) {
+            return semesterLookup.error();
+        }
 
         List<Results> resultsList = resultsRepository
                 .findByLevel_LevelIDAndSemester_SemesterID(levelId, semesterId);
