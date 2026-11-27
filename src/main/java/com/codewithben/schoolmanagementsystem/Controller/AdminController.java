@@ -6,6 +6,7 @@ import com.codewithben.schoolmanagementsystem.DTO.Semester.AddNewSemester;
 import com.codewithben.schoolmanagementsystem.DTO.Class.FindAndUpdateClassInfo;
 import com.codewithben.schoolmanagementsystem.DTO.Semester.FindSemester;
 import com.codewithben.schoolmanagementsystem.DTO.Staff.FindStaffDTO;
+import com.codewithben.schoolmanagementsystem.DTO.Staff.ResetStaffPassword;
 import com.codewithben.schoolmanagementsystem.DTO.Subject.AddNewSubject;
 import com.codewithben.schoolmanagementsystem.DTO.Subject.SubjectDTO;
 import jakarta.validation.Valid;
@@ -15,12 +16,14 @@ import com.codewithben.schoolmanagementsystem.Service.*;
 import com.codewithben.schoolmanagementsystem.Utility.AuthenticatedStaffProvider;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 
+@Slf4j
 @AllArgsConstructor
 @Builder
 @RestController
@@ -50,11 +53,25 @@ public class AdminController {
 
     private final AuthenticatedStaffProvider authenticatedStaffProvider;
 
+    /*
+     * Body: {"staffId": "<whose password>", "newPassword": "..."} (ResetStaffPassword).
+     *
+     * The old query-string form (?newPasswordStaffId&newPassword) still works so desktop apps
+     * already installed in schools don't break, but it puts the password in access logs. It is
+     * deprecated: remove the two @RequestParams once eazy_manage sends the body (its issue #2).
+     */
     @PostMapping("/v1/reset-staff-password")
-    public ResponseEntity<?> recoverStaffPassword(@RequestParam String newPasswordStaffId,
-                                                  @RequestParam String newPassword) {
+    public ResponseEntity<?> recoverStaffPassword(@Valid @RequestBody(required = false) ResetStaffPassword body,
+                                                  @RequestParam(required = false) String newPasswordStaffId,
+                                                  @RequestParam(required = false) String newPassword) {
         String staffId = authenticatedStaffProvider.getStaffId();
 
+        if (body != null) {
+            return staffService.resetStaffPassword(body.getStaffId(), body.getNewPassword(), staffId);
+        }
+
+        log.warn("Deprecated reset-staff-password call with the password in the query string (caller {}); "
+                + "send a JSON body instead", staffId);
         return staffService.resetStaffPassword(newPasswordStaffId, newPassword, staffId);
     }
 
