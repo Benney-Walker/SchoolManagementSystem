@@ -16,8 +16,10 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 @RequiredArgsConstructor
@@ -80,9 +82,9 @@ public class ResultsService {
                 LogType.RESULT, LogAction.READ,
                 "Downloaded report for " + studentResult.getStudent().getFirstName(),
                 staffId, LogStatus.SUCCESS);
-        return ResponseEntity.ok().header(
-                "school-name", studentResult.getStudent().getInstitution().getInstitutionName()
-        ).body(result);
+        // (The "school-name" header is gone: the client doesn't use it, and a non-ASCII school
+        // name can be garbled in an HTTP header.)
+        return ResponseEntity.ok(result);
     }
 
     public ResponseEntity<?> viewClassSemesterReport(String levelId, String semesterId, String staffId) {
@@ -122,27 +124,27 @@ public class ResultsService {
             String semesterName = semester.getSemesterName();
             String totalScore = scoreText(result.getTotalScore());
             String averageScore = scoreText(result.getAverageScore());
-            String position = result.getPosition();
+            String position = result.getPosition() == null ? "" : result.getPosition();
             String totalStudents = String.valueOf(result.getClassSize());
-            String semesterRemark = "Not field yet";
+            // There is no term remark yet; this used to send the placeholder "Not field yet".
+            String semesterRemark = "";
 
             List<ViewStudentsSubjectsResults> scoresList = new ArrayList<>();
 
-            //Fetch subject scores
-            List<SubjectScore> subjectScores = result.getSubjectScores();
-            for (SubjectScore subjectScore : subjectScores) {
+            // Subjects in a fixed (alphabetical) order, the same for every student.
+            for (SubjectScore subjectScore : sortedBySubject(result.getSubjectScores())) {
 
-                String subjectName = subjectScore.getSubject().getSubjectName();
-                String classTest1Score = subjectScore.getClassTest1().toString();
-                String classTest2Score = subjectScore.getClassTest2().toString();
-                String groupWorkScore = subjectScore.getGroupWork().toString();
-                String projectWorkScore = subjectScore.getProjectWork().toString();
-                String classScore = subjectScore.getClassScore().toString();
-                String examScore = subjectScore.getExamScore().toString();
-                String calculatedExamScore = subjectScore.getCalculatedExamScore().toString();
-                String total = subjectScore.getTotalScore().toString();
-                String grade = subjectScore.getGrade();
-                String description = subjectScore.getGradeDescriptor();
+                String subjectName = subjectName(subjectScore);
+                String classTest1Score = scoreText(subjectScore.getClassTest1());
+                String classTest2Score = scoreText(subjectScore.getClassTest2());
+                String groupWorkScore = scoreText(subjectScore.getGroupWork());
+                String projectWorkScore = scoreText(subjectScore.getProjectWork());
+                String classScore = scoreText(subjectScore.getClassScore());
+                String examScore = scoreText(subjectScore.getExamScore());
+                String calculatedExamScore = scoreText(subjectScore.getCalculatedExamScore());
+                String total = scoreText(subjectScore.getTotalScore());
+                String grade = subjectScore.getGrade() == null ? "" : subjectScore.getGrade();
+                String description = subjectScore.getGradeDescriptor() == null ? "" : subjectScore.getGradeDescriptor();
 
                 ViewStudentsSubjectsResults scores = new ViewStudentsSubjectsResults(
                         subjectName, classTest1Score, groupWorkScore,
@@ -265,116 +267,121 @@ public class ResultsService {
                           Helpers
      ================================================*/
     public List<SbaRecords> generateSbaRecords(List<Results> resultsList, String subjectId) {
+        List<SbaRecords> sbaRecords = new ArrayList<>();
+        for (Results results : resultsList) {
+            String studentId = results.getStudent().getStudentId();
+            String studentName = results.getStudent().getFirstName() + " " + results.getStudent().getLastName();
+            String classTest1Score = "";
+            String groupWorkScore = "";
+            String classTest2Score = "";
+            String projectScore = "";
+            String classScore = "";
+            String examScore = "";
+            String calculatedExamScore = "";
+            String totalScore = "";
 
-        try {
-            //Retrieve sba
-            List<SbaRecords> sbaRecords = new ArrayList<>();
-            for (Results results : resultsList) {
-                String studentId = results.getStudent().getStudentId();
-                String studentName = results.getStudent().getFirstName() + " " + results.getStudent().getLastName();
-                String classTest1Score = "";
-                String groupWorkScore = "";
-                String classTest2Score = "";
-                String projectScore = "";
-                String classScore = "";
-                String examScore = "";
-                String calculatedExamScore = "";
-                String totalScore = "";
-
-                List<SubjectScore> subjectScores = results.getSubjectScores();
-                for (SubjectScore subjectScore : subjectScores) {
-                    if (subjectScore.getSubject().getSubjectId().equals(subjectId)) {
-                        classTest1Score = subjectScore.getClassTest1().toString();
-                        groupWorkScore = subjectScore.getGroupWork().toString();
-                        classTest2Score = subjectScore.getClassTest2().toString();
-                        projectScore = subjectScore.getProjectWork().toString();
-                        classScore = subjectScore.getClassScore().toString();
-                        examScore = subjectScore.getExamScore().toString();
-                        calculatedExamScore = subjectScore.getCalculatedExamScore().toString();
-                        totalScore = subjectScore.getTotalScore().toString();
-                        break;
-                    }
+            List<SubjectScore> subjectScores = results.getSubjectScores() == null ? List.of() : results.getSubjectScores();
+            for (SubjectScore subjectScore : subjectScores) {
+                if (subjectScore.getSubject() != null && subjectId.equals(subjectScore.getSubject().getSubjectId())) {
+                    classTest1Score = scoreText(subjectScore.getClassTest1());
+                    groupWorkScore = scoreText(subjectScore.getGroupWork());
+                    classTest2Score = scoreText(subjectScore.getClassTest2());
+                    projectScore = scoreText(subjectScore.getProjectWork());
+                    classScore = scoreText(subjectScore.getClassScore());
+                    examScore = scoreText(subjectScore.getExamScore());
+                    calculatedExamScore = scoreText(subjectScore.getCalculatedExamScore());
+                    totalScore = scoreText(subjectScore.getTotalScore());
+                    break;
                 }
-
-                SbaRecords sbaRecord = SbaRecords.builder()
-                        .studentId(studentId)
-                        .studentName(studentName)
-                        .classTest1Score(classTest1Score)
-                        .classTest2Score(classTest2Score)
-                        .groupWorkScore(groupWorkScore)
-                        .projectScore(projectScore)
-                        .examScore(examScore)
-                        .classScore(classScore)
-                        .calculatedExamScore(calculatedExamScore)
-                        .totalScore(totalScore)
-                        .build();
-                sbaRecords.add(sbaRecord);
             }
 
-            return sbaRecords;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+            SbaRecords sbaRecord = SbaRecords.builder()
+                    .studentId(studentId)
+                    .studentName(studentName)
+                    .classTest1Score(classTest1Score)
+                    .classTest2Score(classTest2Score)
+                    .groupWorkScore(groupWorkScore)
+                    .projectScore(projectScore)
+                    .examScore(examScore)
+                    .classScore(classScore)
+                    .calculatedExamScore(calculatedExamScore)
+                    .totalScore(totalScore)
+                    .build();
+            sbaRecords.add(sbaRecord);
         }
+        // Alphabetical, so the sheet reads like the class register.
+        sbaRecords.sort(Comparator.comparing((SbaRecords record) -> record.getStudentName().toLowerCase(Locale.ROOT)));
+        return sbaRecords;
     }
 
     public MasterScoreSheet generateMasterSheetRecord(List<Results> resultsList) {
 
-        try {
-            String semesterName = null;
-            String className = null;
-            String academicYear = null;
-            List<String> subjects = new ArrayList<>();
+        String semesterName = null;
+        String className = null;
+        String academicYear = null;
+        List<String> subjects = new ArrayList<>();
 
-            List<MasterScoreSheetRow> rows = new ArrayList<>();
-            for (Results result : resultsList) {
+        List<MasterScoreSheetRow> rows = new ArrayList<>();
+        for (Results result : resultsList) {
 
-                List<SubjectScore> subjectScores = result.getSubjectScores();
-                if (subjectScores == null || subjectScores.isEmpty()) continue;
+            List<SubjectScore> subjectScores = result.getSubjectScores();
+            if (subjectScores == null || subjectScores.isEmpty()) continue;
 
-                Map<String, Double> scores = new LinkedHashMap<>();
-                for (SubjectScore subjectScore : subjectScores) {
+            Map<String, Double> scores = new LinkedHashMap<>();
+            for (SubjectScore subjectScore : subjectScores) {
 
-                    if (!subjects.contains(subjectScore.getSubject().getSubjectName())) {
-                        subjects.add(subjectScore.getSubject().getSubjectName());
-                    }
-
-                    scores.put(
-                            subjectScore.getSubject().getSubjectName(),
-                            subjectScore.getTotalScore()
-                    );
+                if (!subjects.contains(subjectScore.getSubject().getSubjectName())) {
+                    subjects.add(subjectScore.getSubject().getSubjectName());
                 }
-                // "1st", "23rd", "105th" -> 1, 23, 105; not ranked yet -> 0. (The old parsing
-                // handled only one- or two-digit positions and threw on a null position.)
-                String digits = result.getPosition() == null ? "" : result.getPosition().replaceAll("\\D", "");
-                String position = digits.isEmpty() ? "0" : digits;
 
-                MasterScoreSheetRow record = MasterScoreSheetRow.builder()
-                        .studentId(result.getStudent().getStudentId())
-                        .studentName(
-                                result.getStudent().getFirstName() + " " + result.getStudent().getLastName()
-                                )
-                        .subjectScores(scores)
-                        .studentTotalScore(result.getTotalScore())
-                        .studentAverageScore(result.getAverageScore())
-                        .position(Integer.parseInt(position))
-                        .build();
-                rows.add(record);
-
-                if (semesterName == null || className == null || academicYear == null) {
-                    semesterName = result.getSemester().getSemesterName();
-                    className = result.getLevel().getLevelName();
-                    academicYear = result.getSemester().getAcademicYear();
-                }
+                scores.put(
+                        subjectScore.getSubject().getSubjectName(),
+                        subjectScore.getTotalScore()
+                );
             }
+            // "1st", "23rd", "105th" -> 1, 23, 105; not ranked yet -> 0. (The old parsing
+            // handled only one- or two-digit positions and threw on a null position.)
+            String digits = result.getPosition() == null ? "" : result.getPosition().replaceAll("\\D", "");
+            String position = digits.isEmpty() ? "0" : digits;
 
-            return new MasterScoreSheet(className, semesterName, academicYear, subjects, rows);
-        } catch (NumberFormatException e) {
-            throw new RuntimeException(e);
+            MasterScoreSheetRow record = MasterScoreSheetRow.builder()
+                    .studentId(result.getStudent().getStudentId())
+                    .studentName(
+                            result.getStudent().getFirstName() + " " + result.getStudent().getLastName()
+                            )
+                    .subjectScores(scores)
+                    .studentTotalScore(result.getTotalScore())
+                    .studentAverageScore(result.getAverageScore())
+                    .position(Integer.parseInt(position))
+                    .build();
+            rows.add(record);
+
+            if (semesterName == null || className == null || academicYear == null) {
+                semesterName = result.getSemester().getSemesterName();
+                className = result.getLevel().getLevelName();
+                academicYear = result.getSemester().getAcademicYear();
+            }
         }
+
+        // Subject columns in alphabetical order (they used to follow the order scores were
+        // first seen, so two classes' sheets could have different column orders).
+        subjects.sort(String.CASE_INSENSITIVE_ORDER);
+        return new MasterScoreSheet(className, semesterName, academicYear, subjects, rows);
     }
 
     // Results created by attendance (or before totals were computed) may have no total yet.
     private static String scoreText(Double score) {
         return String.valueOf(score == null ? 0.0 : score);
+    }
+
+    private static List<SubjectScore> sortedBySubject(List<SubjectScore> scores) {
+        List<SubjectScore> sorted = new ArrayList<>(scores == null ? List.of() : scores);
+        sorted.sort(Comparator.comparing(score -> subjectName(score).toLowerCase(Locale.ROOT)));
+        return sorted;
+    }
+
+    private static String subjectName(SubjectScore score) {
+        return score.getSubject() == null || score.getSubject().getSubjectName() == null
+                ? "" : score.getSubject().getSubjectName();
     }
 }

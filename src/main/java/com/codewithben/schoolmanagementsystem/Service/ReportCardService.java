@@ -13,8 +13,10 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 /**
@@ -118,18 +120,21 @@ public class ReportCardService {
         Level level = result.getLevel();
         String studentId = result.getStudent().getStudentId();
 
+        // Subjects in a fixed (alphabetical) order, the same on every report card.
+        List<SubjectScore> subjectScores = new ArrayList<>(result.getSubjectScores() == null ? List.of() : result.getSubjectScores());
+        subjectScores.sort(Comparator.comparing((SubjectScore score) ->
+                score.getSubject() == null || score.getSubject().getSubjectName() == null
+                        ? "" : score.getSubject().getSubjectName().toLowerCase(Locale.ROOT)));
         List<SubjectReportDTO> scores = new ArrayList<>();
-        if (result.getSubjectScores() != null) {
-            for (SubjectScore subjectScore : result.getSubjectScores()) {
-                scores.add(new SubjectReportDTO(
-                        subjectScore.getSubject() == null ? "" : subjectScore.getSubject().getSubjectName(),
-                        text(subjectScore.getClassScore()),
-                        text(subjectScore.getCalculatedExamScore()),
-                        text(subjectScore.getTotalScore()),
-                        nullToEmpty(subjectScore.getGrade()),
-                        nullToEmpty(subjectScore.getGradeDescriptor())
-                ));
-            }
+        for (SubjectScore subjectScore : subjectScores) {
+            scores.add(new SubjectReportDTO(
+                    subjectScore.getSubject() == null ? "" : subjectScore.getSubject().getSubjectName(),
+                    text(subjectScore.getClassScore()),
+                    text(subjectScore.getCalculatedExamScore()),
+                    text(subjectScore.getTotalScore()),
+                    nullToEmpty(subjectScore.getGrade()),
+                    nullToEmpty(subjectScore.getGradeDescriptor())
+            ));
         }
 
         String instructorName = level == null || level.getStaff() == null ? ""
