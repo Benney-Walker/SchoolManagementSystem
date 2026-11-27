@@ -351,8 +351,8 @@ All endpoints below require `Authorization: Bearer <accessToken>` unless noted. 
 | PUT | `/v2/update-semester-fees` | Change a fee amount |
 | POST | `/v1/add-fees-payment` | Record a payment |
 | GET | `/v1/fetch-payment-records` | Payment history for a student |
-| PUT | `/v1/update-payment-details` | Amend a payment |
-| DELETE | `/v1/delete-payment-record/{transactionId}` | Remove a payment |
+| PUT | `/v1/update-payment-details` | Amend a payment (own school, not deleted; totals recomputed from the remaining payments) |
+| DELETE | `/v1/delete-payment-record/{transactionId}?reason=` | Remove a payment entered by mistake. ACCOUNTANT only, current term only, `reason` required (3–255 characters). Soft delete (`deletedAt`/`deletedBy`/`deletionReason`); the fee record's paid and balance are recomputed. Returns `{message, amountPaid, balance}` |
 | GET | `/v1/search-fees-report` | Student fee position |
 | GET | `/v1/fetch-grade-fees-report/{levelId}/{semesterId}` | Class fee report |
 | GET | `/v1/class-summary-fees` | Per-class collection summary for the current term (active students only; 404 if no current term) |
