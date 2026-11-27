@@ -4,6 +4,7 @@ import com.codewithben.schoolmanagementsystem.DTO.Report.MasterScoreSheet;
 import com.codewithben.schoolmanagementsystem.DTO.Report.MasterScoreSheetRow;
 import com.codewithben.schoolmanagementsystem.Entity.Institution;
 import com.lowagie.text.*;
+import com.lowagie.text.pdf.BaseFont;
 import com.lowagie.text.pdf.PdfPCell;
 import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
@@ -13,6 +14,10 @@ import org.springframework.stereotype.Service;
 
 import java.awt.Color;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Locale;
@@ -25,6 +30,10 @@ import java.util.Locale;
  * printers can't print; the font shrinks instead). School header from the school's own
  * branding, the header row repeats on every page, the name column is wider than the score
  * columns, and every score prints with one decimal place, the same as the report card.
+ *
+ * Font: DejaVu Sans Condensed, embedded, the same family as the Jasper reports (from the
+ * jasperreports-fonts jar). The built-in PDF fonts (Times, Helvetica) cover Latin-1 only, so
+ * Akan letters in names (Ɛ ɛ Ɔ ɔ) and the cedi sign (₵) used to print blank.
  */
 @Slf4j
 @RequiredArgsConstructor
@@ -32,6 +41,16 @@ import java.util.Locale;
 public class PdfGenerationService {
 
     private static final Color HEADER_SHADE = new Color(235, 235, 235);
+
+    private static final String FONT_DIR = "net/sf/jasperreports/fonts/dejavu/";
+    private static final String SYSTEM_FONT_DIR = "/usr/share/fonts/truetype/dejavu/";
+
+    /* Loaded once; BaseFont is thread-safe to share between documents. */
+    private static final class Fonts {
+        static final BaseFont REGULAR = load("DejaVuSansCondensed.ttf", BaseFont.HELVETICA);
+        static final BaseFont BOLD = load("DejaVuSansCondensed-Bold.ttf", BaseFont.HELVETICA_BOLD);
+        static final BaseFont ITALIC = load("DejaVuSansCondensed-Oblique.ttf", BaseFont.HELVETICA_OBLIQUE);
+    }
 
     private final BrandingAssetService brandingAssetService;
 
@@ -46,12 +65,12 @@ public class PdfGenerationService {
         PdfWriter.getInstance(document, outputStream);
         document.open();
 
-        Font schoolFont = FontFactory.getFont(FontFactory.TIMES_BOLD, 15);
-        Font titleFont = FontFactory.getFont(FontFactory.TIMES_BOLD, 12);
-        Font infoFont = FontFactory.getFont(FontFactory.TIMES, 9);
-        Font mottoFont = FontFactory.getFont(FontFactory.TIMES_ITALIC, 9);
-        Font headerFont = FontFactory.getFont(FontFactory.TIMES_BOLD, crowded ? 6.5f : 8);
-        Font bodyFont = FontFactory.getFont(FontFactory.TIMES, crowded ? 7 : 8);
+        Font schoolFont = new Font(Fonts.BOLD, 15);
+        Font titleFont = new Font(Fonts.BOLD, 12);
+        Font infoFont = new Font(Fonts.REGULAR, 9);
+        Font mottoFont = new Font(Fonts.ITALIC, 9);
+        Font headerFont = new Font(Fonts.BOLD, crowded ? 6f : 8);
+        Font bodyFont = new Font(Fonts.REGULAR, crowded ? 7 : 8);
 
         // =========================
         // SCHOOL HEADER
@@ -124,20 +143,52 @@ public class PdfGenerationService {
      =================================================*/
 
     /*
-     * Relative widths: No. 3, Student Id 7, Student Name 16, each subject 7, Total 7,
-     * Average 6, Position 5. With equal widths the names wrapped onto three lines.
+     * DejaVu from the jasperreports-fonts jar, else from the system (the Docker image installs
+     * fonts-dejavu), else a built-in PDF font with a warning: the sheet still prints, but
+     * letters outside Latin-1 come out blank.
+     */
+    static BaseFont load(String file, String builtInFallback) {
+        try {
+            byte[] bytes = null;
+            try (InputStream in = PdfGenerationService.class.getClassLoader().getResourceAsStream(FONT_DIR + file)) {
+                if (in != null) {
+                    bytes = in.readAllBytes();
+                }
+            }
+            if (bytes == null && Files.isReadable(Path.of(SYSTEM_FONT_DIR, file))) {
+                bytes = Files.readAllBytes(Path.of(SYSTEM_FONT_DIR, file));
+            }
+            if (bytes != null) {
+                return BaseFont.createFont(file, BaseFont.IDENTITY_H, BaseFont.EMBEDDED, true, bytes, null);
+            }
+            log.warn("Font {} not found; the master score sheet will use {} and can't print letters like Ɛ or Ɔ",
+                    file, builtInFallback);
+        } catch (IOException | DocumentException e) {
+            log.warn("Could not load font {}; the master score sheet will use {}", file, builtInFallback, e);
+        }
+        try {
+            return BaseFont.createFont(builtInFallback, BaseFont.WINANSI, BaseFont.NOT_EMBEDDED);
+        } catch (IOException | DocumentException e) {
+            throw new IllegalStateException("Cannot load the built-in PDF font " + builtInFallback, e);
+        }
+    }
+
+    /*
+     * Relative widths: No. 3, Student Id 6, Student Name 15, each subject 8, Total 6,
+     * Average 5.5, Position 6.5. With equal widths the names wrapped onto three lines; subject
+     * columns are wide enough for "Mathematics" in the header with 13 subjects.
      */
     static float[] columnWidths(int subjectCount) {
         float[] widths = new float[subjectCount + 6];
         widths[0] = 3f;
-        widths[1] = 7f;
-        widths[2] = 16f;
+        widths[1] = 6f;
+        widths[2] = 15f;
         for (int i = 0; i < subjectCount; i++) {
-            widths[3 + i] = 7f;
+            widths[3 + i] = 8f;
         }
-        widths[subjectCount + 3] = 7f;
-        widths[subjectCount + 4] = 6f;
-        widths[subjectCount + 5] = 5f;
+        widths[subjectCount + 3] = 6f;
+        widths[subjectCount + 4] = 5.5f;
+        widths[subjectCount + 5] = 6.5f;
         return widths;
     }
 
@@ -224,7 +275,7 @@ public class PdfGenerationService {
         cell.setHorizontalAlignment(Element.ALIGN_CENTER);
         cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
         cell.setBackgroundColor(HEADER_SHADE);
-        cell.setPadding(3);
+        cell.setPadding(2);
         table.addCell(cell);
     }
 

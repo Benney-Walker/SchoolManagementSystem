@@ -1,6 +1,7 @@
 package com.codewithben.schoolmanagementsystem.Service;
 
 import com.codewithben.schoolmanagementsystem.DTO.Report.MasterScoreSheetRow;
+import com.lowagie.text.pdf.BaseFont;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -48,5 +49,22 @@ class PdfGenerationServiceTest {
 
     private static MasterScoreSheetRow row(String name, Integer position) {
         return MasterScoreSheetRow.builder().studentName(name).position(position).build();
+    }
+
+    @Test
+    void masterSheetFontPrintsAkanLettersAndTheCediSign() {
+        // DejaVu comes from the jasperreports-fonts dependency.
+        BaseFont font = PdfGenerationService.load("DejaVuSansCondensed.ttf", BaseFont.HELVETICA);
+
+        assertTrue(font.charExists('Ɛ'));
+        assertTrue(font.charExists('ɔ'));
+        assertTrue(font.charExists('₵'));
+    }
+
+    @Test
+    void missingFontFallsBackToABuiltInOne() {
+        BaseFont font = PdfGenerationService.load("NoSuchFont.ttf", BaseFont.HELVETICA);
+
+        assertEquals("Helvetica", font.getPostscriptFontName());
     }
 }

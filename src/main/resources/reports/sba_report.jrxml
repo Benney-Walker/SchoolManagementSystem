@@ -1,6 +1,11 @@
 <!-- Created with Jaspersoft Studio version 7.0.3.final using JasperReports Library version 7.0.3-41034ca841d452f3305ba55b9042260aaa1ab5dd  -->
 <jasperReport name="SbaReport" language="java" orientation="Landscape" pageWidth="842" pageHeight="595" columnWidth="802" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="b1a2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d">
     <property name="com.jaspersoft.studio.data.defaultdataadapter" value="One Empty Record"/>
+    <!-- Default font for every text element: DejaVu Sans Condensed from jasperreports-fonts,
+         embedded with Unicode encoding so Akan letters (Ɛ ɛ Ɔ ɔ) and the cedi sign (₵) print.
+         The built-in PDF Helvetica covers Latin-1 only. Condensed is about as wide as Helvetica,
+         so the layout doesn't move. -->
+    <style name="Base" default="true" fontName="DejaVu Sans Condensed"/>
     <style name="Table_CH" mode="Opaque" backcolor="#FFFFFF">
         <box>
             <pen lineWidth="0.5" lineColor="#000000"/>
