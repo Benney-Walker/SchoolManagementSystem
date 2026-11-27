@@ -6,6 +6,7 @@ import com.codewithben.schoolmanagementsystem.DTO.Staff.ViewStaffList;
 import com.codewithben.schoolmanagementsystem.DTO.Staff.StaffCaching;
 import com.codewithben.schoolmanagementsystem.Entity.*;
 import com.codewithben.schoolmanagementsystem.Repository.*;
+import com.codewithben.schoolmanagementsystem.Utility.PasswordResetRules;
 import com.codewithben.schoolmanagementsystem.Utility.UtilityClass;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -301,13 +302,57 @@ public class StaffService {
         return ResponseEntity.ok(staffCount);
     }
 
-    public ResponseEntity<?> resetStaffPassword(String newPasswordStaffId, String newPassword, String staffId) {
+    /*
+     * Resets another staff member's password (Issue 1).
+     *
+     * Before: any logged-in staff member (/api/admin admits every role) could reset any staff
+     * member's password at any school, because the target was looked up by id alone and the
+     * caller's role was never checked. Staff ids are sequential, so a teacher could take over
+     * the principal's account.
+     *
+     * Now: caller must be PRINCIPAL or ADMINISTRATOR (403); the target must be at the caller's
+     * school (404, same as an unknown id); an administrator can't reset a principal (403);
+     * the new password must pass PasswordResetRules (400).
+     */
+    public ResponseEntity<?> resetStaffPassword(String targetStaffId, String newPassword, String staffId) {
 
-        Staffs staff = staffsRepository.findByStaffId(newPasswordStaffId).orElse(null);
+        Staffs caller = staffId == null ? null : staffsRepository.findByStaffId(staffId).orElse(null);
+        if (caller == null || caller.getInstitution() == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                    "message", "Session expired. Login again"
+            ));
+        }
+
+        Set<StaffRoles> callerRoles = rolesOf(caller);
+        if (!PasswordResetRules.mayResetPasswords(callerRoles)) {
+            loggingService.logGeneralActivity(LogType.STAFF, LogAction.RESET,
+                    "Password reset refused: caller is not a principal or administrator", staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                    "message", "Only a principal or administrator can reset passwords"
+            ));
+        }
+
+        String passwordProblem = PasswordResetRules.passwordProblem(newPassword);
+        if (passwordProblem != null) {
+            return ResponseEntity.badRequest().body(Map.of("message", passwordProblem));
+        }
+
+        Staffs staff = targetStaffId == null || targetStaffId.isBlank() ? null : staffsRepository
+                .findByStaffIdAndInstitution_InstitutionId(targetStaffId.trim(), caller.getInstitution().getInstitutionId())
+                .orElse(null);
         if (staff == null) {
             loggingService.logGeneralActivity(LogType.STAFF, LogAction.RESET, "Invalid Staff Id", staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "message", "Invalid Staff Id"
+            ));
+        }
+
+        if (!PasswordResetRules.mayReset(callerRoles, rolesOf(staff))) {
+            loggingService.logGeneralActivity(LogType.STAFF, LogAction.RESET,
+                    "Password reset refused for " + staff.getStaffId() + ": only a principal can reset a principal's password",
+                    staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                    "message", "Only a principal can reset a principal's password"
             ));
         }
 
@@ -322,10 +367,22 @@ public class StaffService {
         staffsRepository.save(staff);
 
         loggingService.logGeneralActivity(
-                LogType.STAFF, LogAction.UPDATE,
-                "Password reset for " + staff.getFirstName() + " " + staff.getLastName(),
+                LogType.STAFF, LogAction.RESET,
+                "Password reset for " + staff.getFirstName() + " " + staff.getLastName() + " (" + staff.getStaffId() + ")",
                 staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok().build();
+    }
+
+    private static Set<StaffRoles> rolesOf(Staffs staff) {
+        Set<StaffRoles> roles = EnumSet.noneOf(StaffRoles.class);
+        if (staff.getRoles() != null) {
+            for (StaffRolesEntity role : staff.getRoles()) {
+                if (role != null && role.getStaffRole() != null) {
+                    roles.add(role.getStaffRole());
+                }
+            }
+        }
+        return roles;
     }
 
     public ResponseEntity<?> loadAllStaffList(String staffId) {

@@ -274,7 +274,7 @@ All endpoints below require `Authorization: Bearer <accessToken>` unless noted. 
 
 | Method | Path | Purpose |
 |---|---|---|
-| POST | `/v1/reset-staff-password` | Reset a staff member's password |
+| POST | `/v1/reset-staff-password` | Reset a staff member's password. Body `{staffId, newPassword}` (8–72 characters). PRINCIPAL or ADMINISTRATOR only, own school only; an administrator can't reset a principal. The old query-string form (`?newPasswordStaffId&newPassword`) is deprecated and will be removed |
 | POST | `/v1/add-semester` | Create a term |
 | GET | `/v1/search-semester/{semesterId}` | Fetch term details |
 | PUT | `/v1/update-semester-info` | Update a term |
