@@ -1,6 +1,6 @@
 package com.codewithben.schoolmanagementsystem.Service;
 
-import com.codewithben.schoolmanagementsystem.DTO.Expenses.ExpensesRecord;
+import com.codewithben.schoolmanagementsystem.DTO.Expenses.ExpensesReport;
 import com.codewithben.schoolmanagementsystem.DTO.Report.GenerateStudentResult;
 import com.codewithben.schoolmanagementsystem.DTO.Report.SbaReport;
 import com.codewithben.schoolmanagementsystem.Entity.Institution;
@@ -82,7 +82,12 @@ public class JasperReportService {
         return JasperExportManager.exportReportToPdf(print);
     }
 
-    public byte[] generateExpensesReport(List<ExpensesRecord> expensesReport, Institution institution) throws Exception {
+    /*
+     * One ExpensesReport object as the single record; the template lists its rows through a
+     * table datasetRun over $F{records}. (This used to wrap a bare List, so the template
+     * could only reach the rows through $F{_THIS} and had no term name or total.)
+     */
+    public byte[] generateExpensesReport(ExpensesReport expensesReport, Institution institution) throws Exception {
         JasperReport jasperReport = getCompiledExpensesReport();
 
         JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(
