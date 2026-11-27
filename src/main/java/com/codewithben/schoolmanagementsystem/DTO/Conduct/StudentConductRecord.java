@@ -36,4 +36,8 @@ public class StudentConductRecord {
     private String conductRemark;
 
     private String peculiarIssue;
+
+    // Returned when loading: false when no conduct has been saved for the student this term
+    // (the ratings are then blank). Ignored on save.
+    private Boolean saved;
 }
