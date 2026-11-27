@@ -14,6 +14,7 @@ import com.codewithben.schoolmanagementsystem.Entity.*;
 import com.codewithben.schoolmanagementsystem.Repository.*;
 import com.codewithben.schoolmanagementsystem.Utility.UtilityClass;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -25,8 +26,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
+@Slf4j
 @AllArgsConstructor
 @Service
 public class AttendanceService {
@@ -49,17 +53,18 @@ public class AttendanceService {
 
     private final RabbitMQProducer rabbitMQProducer;
 
+    private final SchoolScopeService schoolScopeService;
+
     public ResponseEntity<?> loadStudentsForAttendance(String levelId, String attendanceDate, String staffId) {
 
         LocalDate selectedDate = LocalDate.parse(attendanceDate, DateTimeFormatter.ISO_DATE);
 
-        Level level = levelRepository.findByLevelID(levelId).orElse(null);
-        if (level == null) {
-            loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.READ, "Invalid class Id", staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "message", "Invalid class Id"
-            ));
-        }
+        SchoolScopeService.Scoped<Staffs> caller = schoolScopeService.caller(staffId);
+        if (caller.failed()) return caller.error();
+        SchoolScopeService.Scoped<Level> foundLevel =
+                schoolScopeService.level(caller.value(), levelId, LogType.ATTENDANCE, LogAction.READ);
+        if (foundLevel.failed()) return foundLevel.error();
+        Level level = foundLevel.value();
 
         Semester semester = utilityClass.getCurrentSemester(level.getInstitution());
         if (semester == null) {
@@ -127,13 +132,10 @@ public class AttendanceService {
             ));
         }
 
-        Level level = levelRepository.findByLevelID(levelId).orElse(null);
-        if (level == null) {
-            loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.CREATE, "Invalid class Id", staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
-                    "message", "Invalid class Id"
-            ));
-        }
+        SchoolScopeService.Scoped<Level> foundLevel =
+                schoolScopeService.level(staff, levelId, LogType.ATTENDANCE, LogAction.CREATE);
+        if (foundLevel.failed()) return foundLevel.error();
+        Level level = foundLevel.value();
 
         Semester semester = utilityClass.getCurrentSemester(staff.getInstitution());
         if (semester == null) {
@@ -153,12 +155,25 @@ public class AttendanceService {
             ));
         }
 
-        List<String> studentIds = attendanceList.stream().map(
-                AttendanceRequestList::getStudentId
-        ).toList();
         Map<String, AttendanceStatus> attendanceMap = new HashMap<>();
 
-        List<Students> students = studentsRepository.findByStudentIdIn(studentIds);
+        // Only students of this class at the caller's school. Ids are sequential, so the list
+        // could otherwise record attendance for, create results for, and text the parents of
+        // another school's students (issue 2). Ids that don't belong are ignored.
+        List<String> requestedIds = attendanceList.stream().map(
+                AttendanceRequestList::getStudentId
+        ).toList();
+        List<Students> students = studentsRepository.findByStudentIdIn(requestedIds).stream()
+                .filter(student -> SchoolScopeService.sameSchool(staff, student.getInstitution())
+                        && student.getLevel() != null
+                        && Objects.equals(student.getLevel().getLevelID(), level.getLevelID()))
+                .toList();
+        Set<String> classStudentIds = students.stream().map(Students::getStudentId).collect(Collectors.toSet());
+        List<String> studentIds = requestedIds.stream().filter(classStudentIds::contains).distinct().toList();
+        if (studentIds.size() < requestedIds.size()) {
+            log.warn("Attendance for class {} ignored {} student id(s) not in that class", levelId,
+                    requestedIds.size() - studentIds.size());
+        }
         AttendanceDate attendanceDate = attendanceDateRepository
                 .findByLevel_LevelIDAndSemester_SemesterIDAndAttendanceDate(
                         levelId, semester.getSemesterID(), selectedDate
@@ -235,6 +250,15 @@ public class AttendanceService {
 
         LocalDate formattedDate = LocalDate.parse(date, DateTimeFormatter.ISO_DATE);
 
+        SchoolScopeService.Scoped<Staffs> caller = schoolScopeService.caller(staffId);
+        if (caller.failed()) return caller.error();
+        SchoolScopeService.Scoped<Level> foundLevel =
+                schoolScopeService.level(caller.value(), levelId, LogType.ATTENDANCE, LogAction.READ);
+        if (foundLevel.failed()) return foundLevel.error();
+        SchoolScopeService.Scoped<Semester> foundSemester =
+                schoolScopeService.semester(caller.value(), semesterId, LogType.ATTENDANCE, LogAction.READ);
+        if (foundSemester.failed()) return foundSemester.error();
+
         AttendanceDate  markedDate = attendanceDateRepository
                 .findByLevel_LevelIDAndSemester_SemesterIDAndAttendanceDate(
                         levelId, semesterId, formattedDate
@@ -276,13 +300,15 @@ public class AttendanceService {
 
     public ResponseEntity<?> loadDatesMarked(String staffId, String levelId, String semesterId) {
 
-        Semester semester = semesterRepository.findBySemesterID(semesterId).orElse(null);
-        if (semester == null) {
-            loggingService.logGeneralActivity(LogType.ATTENDANCE, LogAction.READ, "Invalid term Id", staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
-                    "message", "Invalid term id " + semesterId
-            ));
-        }
+        SchoolScopeService.Scoped<Staffs> caller = schoolScopeService.caller(staffId);
+        if (caller.failed()) return caller.error();
+        SchoolScopeService.Scoped<Semester> foundSemester =
+                schoolScopeService.semester(caller.value(), semesterId, LogType.ATTENDANCE, LogAction.READ);
+        if (foundSemester.failed()) return foundSemester.error();
+        SchoolScopeService.Scoped<Level> foundLevel =
+                schoolScopeService.level(caller.value(), levelId, LogType.ATTENDANCE, LogAction.READ);
+        if (foundLevel.failed()) return foundLevel.error();
+        Semester semester = foundSemester.value();
 
         LocalDate startDate = semester.getSemesterStartDate();
         LocalDate endDate = semester.getSemesterEndDate();
