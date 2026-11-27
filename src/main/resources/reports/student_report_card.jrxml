@@ -1,5 +1,5 @@
 <!-- Created with Jaspersoft Studio version 7.0.3.final using JasperReports Library version 7.0.3-41034ca841d452f3305ba55b9042260aaa1ab5dd  -->
-<jasperReport name="Daffodil_Report_Export_Fixed" language="java" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="d0f73448-43f2-4d05-a589-dfd449fcc729">
+<jasperReport name="student_report_card" language="java" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="d0f73448-43f2-4d05-a589-dfd449fcc729">
     <property name="com.jaspersoft.studio.data.defaultdataadapter" value="One Empty Record"/>
     <style name="Table_CH" mode="Opaque" backcolor="#E8E8E8">
         <box>
@@ -19,12 +19,11 @@
         <field name="grade" class="java.lang.String"/>
         <field name="gradeDescriptor" class="java.lang.String"/>
     </dataset>
-    <parameter name="logoPath" class="java.lang.String">
-        <defaultValueExpression><![CDATA["D:/BUSINESS/SchoolManagementSystem/src/main/resources/reports/daffodils Logo.png"]]></defaultValueExpression>
-    </parameter>
-    <parameter name="signaturePath" class="java.lang.String">
-        <defaultValueExpression><![CDATA["D:/BUSINESS/SchoolManagementSystem/src/main/resources/reports/Signature.png"]]></defaultValueExpression>
-    </parameter>
+    <parameter name="schoolName" class="java.lang.String"/>
+    <parameter name="schoolMotto" class="java.lang.String"/>
+    <parameter name="schoolAddress" class="java.lang.String"/>
+    <parameter name="logo" class="java.awt.Image"/>
+    <parameter name="signature" class="java.awt.Image"/>
     <field name="studentId" class="java.lang.String"/>
     <field name="studentName" class="java.lang.String"/>
     <field name="className" class="java.lang.String"/>
@@ -43,17 +42,17 @@
     <field name="studentConductReport" class="com.codewithben.schoolmanagementsystem.DTO.Conduct.StudentConductReport"/>
     <detail>
         <band height="802" splitType="Stretch">
-            <element kind="image" uuid="c1234567-89ab-cdef-0123-456789abcdef" x="10" y="0" width="70" height="70" scaleImage="RetainShape">
-                <expression><![CDATA[$P{logoPath}]]></expression>
+            <element kind="image" uuid="c1234567-89ab-cdef-0123-456789abcdef" x="10" y="0" width="70" height="70" scaleImage="RetainShape" onErrorType="Blank">
+                <expression><![CDATA[$P{logo}]]></expression>
             </element>
-            <element kind="staticText" uuid="d41b1a8c-7168-4a5b-9497-89d27617f59d" x="80" y="0" width="410" height="25" fontSize="18.0" bold="true" hTextAlign="Center">
-                <text><![CDATA[DAFFODILS INTERNATIONAL SCHOOL]]></text>
+            <element kind="textField" uuid="d41b1a8c-7168-4a5b-9497-89d27617f59d" x="80" y="0" width="410" height="25" fontSize="18.0" textAdjust="ScaleFont" bold="true" hTextAlign="Center">
+                <expression><![CDATA[$P{schoolName} == null ? "" : $P{schoolName}.toUpperCase()]]></expression>
             </element>
-            <element kind="staticText" uuid="dbf99cea-660a-4395-83cc-df0c74921e84" x="90" y="25" width="400" height="15" fontSize="9.0" bold="true" italic="true" hTextAlign="Center">
-                <text><![CDATA[MOTTO: BUILDING EXCEPTIONAL FOUNDATION FOR A REMARKABLE FUTURE]]></text>
+            <element kind="textField" uuid="dbf99cea-660a-4395-83cc-df0c74921e84" x="90" y="25" width="400" height="15" fontSize="9.0" textAdjust="ScaleFont" bold="true" italic="true" hTextAlign="Center">
+                <expression><![CDATA[$P{schoolMotto} == null ? "" : "MOTTO: " + $P{schoolMotto}.toUpperCase()]]></expression>
             </element>
-            <element kind="staticText" uuid="789122cd-2b2b-491f-8655-e580f9d6c13f" x="200" y="40" width="195" height="15" bold="true" hTextAlign="Center">
-                <text><![CDATA[WASSA SIMPA, TARKWA]]></text>
+            <element kind="textField" uuid="789122cd-2b2b-491f-8655-e580f9d6c13f" x="90" y="40" width="400" height="15" textAdjust="ScaleFont" bold="true" hTextAlign="Center">
+                <expression><![CDATA[$P{schoolAddress} == null ? "" : $P{schoolAddress}.toUpperCase()]]></expression>
             </element>
             <element kind="staticText" uuid="51407804-2f5a-48c9-98a5-2111e00dddbe" x="200" y="60" width="195" height="20" fontSize="14.0" bold="true" hTextAlign="Center">
                 <text><![CDATA[TERMINAL REPORT]]></text>
@@ -495,8 +494,8 @@
             <element kind="staticText" uuid="303c4fac-2945-48df-b3d6-ea344622d106" positionType="Float" x="10" y="495" width="175" height="15" bold="true">
                 <text><![CDATA[HEAD FACILITATOR'S SIGN:]]></text>
             </element>
-            <element kind="image" uuid="8ac0ad62-e209-4e88-86ef-f597782ccdd4" positionType="Float" x="210" y="485" width="70" height="40" scaleImage="RetainShape">
-                <expression><![CDATA[$P{signaturePath}]]></expression>
+            <element kind="image" uuid="8ac0ad62-e209-4e88-86ef-f597782ccdd4" positionType="Float" x="210" y="485" width="70" height="40" scaleImage="RetainShape" onErrorType="Blank">
+                <expression><![CDATA[$P{signature}]]></expression>
             </element>
             <element kind="staticText" uuid="a9ba008b-2492-45da-b5cc-721f7d16bf0b" positionType="Float" x="360" y="495" width="40" height="15" bold="true">
                 <text><![CDATA[DATE:]]></text>

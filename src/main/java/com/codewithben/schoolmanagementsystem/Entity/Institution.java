@@ -22,6 +22,22 @@ public class Institution {
     @Column(nullable = false)
     private String broadcastHeader;
 
+    // Printed under the school name on reports. Optional.
+    @Column(length = 200)
+    private String motto;
+
+    // Printed under the motto on reports (e.g. town, region). Optional.
+    @Column(length = 255)
+    private String address;
+
+    // Object URLs in the private storage bucket (see ObjectStorageService). The files are
+    // downloaded and cached by BrandingAssetService; a new upload gets a new URL.
+    @Column(length = 512)
+    private String reportLogoUrl;
+
+    @Column(length = 512)
+    private String reportSignatureUrl;
+
     @OneToMany(mappedBy = "institution")
     private List<Staffs> staff;
 

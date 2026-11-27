@@ -43,8 +43,6 @@ public class ExpensesService {
 
     private final UtilityClass utilityClass;
 
-    private String schoolName;
-
     public ResponseEntity<?> addNewExpenses(NewExpenses newExpenses, String staffId) {
 
         String extraInfo = "Extra info empty";
@@ -197,7 +195,22 @@ public class ExpensesService {
 
     public ResponseEntity<?> generateExpensesReport(String semesterId, String staffId) {
 
-        schoolName = null;
+        // The school comes from the caller. It used to be kept in a field of this shared
+        // (singleton) service, so two schools generating reports at the same time could get
+        // each other's name on the PDF.
+        Staffs staff = staffsRepository.findByStaffId(staffId).orElse(null);
+        if (staff == null || staff.getInstitution() == null) {
+            loggingService.logGeneralActivity(
+                    LogType.EXPENSES,
+                    LogAction.READ,
+                    "Staff not found for expenses report",
+                    staffId,
+                    LogStatus.FAILED
+            );
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                    "message", "Internal Server error! Contact developer"
+            ));
+        }
 
         List<ExpensesRecord> expensesList = readExpensesRecords(semesterId);
         if(expensesList.isEmpty()){
@@ -215,11 +228,11 @@ public class ExpensesService {
 
         try {
             byte[] expensesPdfReport = jasperReportService.generateExpensesReport(
-                    expensesList, schoolName
+                    expensesList, staff.getInstitution()
             );
             return ResponseEntity.ok().contentType(MediaType.APPLICATION_PDF).body(expensesPdfReport);
         } catch (Exception e) {
-            log.error(String.valueOf(e));
+            log.error("Could not generate expenses report for semester {}", semesterId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -260,9 +273,6 @@ public class ExpensesService {
 
         List<ExpensesRecord> records = new ArrayList<>();
         for (Expenses expenses : expensesList) {
-            if(schoolName == null){
-                schoolName = expenses.getInstitution().getInstitutionName();
-            }
             ExpensesRecord record = ExpensesRecord.builder()
                     .expensesId(expenses.getExpenseId())
                     .description(expenses.getDescription())
