@@ -213,9 +213,16 @@ public class UtilityClass {
         return studentsListForReport;
     }
 
+    // Start of the next term, or null when it isn't set up yet. Terms with missing dates are ignored
+    // instead of failing the report card.
     public String getResumingDate(Semester semester) {
+        if (semester.getSemesterEndDate() == null || semester.getInstitution() == null
+                || semester.getInstitution().getSemester() == null) {
+            return null;
+        }
         List<Semester> nextSemester = semester.getInstitution().getSemester();
         return nextSemester.stream()
+                .filter(s -> s.getSemesterStartDate() != null)
                 .filter(s -> s.getSemesterStartDate().isAfter(semester.getSemesterEndDate()))
                 .min(Comparator.comparing(Semester::getSemesterStartDate))
                 .map(s -> s.getSemesterStartDate().toString())

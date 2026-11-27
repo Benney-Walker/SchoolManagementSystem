@@ -42,6 +42,8 @@ public class ResultsService {
 
     private final ResultAccessService resultAccess;
 
+    private final ReportCardService reportCardService;
+
     public ResponseEntity<?> viewStudentResult(String studentId, String semesterId, String staffId) {
 
         // Caller's own school only; accountants can't view results.
@@ -62,27 +64,17 @@ public class ResultsService {
         }
         Results studentResult = resultLookup.value();
 
-        List<Results> classResultsList = resultsRepository.findByLevel_LevelIDAndSemester_SemesterID(
-                studentResult.getLevel().getLevelID(), semesterId
-        );
-
-        String totalAttendance = String.valueOf(
-                attendanceService.getTotalAttendanceCount(semester)
-        );
-
-        if (studentResult.getConduct() == null) {
-            loggingService.logGeneralActivity(LogType.RESULT, LogAction.READ, "Student conducts not uploaded yet", staffId, LogStatus.FAILED);
+        // Same rules as the PDF (ReportCardService): conduct recorded, every subject scored,
+        // third-term promotion done. The preview used to skip the promotion check.
+        ReportCardService.Outcome outcome = reportCardService.assemble(
+                studentResult, semester, reportCardService.termContext(semester));
+        if (outcome.refused()) {
+            loggingService.logGeneralActivity(LogType.RESULT, LogAction.READ, outcome.problem(), staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
-                    "message", "Student conducts not uploaded yet"
+                    "message", outcome.problem()
             ));
         }
-
-        String resumingDate = utilityClass.getResumingDate(semester);
-
-        GenerateStudentResult result = generateStudentResult(studentResult, resumingDate, totalAttendance);
-        result.setStudentConductReport(
-                conductService.getStudentConductReport(studentResult.getConduct())
-        );
+        GenerateStudentResult result = outcome.reportCard();
 
         loggingService.logGeneralActivity(
                 LogType.RESULT, LogAction.READ,
@@ -268,61 +260,6 @@ public class ResultsService {
                 staffId, LogStatus.SUCCESS);
         return ResponseEntity.ok(masterScoreSheet);
     }
-
-    public GenerateStudentResult generateStudentResult(
-            Results result, String resumingDate, String totalAttendance
-    ) {
-
-        try {
-            String studentId = result.getStudent().getStudentId();
-            String studentName = result.getStudent().getFirstName() +
-                    " " + result.getStudent().getLastName();
-            String className = result.getLevel().getLevelName();
-            String semesterName = result.getSemester().getSemesterName();
-            String totalScore = scoreText(result.getTotalScore());
-            String averageScore = scoreText(result.getAverageScore());
-            String position = result.getPosition();
-            String academicYear = result.getSemester().getAcademicYear();
-            String totalStudents = String.valueOf(result.getClassSize());
-            String vacationDate = result.getSemester().getSemesterEndDate().toString();
-            String attendancePresent = String.valueOf(
-                    attendanceService.getStudentPresentAttendanceCount(studentId, result.getSemester().getSemesterID())
-            );
-            String promotedTo = result.getPromotionTo();
-
-            String instructorName = result.getLevel().getStaff().getFirstName() +
-                    " " + result.getLevel().getStaff().getLastName();
-            String currentDate = LocalDate.now().toString();
-
-            //Get subject scores
-            List<SubjectReportDTO> scores = new ArrayList<>();
-
-            List<SubjectScore> subjectScores = result.getSubjectScores();
-            for (SubjectScore subjectScore : subjectScores) {
-
-                SubjectReportDTO score = new SubjectReportDTO(
-                        subjectScore.getSubject().getSubjectName(),
-                        subjectScore.getClassScore().toString(),
-                        subjectScore.getCalculatedExamScore().toString(),
-                        subjectScore.getTotalScore().toString(),
-                        subjectScore.getGrade(),
-                        subjectScore.getGradeDescriptor()
-                );
-
-                scores.add(score);
-            }
-
-            return new GenerateStudentResult(
-                    studentId, studentName, className, semesterName,
-                    totalScore, averageScore, position, academicYear,
-                    totalStudents, vacationDate, resumingDate, attendancePresent,
-                    totalAttendance, instructorName, currentDate, promotedTo, scores, null
-            );
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
 
     /*===============================================
                           Helpers

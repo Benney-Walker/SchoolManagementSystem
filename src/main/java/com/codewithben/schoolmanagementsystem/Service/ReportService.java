@@ -3,6 +3,7 @@ package com.codewithben.schoolmanagementsystem.Service;
 import com.codewithben.schoolmanagementsystem.Constants.LogAction;
 import com.codewithben.schoolmanagementsystem.Constants.LogStatus;
 import com.codewithben.schoolmanagementsystem.Constants.LogType;
+import com.codewithben.schoolmanagementsystem.Constants.StudentStatus;
 import com.codewithben.schoolmanagementsystem.DTO.Report.GenerateStudentResult;
 import com.codewithben.schoolmanagementsystem.DTO.Report.MasterScoreSheet;
 import com.codewithben.schoolmanagementsystem.DTO.Report.SbaReport;
@@ -47,6 +48,8 @@ public class ReportService {
 
     private final ResultAccessService resultAccess;
 
+    private final ReportCardService reportCardService;
+
     public ResponseEntity<?> generateStudentReport(String studentId, String semesterId, String staffId) {
 
         // Caller's own school only; accountants can't download report cards.
@@ -67,35 +70,17 @@ public class ReportService {
         }
         Results studentResult = resultLookup.value();
 
-        if (semester.getSemesterName().equals("THIRD_TERM") && studentResult.getPromotionTo().equals("-")) {
-            loggingService.logGeneralActivity(LogType.REPORT, LogAction.READ,
-                    "Promotion activity not carried out",
-                    staffId, LogStatus.FAILED);
+        // One set of rules for preview, PDF and class report cards (ReportCardService):
+        // conduct recorded, every subject scored, third-term promotion done.
+        ReportCardService.Outcome outcome = reportCardService.assemble(
+                studentResult, semester, reportCardService.termContext(semester));
+        if (outcome.refused()) {
+            loggingService.logGeneralActivity(LogType.REPORT, LogAction.READ, outcome.problem(), staffId, LogStatus.FAILED);
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
-                    "message", "Promotion activity not carried out"
+                    "message", outcome.problem()
             ));
         }
-
-        String totalAttendance = String.valueOf(
-                attendanceService.getTotalAttendanceCount(semester)
-        );
-
-        if (studentResult.getConduct() == null) {
-            loggingService.logGeneralActivity(
-                    LogType.REPORT, LogAction.READ,
-                    "Student conducts not uploaded yet",
-                    staffId, LogStatus.FAILED);
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
-                    "message", "Student conducts not uploaded yet"
-            ));
-        }
-
-        String resumingDate = utilityClass.getResumingDate(semester);
-
-        GenerateStudentResult result = resultsService.generateStudentResult(studentResult, resumingDate, totalAttendance);
-        result.setStudentConductReport(
-                conductService.getStudentConductReport(studentResult.getConduct())
-        );
+        GenerateStudentResult result = outcome.reportCard();
 
         try {
             byte[] studentReport = jasperReportService.generateStudentReportCard(result, studentResult.getStudent().getInstitution().getInstitutionName());
@@ -129,10 +114,7 @@ public class ReportService {
         }
         Semester semester = semesterLookup.value();
 
-        String totalAttendance = String.valueOf(
-                attendanceService.getTotalAttendanceCount(semester)
-        );
-        String resumingDate = utilityClass.getResumingDate(semester);
+        ReportCardService.TermContext term = reportCardService.termContext(semester);
 
         List<Results> classResultsList = resultsRepository
                 .findByLevel_LevelIDAndSemester_SemesterID(levelId, semesterId);
@@ -143,22 +125,29 @@ public class ReportService {
             ));
         }
 
+        // Every report card in the class follows the same rules as a single one. Students who
+        // have left (INACTIVE) get no report card, so they don't block the class.
         List<GenerateStudentResult> reportData = new ArrayList<>();
-        //retrieve results
         for (Results result : classResultsList) {
-            if (result.getConduct() == null) {
+            if (result.getStudent() == null || result.getStudent().getStudentStatus() == StudentStatus.INACTIVE) {
+                continue;
+            }
+            ReportCardService.Outcome outcome = reportCardService.assemble(result, semester, term);
+            if (outcome.refused()) {
                 String studentName = result.getStudent().getFirstName() + " " + result.getStudent().getLastName();
-                loggingService.logGeneralActivity(LogType.REPORT, LogAction.READ, "No Conduct records found for " + studentName, staffId, LogStatus.FAILED);
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                        "message", "No Conduct records found for " + result.getStudent().getFirstName()
+                loggingService.logGeneralActivity(LogType.REPORT, LogAction.READ,
+                        studentName + ": " + outcome.problem(), staffId, LogStatus.FAILED);
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                        "message", studentName + ": " + outcome.problem()
                 ));
             }
-
-            GenerateStudentResult generateStudentResult = resultsService.generateStudentResult(result, resumingDate, totalAttendance);
-            generateStudentResult.setStudentConductReport(
-                    conductService.getStudentConductReport(result.getConduct())
-            );
-            reportData.add(generateStudentResult);
+            reportData.add(outcome.reportCard());
+        }
+        if (reportData.isEmpty()) {
+            loggingService.logGeneralActivity(LogType.REPORT, LogAction.READ, "No records are found", staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "message", "No records are found"
+            ));
         }
 
         try {
