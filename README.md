@@ -150,6 +150,7 @@ erDiagram
 - **Soft deletion** is used throughout via `DeletionStatus` / `StudentStatus` / `StaffStatus` rather than row removal, so historical results and payments stay intact.
 - **Graduation is a status, not a class.** Setting a student's status to `GRADUATED` (through `update-student-data`) removes them from their class (`Students.level` becomes null) and records `graduationDate`, `graduationClassName` and `graduationAcademicYear`. Class rosters and counts therefore never include graduates, while their past results, attendance and fee records keep their own link to the class. Re-activating a graduate enrols them in the chosen class and clears those fields. The rules are in `Utility/StudentEnrolment`.
 - **Only ACTIVE students are billed.** When an INACTIVE or GRADUATED student is set back to ACTIVE, they are billed the full fee for the current term through `new_student_fee_creation_queue` (the same path as a new enrolment), unless they already have a fee record for that term. `Migration/GraduatedStudentsBackfill` detaches students graduated before this change, once, at startup.
+- **Grades.** A total gets the band with the highest lower limit at or below it, so 79.5 gets the 70–79 grade when bands are whole numbers (no rounding). `Migration/UngradedScoresBackfill` grades, once at startup, scores saved without a grade before this fix.
 
 ---
 
@@ -278,9 +279,9 @@ All endpoints below require `Authorization: Bearer <accessToken>` unless noted. 
 | POST | `/v1/add-semester` | Create a term |
 | GET | `/v1/search-semester/{semesterId}` | Fetch term details |
 | PUT | `/v1/update-semester-info` | Update a term |
-| POST | `/v1/new-grading-criteria` | Define a grading band |
+| POST | `/v1/new-grading-criteria` | Define a grading band (0–100, lower ≤ upper, no overlap with another band; 400/409 otherwise) |
 | GET | `/v1/load-grading-criteria` | List grading bands |
-| PUT | `/v1/update-grading-criteria` | Update a grading band |
+| PUT | `/v1/update-grading-criteria` | Update a grading band (same rules) |
 | POST | `/v1/add-new-class` | Create a class/level |
 | GET | `/v1/find-class-info/{levelId}` | Class details |
 | PUT | `/v1/update-class-info` | Update a class |
