@@ -128,8 +128,8 @@ public class ResultsService {
                     " " + result.getStudent().getLastName();
             String className = level.getLevelName();
             String semesterName = semester.getSemesterName();
-            String totalScore = result.getTotalScore().toString();
-            String averageScore = result.getAverageScore().toString();
+            String totalScore = scoreText(result.getTotalScore());
+            String averageScore = scoreText(result.getAverageScore());
             String position = result.getPosition();
             String totalStudents = String.valueOf(result.getClassSize());
             String semesterRemark = "Not field yet";
@@ -253,8 +253,8 @@ public class ResultsService {
                     " " + result.getStudent().getLastName();
             String className = result.getLevel().getLevelName();
             String semesterName = result.getSemester().getSemesterName();
-            String totalScore = result.getTotalScore().toString();
-            String averageScore = result.getAverageScore().toString();
+            String totalScore = scoreText(result.getTotalScore());
+            String averageScore = scoreText(result.getAverageScore());
             String position = result.getPosition();
             String academicYear = result.getSemester().getAcademicYear();
             String totalStudents = String.valueOf(result.getClassSize());
@@ -380,13 +380,10 @@ public class ResultsService {
                             subjectScore.getTotalScore()
                     );
                 }
-                String[] splitPositionString = result.getPosition().split("");
-                String position = "";
-                if (splitPositionString.length == 3) {
-                    position = splitPositionString[0];
-                } else if (splitPositionString.length == 4) {
-                    position = splitPositionString[0] + splitPositionString[1];
-                }
+                // "1st", "23rd", "105th" -> 1, 23, 105; not ranked yet -> 0. (The old parsing
+                // handled only one- or two-digit positions and threw on a null position.)
+                String digits = result.getPosition() == null ? "" : result.getPosition().replaceAll("\\D", "");
+                String position = digits.isEmpty() ? "0" : digits;
 
                 MasterScoreSheetRow record = MasterScoreSheetRow.builder()
                         .studentId(result.getStudent().getStudentId())
@@ -411,5 +408,10 @@ public class ResultsService {
         } catch (NumberFormatException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    // Results created by attendance (or before totals were computed) may have no total yet.
+    private static String scoreText(Double score) {
+        return String.valueOf(score == null ? 0.0 : score);
     }
 }

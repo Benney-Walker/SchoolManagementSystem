@@ -226,7 +226,8 @@ public class StudentService {
         return ResponseEntity.ok(students.size());
     }
 
-    // Transactional so that if billing a re-activated student can't be queued, the status change is rolled back too.
+    // Transactional: the status change and any re-activation billing event belong together. The
+    // event is published only after this transaction commits (RabbitMQProducer).
     @Transactional
     public ResponseEntity<?> updateStudentPersonalData(UpdateStudentPersonalData data, String staffId) {
 

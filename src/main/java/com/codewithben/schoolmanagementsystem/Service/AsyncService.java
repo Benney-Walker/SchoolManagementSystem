@@ -57,6 +57,8 @@ public class AsyncService {
 
     private final SmsInterface smsInterface;
 
+    private final ResultTotalsService resultTotalsService;
+
     @Value("${attendance.default.message}")
     private String attendanceMessageHeader;
 
@@ -225,6 +227,15 @@ public class AsyncService {
         List<Results> resultsList = resultsRepository
                 .findAllBySemester_SemesterIDAndStudent_StudentIdIn(createResults.getSemesterId(), createResults.getStudentIds());
 
+        // Results.updatedBy is NOT NULL: a row created without it made the whole batch fail
+        // (retried, then dead-lettered), so attendance never reached the results. Use the staff
+        // member who marked attendance, else the class teacher.
+        Staffs createdBy = createResults.getStaffId() == null ? null
+                : staffsRepository.findByStaffId(createResults.getStaffId()).orElse(null);
+        if (createdBy == null) {
+            createdBy = level.getStaff();
+        }
+
         boolean found;
         List<Results> newResultsList = new ArrayList<>();
         for (String studentId : createResults.getStudentIds()) {
@@ -242,12 +253,20 @@ public class AsyncService {
                 if (student == null) {
                     continue;
                 }
-                Results result = resultsRepository
-                        .findByStudent_StudentIdAndSemester_SemesterID(studentId, createResults.getSemesterId())
-                        .orElse(new Results());
+                if (createdBy == null) {
+                    log.error("Cannot create results for class {}: no staff to record as creator", level.getLevelID());
+                    continue;
+                }
+                // Same starting values as a result created when scores are saved: totals 0
+                // rather than null, so ranking and the report views never see a null total.
+                Results result = new Results();
                 result.setStudent(student);
                 result.setSemester(semester);
                 result.setLevel(level);
+                result.setUpdatedBy(createdBy);
+                result.setCreatedAt(LocalDate.now());
+                result.setTotalScore(0.0);
+                result.setAverageScore(0.0);
                 newResultsList.add(result);
             }
         }
@@ -259,15 +278,19 @@ public class AsyncService {
         List<AttendanceRecords> attendanceRecords = attendanceRecordsRepository
                 .findByAttendanceDate_Level_LevelIDAndAttendanceDate_Semester_SemesterID(createResults.getLevelId(), createResults.getSemesterId());
 
+        // Days present per student. Absent days are stored as records too (status ABSENT), so
+        // they must not be counted; and the count is always written, so a day corrected from
+        // present to absent lowers it again.
         List<Results> affectedResults = new ArrayList<>();
         for (Results result : resultsList) {
             int presentCount = 0;
             for (AttendanceRecords attendanceRecord : attendanceRecords) {
-                if (result.getStudent().getStudentId().equals(attendanceRecord.getStudent().getStudentId())) {
+                if (attendanceRecord.getStatus() == AttendanceStatus.PRESENT
+                        && result.getStudent().getStudentId().equals(attendanceRecord.getStudent().getStudentId())) {
                     presentCount++;
                 }
             }
-            if (presentCount > 0) {
+            if (result.getPresentAttendanceCount() != presentCount) {
                 result.setPresentAttendanceCount(presentCount);
                 affectedResults.add(result);
             }
@@ -275,13 +298,15 @@ public class AsyncService {
         resultsRepository.saveAllAndFlush(affectedResults);
     }
 
+    /*
+     * Save-scores no longer publishes this event: totals are rebuilt in the same transaction
+     * as the save (ResultTotalsService). This consumer stays so that messages already queued
+     * when this version is deployed are still processed, the same way. It can be removed,
+     * with the queue, once update_results_queue is empty in every environment.
+     */
     @Transactional
     public void updateResults(ResultsUpdate resultsUpdate) {
         Staffs staff = staffsRepository.findByStaffId(resultsUpdate.getStaffId()).orElse(null);
-        if (staff == null) {
-            log.error("Could not find staff with id {}", resultsUpdate.getStaffId());
-            return;
-        }
 
         Subjects subject = subjectsRepository.findBySubjectId(resultsUpdate.getSubjectId()).orElse(null);
         if (subject == null) {
@@ -295,29 +320,8 @@ public class AsyncService {
             return;
         }
 
-        int classSize = utilityClass.getActiveStudents(subject.getLevel().getStudents()).size();
-        int savedSubjects = subject.getLevel().getSubjects().size();
-
-        String levelId = null;
-        String semesterId = null;
-        for (Results result : affectedResults) {
-            if (levelId == null || semesterId == null) {
-                levelId = result.getLevel().getLevelID();
-                semesterId = result.getSemester().getSemesterID();
-            }
-            utilityClass.updateResultTotals(result, staff, classSize);
-            int savedScoresSubjects = subjectScoreRepository.countByResults_ResultId(result.getResultId());
-            result.setReady(savedScoresSubjects == savedSubjects);
-        }
-
-        resultsRepository.saveAllAndFlush(affectedResults);
-
-        List<Results> classResultsList = resultsRepository.findByLevel_LevelIDAndSemester_SemesterID(
-                levelId, semesterId
-        );
-        if (classResultsList == null || classResultsList.isEmpty()) return;
-        classResultsList.sort(Comparator.comparing(Results::getTotalScore).reversed());
-        utilityClass.reArrangePositions(classResultsList);
+        String semesterId = affectedResults.getFirst().getSemester().getSemesterID();
+        resultTotalsService.recalculate(affectedResults, subject.getLevel(), semesterId, staff);
     }
 
     @Transactional
