@@ -191,7 +191,10 @@ public class AttendanceService {
 
                 for (Students student : students) {
                     if (student.getStudentId().equals(record.getStudentId())) {
-                        AttendanceStatus status = AttendanceStatus.valueOf(record.getStatus().toUpperCase());
+                        AttendanceStatus status = parseStatus(record.getStatus());
+                        if (status == null) {
+                            continue;
+                        }
 
                         AttendanceRecords attendanceRecord = AttendanceRecords.builder()
                                 .attendanceDate(attendanceDate)
@@ -214,10 +217,11 @@ public class AttendanceService {
 
                  for (AttendanceRecords existingRecord : existingRecords) {
 
-                     if (record.getStudentId().equals(existingRecord.getStudent().getStudentId()) &&
-                     !AttendanceStatus.valueOf(record.getStatus().toUpperCase()).equals(existingRecord.getStatus())) {
+                     AttendanceStatus status = parseStatus(record.getStatus());
+                     if (status != null && record.getStudentId().equals(existingRecord.getStudent().getStudentId()) &&
+                     !status.equals(existingRecord.getStatus())) {
 
-                         existingRecord.setStatus(AttendanceStatus.valueOf(record.getStatus().toUpperCase()));
+                         existingRecord.setStatus(status);
                          break;
                      }
                  }
@@ -475,5 +479,23 @@ public class AttendanceService {
         }
 
         return totalAttendance;
+    }
+
+    /*
+     * PRESENT or ABSENT, any case; null for anything else. AttendanceStatus.valueOf threw on an
+     * unknown status ("LATE", "", null), turning the whole request into a 500 that the
+     * attendance app's offline queue retried forever. Rows with an unknown status are now
+     * skipped (offline sync stays lenient) and logged.
+     */
+    static AttendanceStatus parseStatus(String status) {
+        if (status != null) {
+            for (AttendanceStatus candidate : AttendanceStatus.values()) {
+                if (candidate.name().equalsIgnoreCase(status.strip())) {
+                    return candidate;
+                }
+            }
+        }
+        log.warn("Attendance row with unknown status '{}' skipped", status);
+        return null;
     }
 }
