@@ -10,16 +10,18 @@ import com.codewithben.schoolmanagementsystem.DTO.Report.SbaReport;
 import com.codewithben.schoolmanagementsystem.DTO.Result.SbaRecords;
 import com.codewithben.schoolmanagementsystem.Entity.*;
 import com.codewithben.schoolmanagementsystem.Repository.*;
+import com.codewithben.schoolmanagementsystem.Utility.PdfResponses;
 import com.codewithben.schoolmanagementsystem.Utility.UtilityClass;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.*;
 
+@Slf4j
 @AllArgsConstructor
 @Service
 public class ReportService {
@@ -91,9 +93,11 @@ public class ReportService {
                             studentResult.getStudent().getLastName(),
                     staffId, LogStatus.SUCCESS
             );
-            return ResponseEntity.ok().contentType(MediaType.APPLICATION_PDF).body(studentReport);
+            return PdfResponses.pdf(studentReport,
+                    studentResult.getStudent().getFirstName(), studentResult.getStudent().getLastName(),
+                    semester.getSemesterName(), semester.getAcademicYear(), "report card");
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            return pdfFailed("report card for student " + studentId, staffId, e);
         }
     }
 
@@ -159,9 +163,10 @@ public class ReportService {
                     "Downloaded bulk report for " + level.getLevelName(),
                     staffId, LogStatus.SUCCESS
             );
-            return ResponseEntity.ok().contentType(MediaType.APPLICATION_PDF).body(studentBulkReportPdf);
+            return PdfResponses.pdf(studentBulkReportPdf,
+                    level.getLevelName(), semester.getSemesterName(), semester.getAcademicYear(), "report cards");
         } catch (Exception e) {
-            throw new RuntimeException("Error while generating report for " + e);
+            return pdfFailed("class report cards for " + level.getLevelName(), staffId, e);
         }
     }
 
@@ -217,9 +222,11 @@ public class ReportService {
                     "Generated Sba report for " + level.getLevelName() + "' " +
                             subject.getSubjectName(), staffId, LogStatus.SUCCESS
             );
-            return ResponseEntity.ok().contentType(MediaType.APPLICATION_PDF).body(sbaReportPdf);
+            return PdfResponses.pdf(sbaReportPdf,
+                    level.getLevelName(), subject.getSubjectName(), semester.getSemesterName(),
+                    semester.getAcademicYear(), "SBA");
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            return pdfFailed("SBA report for " + level.getLevelName() + " " + subject.getSubjectName(), staffId, e);
         }
     }
 
@@ -258,10 +265,26 @@ public class ReportService {
                     "Generated master score sheet for " + masterScoreSheet.getClassName(),
                     staffId, LogStatus.SUCCESS
             );
-            return ResponseEntity.ok().contentType(MediaType.APPLICATION_PDF).body(scoreSheetPdf);
+            return PdfResponses.pdf(scoreSheetPdf,
+                    masterScoreSheet.getClassName(), masterScoreSheet.getSemesterName(),
+                    masterScoreSheet.getAcademicYear(), "master sheet");
         } catch (Exception e)  {
-            throw new RuntimeException("Error while generating report for " + e);
+            return pdfFailed("master score sheet for " + masterScoreSheet.getClassName(), staffId, e);
         }
+    }
+
+    /*
+     * A PDF that could not be filled or exported (usually a template that doesn't match the
+     * code; see JasperReportService.verifyTemplates). It used to be rethrown as a bare
+     * RuntimeException: a generic 500, no audit entry and, for some reports, no stack trace.
+     */
+    private ResponseEntity<?> pdfFailed(String what, String staffId, Exception e) {
+        log.error("Could not generate {}", what, e);
+        loggingService.logGeneralActivity(LogType.REPORT, LogAction.READ,
+                "Could not generate " + what, staffId, LogStatus.FAILED);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                "message", "Could not generate the report. Try again, or contact support if it keeps failing"
+        ));
     }
 
 }

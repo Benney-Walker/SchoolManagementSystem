@@ -13,11 +13,11 @@ import com.codewithben.schoolmanagementsystem.Entity.Staffs;
 import com.codewithben.schoolmanagementsystem.Repository.ExpensesRepo;
 import com.codewithben.schoolmanagementsystem.Repository.SemesterRepository;
 import com.codewithben.schoolmanagementsystem.Repository.StaffsRepository;
+import com.codewithben.schoolmanagementsystem.Utility.PdfResponses;
 import com.codewithben.schoolmanagementsystem.Utility.UtilityClass;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -194,10 +194,16 @@ public class ExpensesService {
 
         try {
             byte[] expensesPdfReport = jasperReportService.generateExpensesReport(report, staff.getInstitution());
-            return ResponseEntity.ok().contentType(MediaType.APPLICATION_PDF).body(expensesPdfReport);
+            return PdfResponses.pdf(expensesPdfReport,
+                    semester.getSemesterName(), semester.getAcademicYear(), "expenses");
         } catch (Exception e) {
+            // Logged with the stack trace and audited, so a missing or stale template is visible.
             log.error("Could not generate expenses report for semester {}", semesterId, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            loggingService.logGeneralActivity(LogType.EXPENSES, LogAction.READ,
+                    "Could not generate expenses report", staffId, LogStatus.FAILED);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                    "message", "Could not generate the report. Try again, or contact support if it keeps failing"
+            ));
         }
     }
 
