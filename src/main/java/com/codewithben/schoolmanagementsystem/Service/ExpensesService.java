@@ -61,16 +61,16 @@ public class ExpensesService {
             return sessionExpired();
         }
 
-        String extraInfo = "Extra info empty";
-
         Semester semester = schoolSemester(staff, newExpenses.getSemesterId());
         if(semester == null){
             return notFound(LogAction.CREATE, "Term not found", staffId);
         }
 
-        if (newExpenses.getExtraInfo() != null &&  newExpenses.getExtraInfo().isEmpty()) {
-            extraInfo = newExpenses.getExtraInfo();
-        }
+        // Was "!= null && isEmpty()", which kept the typed text only when it was empty, so every
+        // expense was saved as "Extra info empty".
+        String extraInfo = newExpenses.getExtraInfo() == null || newExpenses.getExtraInfo().isBlank()
+                ? "Extra info empty"
+                : newExpenses.getExtraInfo().trim();
 
         Expenses expenses = Expenses.builder()
                 .description(newExpenses.getDescription())
