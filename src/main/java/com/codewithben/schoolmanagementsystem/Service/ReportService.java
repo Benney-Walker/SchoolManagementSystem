@@ -83,7 +83,7 @@ public class ReportService {
         GenerateStudentResult result = outcome.reportCard();
 
         try {
-            byte[] studentReport = jasperReportService.generateStudentReportCard(result, studentResult.getStudent().getInstitution().getInstitutionName());
+            byte[] studentReport = jasperReportService.generateStudentReportCard(result, studentResult.getStudent().getInstitution());
 
             loggingService.logGeneralActivity(
                     LogType.REPORT, LogAction.READ,
@@ -152,7 +152,7 @@ public class ReportService {
 
         try {
 
-            byte[] studentBulkReportPdf = jasperReportService.generateClassReportCards(reportData, level.getInstitution().getInstitutionName());
+            byte[] studentBulkReportPdf = jasperReportService.generateClassReportCards(reportData, level.getInstitution());
 
             loggingService.logGeneralActivity(
                     LogType.REPORT, LogAction.READ,
@@ -210,7 +210,7 @@ public class ReportService {
                 .build();
 
         try {
-            byte[] sbaReportPdf = jasperReportService.generateSbaReport(sbaReport, level.getInstitution().getInstitutionName());
+            byte[] sbaReportPdf = jasperReportService.generateSbaReport(sbaReport, level.getInstitution());
 
             loggingService.logGeneralActivity(
                     LogType.REPORT, LogAction.READ,
