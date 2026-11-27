@@ -128,37 +128,27 @@ public class UtilityClass {
         }
     }
 
-    //Returns subject grade and its description based on the score
-    public String getGradeAndDescription(Double totalScore, String institutionId) {
-        List<GradeSystem> list = getOrderedCacheList(institutionId);
-
-        //Find matching range
-        for (GradeSystem grade : list) {
-            if (totalScore >= grade.getLowerRange() && totalScore <= grade.getUpperRange()) {
-                return grade.getGrade() + "_" + grade.getGradeDescription();
-            }
-        }
-        return " ";
+    /*
+     * Grade band for a total (H1): the band with the highest lower limit at or below the total
+     * (GradeBands.bandFor). It used to need lower <= total <= upper, so a total of 79.5 between
+     * the bands 70-79 and 80-100 got no grade. Grade and description are read from the band
+     * directly; they used to be joined with "_" and split again, which broke for any
+     * description containing "_".
+     */
+    public GradeSystem gradeBandFor(Double totalScore, String institutionId) {
+        return GradeBands.bandFor(totalScore, getOrderedCacheList(institutionId));
     }
 
-    //Extract grade
+    //Extract grade (null when no band fits)
     public String extractGrade(Double totalScore, String institutionId) {
-        String[] gradeAndDescription = getGradeAndDescription(totalScore, institutionId).split("_");
-
-        if (gradeAndDescription.length == 2) {
-            return gradeAndDescription[0];
-        }
-        return null;
+        GradeSystem band = gradeBandFor(totalScore, institutionId);
+        return band == null ? null : band.getGrade();
     }
 
-    //Extract grade Description
+    //Extract grade Description (null when no band fits)
     public String extractDescription(Double totalScore, String institutionId) {
-        String[] gradeAndDescription = getGradeAndDescription(totalScore, institutionId).split("_");
-
-        if (gradeAndDescription.length == 2) {
-            return gradeAndDescription[1];
-        }
-        return null;
+        GradeSystem band = gradeBandFor(totalScore, institutionId);
+        return band == null ? null : band.getGradeDescription();
     }
 
     //Method for finding the current semester
